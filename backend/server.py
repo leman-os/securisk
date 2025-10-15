@@ -439,14 +439,19 @@ async def create_incident(incident_data: IncidentCreate, current_user: User = De
 async def get_incidents(current_user: User = Depends(get_current_user)):
     incidents = await db.incidents.find({}, {"_id": 0}).to_list(1000)
     for incident in incidents:
+        # Parse datetime fields
         if isinstance(incident.get('detected_at'), str):
             incident['detected_at'] = datetime.fromisoformat(incident['detected_at'])
+        if isinstance(incident.get('acknowledged_at'), str):
+            incident['acknowledged_at'] = datetime.fromisoformat(incident['acknowledged_at'])
+        if isinstance(incident.get('resolved_at'), str):
+            incident['resolved_at'] = datetime.fromisoformat(incident['resolved_at'])
+        if isinstance(incident.get('closed_at'), str):
+            incident['closed_at'] = datetime.fromisoformat(incident['closed_at'])
         if isinstance(incident.get('created_at'), str):
             incident['created_at'] = datetime.fromisoformat(incident['created_at'])
         if isinstance(incident.get('updated_at'), str):
             incident['updated_at'] = datetime.fromisoformat(incident['updated_at'])
-        if isinstance(incident.get('closed_at'), str):
-            incident['closed_at'] = datetime.fromisoformat(incident['closed_at'])
     return incidents
 
 @api_router.get("/incidents/{incident_id}", response_model=Incident)
