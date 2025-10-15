@@ -147,11 +147,13 @@ class IncidentUpdate(BaseModel):
     severity: Optional[str] = None
     status: Optional[str] = None
     detected_at: Optional[datetime] = None
+    acknowledged_at: Optional[datetime] = None
+    resolved_at: Optional[datetime] = None
+    closed_at: Optional[datetime] = None
     source: Optional[str] = None
     affected_assets: Optional[str] = None
     owner: Optional[str] = None
     actions: Optional[str] = None
-    closed_at: Optional[datetime] = None
 
 class Asset(BaseModel):
     model_config = ConfigDict(extra="ignore")
