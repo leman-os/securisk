@@ -471,12 +471,38 @@ async def get_incident(incident_id: str, current_user: User = Depends(get_curren
 
 @api_router.put("/incidents/{incident_id}", response_model=Incident)
 async def update_incident(incident_id: str, incident_data: IncidentUpdate, current_user: User = Depends(get_current_user)):
+    # Get current incident to check status change
+    current_incident = await db.incidents.find_one({"id": incident_id}, {"_id": 0})
+    if not current_incident:
+        raise HTTPException(status_code=404, detail="Incident not found")
+    
     update_dict = {k: v for k, v in incident_data.model_dump().items() if v is not None}
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
     
+    # Auto-set timestamps based on status changes
+    if 'status' in update_dict:
+        if update_dict['status'] == "В работе" and not current_incident.get('acknowledged_at'):
+            update_dict['acknowledged_at'] = datetime.now(timezone.utc)
+        elif update_dict['status'] == "Решен" and not current_incident.get('resolved_at'):
+            update_dict['resolved_at'] = datetime.now(timezone.utc)
+        elif update_dict['status'] == "Закрыт" and not current_incident.get('closed_at'):
+            update_dict['closed_at'] = datetime.now(timezone.utc)
+    
+    # Merge with current data for metric calculation
+    merged_data = {**current_incident, **update_dict}
+    merged_data = calculate_incident_metrics(merged_data)
+    
+    # Update only the changed fields + metrics
+    if 'mtta' in merged_data:
+        update_dict['mtta'] = merged_data['mtta']
+    if 'mttr' in merged_data:
+        update_dict['mttr'] = merged_data['mttr']
+    if 'mttc' in merged_data:
+        update_dict['mttc'] = merged_data['mttc']
+    
     # Serialize datetimes
-    for key in ['detected_at', 'closed_at']:
+    for key in ['detected_at', 'acknowledged_at', 'resolved_at', 'closed_at']:
         if key in update_dict and isinstance(update_dict[key], datetime):
             update_dict[key] = update_dict[key].isoformat()
     
@@ -487,14 +513,19 @@ async def update_incident(incident_id: str, incident_data: IncidentUpdate, curre
         raise HTTPException(status_code=404, detail="Incident not found")
     
     incident = await db.incidents.find_one({"id": incident_id}, {"_id": 0})
+    # Parse datetime fields
     if isinstance(incident.get('detected_at'), str):
         incident['detected_at'] = datetime.fromisoformat(incident['detected_at'])
+    if isinstance(incident.get('acknowledged_at'), str):
+        incident['acknowledged_at'] = datetime.fromisoformat(incident['acknowledged_at'])
+    if isinstance(incident.get('resolved_at'), str):
+        incident['resolved_at'] = datetime.fromisoformat(incident['resolved_at'])
+    if isinstance(incident.get('closed_at'), str):
+        incident['closed_at'] = datetime.fromisoformat(incident['closed_at'])
     if isinstance(incident.get('created_at'), str):
         incident['created_at'] = datetime.fromisoformat(incident['created_at'])
     if isinstance(incident.get('updated_at'), str):
         incident['updated_at'] = datetime.fromisoformat(incident['updated_at'])
-    if isinstance(incident.get('closed_at'), str):
-        incident['closed_at'] = datetime.fromisoformat(incident['closed_at'])
     return Incident(**incident)
 
 @api_router.delete("/incidents/{incident_id}")
