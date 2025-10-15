@@ -413,11 +413,25 @@ async def delete_risk(risk_id: str, current_user: User = Depends(get_current_use
 async def create_incident(incident_data: IncidentCreate, current_user: User = Depends(get_current_user)):
     incident = Incident(**incident_data.model_dump())
     doc = incident.model_dump()
+    
+    # Auto-set acknowledged_at when status is "В работе"
+    if doc['status'] == "В работе" and not doc.get('acknowledged_at'):
+        doc['acknowledged_at'] = datetime.now(timezone.utc)
+    
+    # Calculate metrics
+    doc = calculate_incident_metrics(doc)
+    
+    # Serialize datetimes
     doc['detected_at'] = doc['detected_at'].isoformat()
     doc['created_at'] = doc['created_at'].isoformat()
     doc['updated_at'] = doc['updated_at'].isoformat()
+    if doc.get('acknowledged_at'):
+        doc['acknowledged_at'] = doc['acknowledged_at'].isoformat()
+    if doc.get('resolved_at'):
+        doc['resolved_at'] = doc['resolved_at'].isoformat()
     if doc.get('closed_at'):
         doc['closed_at'] = doc['closed_at'].isoformat()
+    
     await db.incidents.insert_one(doc)
     return incident
 
