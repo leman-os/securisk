@@ -113,11 +113,16 @@ class Incident(BaseModel):
     severity: str  # "Низкая", "Средняя", "Высокая", "Критическая"
     status: str  # "Новый", "В работе", "Решен", "Закрыт"
     detected_at: datetime
+    acknowledged_at: Optional[datetime] = None  # Когда взят в работу
+    resolved_at: Optional[datetime] = None  # Когда решен
+    closed_at: Optional[datetime] = None  # Когда закрыт
     source: Optional[str] = None
     affected_assets: Optional[str] = None
     owner: str
     actions: Optional[str] = None
-    closed_at: Optional[datetime] = None
+    mtta: Optional[float] = None  # Mean Time To Acknowledge (в часах)
+    mttr: Optional[float] = None  # Mean Time To Resolve (в часах)
+    mttc: Optional[float] = None  # Mean Time To Close (в часах)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
