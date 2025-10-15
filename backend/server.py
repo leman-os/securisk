@@ -196,6 +196,17 @@ class DashboardStats(BaseModel):
     critical_risks: int
     open_incidents: int
     critical_assets: int
+    avg_mtta: Optional[float] = None  # Среднее время подтверждения (часы)
+    avg_mttr: Optional[float] = None  # Среднее время решения (часы)
+    avg_mttc: Optional[float] = None  # Среднее время закрытия (часы)
+
+class IncidentMetrics(BaseModel):
+    avg_mtta: Optional[float] = None
+    avg_mttr: Optional[float] = None
+    avg_mttc: Optional[float] = None
+    total_incidents: int
+    resolved_incidents: int
+    closed_incidents: int
 
 # ==================== AUTH HELPERS ====================
 
