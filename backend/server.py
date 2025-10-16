@@ -261,33 +261,33 @@ class SettingsUpdate(BaseModel):
 # ==================== HELPERS ====================
 
 def calculate_incident_metrics(incident_dict: dict) -> dict:
-    """Calculate MTTA, MTTR, MTTC for an incident"""
-    detected_at = incident_dict.get('detected_at')
-    acknowledged_at = incident_dict.get('acknowledged_at')
-    resolved_at = incident_dict.get('resolved_at')
+    """Calculate MTTA, MTTR, MTTC for an incident in minutes"""
+    incident_time = incident_dict.get('incident_time')
+    detection_time = incident_dict.get('detection_time')
+    reaction_start_time = incident_dict.get('reaction_start_time')
     closed_at = incident_dict.get('closed_at')
     
     # Parse datetime if strings
-    if isinstance(detected_at, str):
-        detected_at = datetime.fromisoformat(detected_at)
-    if isinstance(acknowledged_at, str):
-        acknowledged_at = datetime.fromisoformat(acknowledged_at)
-    if isinstance(resolved_at, str):
-        resolved_at = datetime.fromisoformat(resolved_at)
+    if isinstance(incident_time, str):
+        incident_time = datetime.fromisoformat(incident_time)
+    if isinstance(detection_time, str):
+        detection_time = datetime.fromisoformat(detection_time)
+    if isinstance(reaction_start_time, str):
+        reaction_start_time = datetime.fromisoformat(reaction_start_time)
     if isinstance(closed_at, str):
         closed_at = datetime.fromisoformat(closed_at)
     
-    # Calculate MTTA (Mean Time To Acknowledge) - in hours
-    if acknowledged_at and detected_at:
-        incident_dict['mtta'] = round((acknowledged_at - detected_at).total_seconds() / 3600, 2)
+    # Calculate MTTA (время от инцидента до обнаружения) - in minutes
+    if detection_time and incident_time:
+        incident_dict['mtta'] = round((detection_time - incident_time).total_seconds() / 60, 2)
     
-    # Calculate MTTR (Mean Time To Resolve) - in hours
-    if resolved_at and detected_at:
-        incident_dict['mttr'] = round((resolved_at - detected_at).total_seconds() / 3600, 2)
+    # Calculate MTTR (время от обнаружения до начала реакции) - in minutes
+    if reaction_start_time and detection_time:
+        incident_dict['mttr'] = round((reaction_start_time - detection_time).total_seconds() / 60, 2)
     
-    # Calculate MTTC (Mean Time To Close) - in hours
-    if closed_at and detected_at:
-        incident_dict['mttc'] = round((closed_at - detected_at).total_seconds() / 3600, 2)
+    # Calculate MTTC (время от инцидента до закрытия) - in minutes
+    if closed_at and incident_time:
+        incident_dict['mttc'] = round((closed_at - incident_time).total_seconds() / 60, 2)
     
     return incident_dict
 
