@@ -485,8 +485,14 @@ const Incidents = ({ user }) => {
                           {incident.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-slate-700">
-                        {new Date(incident.detected_at).toLocaleString('ru-RU')}
+                      <TableCell className="text-sm text-slate-700 text-center">
+                        {incident.mtta ? `${incident.mtta}ч` : '-'}
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-700 text-center">
+                        {incident.mttr ? `${incident.mttr}ч` : '-'}
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-700 text-center">
+                        {incident.mttc ? `${incident.mttc}ч` : '-'}
                       </TableCell>
                       <TableCell className="text-sm text-slate-700">{incident.owner}</TableCell>
                       <TableCell className="text-right">
