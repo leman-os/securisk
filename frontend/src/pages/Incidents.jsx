@@ -166,7 +166,6 @@ const Incidents = ({ user }) => {
   const resetForm = () => {
     setEditingIncident(null);
     setFormData({
-      incident_number: '',
       incident_time: new Date().toISOString().slice(0, 16),
       detection_time: new Date().toISOString().slice(0, 16),
       reaction_start_time: '',
