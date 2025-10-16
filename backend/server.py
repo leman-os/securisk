@@ -172,14 +172,22 @@ class IncidentUpdate(BaseModel):
 class Asset(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    asset_number: str
-    name: str
-    asset_type: str  # "Сервер", "Рабочая станция", "Сеть", "ПО", "Данные"
-    criticality: str  # "Низкая", "Средняя", "Высокая", "Критическая"
-    owner: str
-    location: Optional[str] = None
-    status: str  # "Активен", "Неактивен", "На обслуживании"
-    description: Optional[str] = None
+    asset_number: str  # ACT00001
+    name: str  # Название актива
+    category: Optional[str] = None  # Категория
+    owner: Optional[str] = None  # Владелец
+    criticality: str  # Низкая, Средняя, Высокая
+    format: Optional[str] = None  # Формат
+    location: Optional[str] = None  # Месторасположение
+    rights_rw: Optional[str] = None  # Права RW
+    rights_ro: Optional[str] = None  # Права RO
+    classification: Optional[str] = None  # Классификация
+    review_date: Optional[datetime] = None  # Дата пересмотра
+    status: str  # Актуален, Не актуален
+    threats: List[str] = Field(default_factory=list)  # Угрозы (множественный выбор)
+    protection_measures: Optional[str] = None  # Меры защиты
+    description: Optional[str] = None  # Описание
+    note: Optional[str] = None  # Примечание
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
