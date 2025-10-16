@@ -683,7 +683,10 @@ async def get_incident_metrics(current_user: User = Depends(get_current_user)):
 
 @api_router.post("/assets", response_model=Asset)
 async def create_asset(asset_data: AssetCreate, current_user: User = Depends(get_current_user)):
-    asset = Asset(**asset_data.model_dump())
+    # Auto-generate asset number
+    asset_number = await generate_asset_number()
+    
+    asset = Asset(**asset_data.model_dump(), asset_number=asset_number)
     doc = asset.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     doc['updated_at'] = doc['updated_at'].isoformat()
