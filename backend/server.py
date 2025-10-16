@@ -490,7 +490,10 @@ async def update_settings(settings_data: SettingsUpdate, current_user: User = De
 
 @api_router.post("/risks", response_model=Risk)
 async def create_risk(risk_data: RiskCreate, current_user: User = Depends(get_current_user)):
-    risk = Risk(**risk_data.model_dump())
+    # Auto-generate risk number
+    risk_number = await generate_risk_number()
+    
+    risk = Risk(**risk_data.model_dump(), risk_number=risk_number)
     doc = risk.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     doc['updated_at'] = doc['updated_at'].isoformat()
