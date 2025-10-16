@@ -243,17 +243,18 @@ const Incidents = ({ user }) => {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              {editingIncident && (
                 <div className="space-y-2">
                   <Label>№ инцидента</Label>
                   <Input
-                    data-testid="incident-number-input"
-                    value={formData.incident_number}
-                    onChange={(e) => setFormData({ ...formData, incident_number: e.target.value })}
-                    placeholder="INC00001"
-                    required
+                    value={editingIncident.incident_number}
+                    disabled
+                    className="bg-slate-100"
                   />
                 </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Критичность</Label>
                   <Select value={formData.criticality} onValueChange={(v) => setFormData({ ...formData, criticality: v })}>
