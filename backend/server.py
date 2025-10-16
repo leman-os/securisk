@@ -77,7 +77,7 @@ class Risk(BaseModel):
     priority: int = Field(default=0)
 
 class RiskCreate(BaseModel):
-    risk_number: str
+    risk_number: Optional[str] = None  # Auto-generated if not provided
     title: str
     description: str
     category: str
