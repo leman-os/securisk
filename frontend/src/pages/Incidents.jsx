@@ -448,7 +448,9 @@ const Incidents = ({ user }) => {
                   <TableHead>Тип</TableHead>
                   <TableHead>Серьезность</TableHead>
                   <TableHead>Статус</TableHead>
-                  <TableHead>Дата обнаружения</TableHead>
+                  <TableHead>MTTA</TableHead>
+                  <TableHead>MTTR</TableHead>
+                  <TableHead>MTTC</TableHead>
                   <TableHead>Ответственный</TableHead>
                   <TableHead className="text-right">Действия</TableHead>
                 </TableRow>
@@ -456,7 +458,7 @@ const Incidents = ({ user }) => {
               <TableBody>
                 {filteredIncidents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-slate-500">
+                    <TableCell colSpan={10} className="text-center py-8 text-slate-500">
                       Инциденты не найдены
                     </TableCell>
                   </TableRow>
