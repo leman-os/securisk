@@ -245,6 +245,19 @@ class IncidentMetrics(BaseModel):
     resolved_incidents: int
     closed_incidents: int
 
+class Settings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    subject_types: List[str] = Field(default_factory=lambda: ["Внутренний", "Внешний", "Привилегированный"])
+    systems: List[str] = Field(default_factory=lambda: ["Windows", "Linux", "MacOS", "Web-приложение"])
+    threats: List[str] = Field(default_factory=lambda: ["Несанкционированный доступ", "Утечка данных", "DDoS", "Вредоносное ПО"])
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SettingsUpdate(BaseModel):
+    subject_types: Optional[List[str]] = None
+    systems: Optional[List[str]] = None
+    threats: Optional[List[str]] = None
+
 # ==================== HELPERS ====================
 
 def calculate_incident_metrics(incident_dict: dict) -> dict:
