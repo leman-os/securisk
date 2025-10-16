@@ -548,7 +548,10 @@ async def delete_risk(risk_id: str, current_user: User = Depends(get_current_use
 
 @api_router.post("/incidents", response_model=Incident)
 async def create_incident(incident_data: IncidentCreate, current_user: User = Depends(get_current_user)):
-    incident = Incident(**incident_data.model_dump())
+    # Auto-generate incident number
+    incident_number = await generate_incident_number()
+    
+    incident = Incident(**incident_data.model_dump(), incident_number=incident_number)
     doc = incident.model_dump()
     
     # Calculate metrics
