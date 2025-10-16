@@ -9,37 +9,56 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const Assets = ({ user }) => {
   const [assets, setAssets] = useState([]);
   const [filteredAssets, setFilteredAssets] = useState([]);
+  const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   const [formData, setFormData] = useState({
     asset_number: '',
     name: '',
-    asset_type: 'Сервер',
+    category: '',
+    owner: '',
     criticality: 'Средняя',
-    owner: user?.username || '',
+    format: '',
     location: '',
-    status: 'Активен',
+    rights_rw: '',
+    rights_ro: '',
+    classification: '',
+    status: 'Актуален',
+    threats: [],
+    protection_measures: '',
     description: '',
+    note: '',
   });
 
   useEffect(() => {
+    fetchSettings();
     fetchAssets();
   }, []);
 
   useEffect(() => {
     applyFilters();
-  }, [assets, searchTerm, filterType]);
+  }, [assets, searchTerm, filterStatus]);
+
+  const fetchSettings = async () => {
+    try {
+      const response = await axios.get(`${API}/settings`);
+      setSettings(response.data);
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
 
   const fetchAssets = async () => {
     try {
@@ -63,8 +82,8 @@ const Assets = ({ user }) => {
       );
     }
 
-    if (filterType !== 'all') {
-      filtered = filtered.filter((asset) => asset.asset_type === filterType);
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter((asset) => asset.status === filterStatus);
     }
 
     setFilteredAssets(filtered);
@@ -99,17 +118,34 @@ const Assets = ({ user }) => {
     }
   };
 
+  const handleReview = async (id) => {
+    try {
+      await axios.post(`${API}/assets/${id}/review`);
+      toast.success('Актив пересмотрен');
+      fetchAssets();
+    } catch (error) {
+      toast.error('Ошибка при пересмотре');
+    }
+  };
+
   const handleEdit = (asset) => {
     setEditingAsset(asset);
     setFormData({
       asset_number: asset.asset_number,
       name: asset.name,
-      asset_type: asset.asset_type,
+      category: asset.category || '',
+      owner: asset.owner || '',
       criticality: asset.criticality,
-      owner: asset.owner,
+      format: asset.format || '',
       location: asset.location || '',
+      rights_rw: asset.rights_rw || '',
+      rights_ro: asset.rights_ro || '',
+      classification: asset.classification || '',
       status: asset.status,
+      threats: asset.threats || [],
+      protection_measures: asset.protection_measures || '',
       description: asset.description || '',
+      note: asset.note || '',
     });
     setDialogOpen(true);
   };
@@ -119,21 +155,33 @@ const Assets = ({ user }) => {
     setFormData({
       asset_number: '',
       name: '',
-      asset_type: 'Сервер',
+      category: '',
+      owner: '',
       criticality: 'Средняя',
-      owner: user?.username || '',
+      format: '',
       location: '',
-      status: 'Активен',
+      rights_rw: '',
+      rights_ro: '',
+      classification: '',
+      status: 'Актуален',
+      threats: [],
+      protection_measures: '',
       description: '',
+      note: '',
     });
+  };
+
+  const toggleThreat = (threat) => {
+    const newThreats = formData.threats.includes(threat)
+      ? formData.threats.filter((t) => t !== threat)
+      : [...formData.threats, threat];
+    setFormData({ ...formData, threats: newThreats });
   };
 
   const getCriticalityColor = (criticality) => {
     switch (criticality) {
-      case 'Критическая':
-        return 'bg-red-100 text-red-800 border-red-300';
       case 'Высокая':
-        return 'bg-orange-100 text-orange-800 border-orange-300';
+        return 'bg-red-100 text-red-800 border-red-300';
       case 'Средняя':
         return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'Низкая':
@@ -145,12 +193,10 @@ const Assets = ({ user }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Активен':
+      case 'Актуален':
         return 'bg-green-100 text-green-800 border-green-300';
-      case 'Неактивен':
+      case 'Не актуален':
         return 'bg-slate-100 text-slate-800 border-slate-300';
-      case 'На обслуживании':
-        return 'bg-amber-100 text-amber-800 border-amber-300';
       default:
         return 'bg-slate-100 text-slate-800 border-slate-300';
     }
@@ -182,7 +228,7 @@ const Assets = ({ user }) => {
               Создать актив
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingAsset ? 'Редактировать актив' : 'Создать новый актив'}</DialogTitle>
               <DialogDescription>
@@ -192,39 +238,140 @@ const Assets = ({ user }) => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Номер актива</Label>
+                  <Label>ID актива</Label>
                   <Input
                     data-testid="asset-number-input"
                     value={formData.asset_number}
                     onChange={(e) => setFormData({ ...formData, asset_number: e.target.value })}
+                    placeholder="ACT00001"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Тип актива</Label>
-                  <Select value={formData.asset_type} onValueChange={(v) => setFormData({ ...formData, asset_type: v })}>
+                  <Label>Критичность</Label>
+                  <Select value={formData.criticality} onValueChange={(v) => setFormData({ ...formData, criticality: v })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Сервер">Сервер</SelectItem>
-                      <SelectItem value="Рабочая станция">Рабочая станция</SelectItem>
-                      <SelectItem value="Сеть">Сеть</SelectItem>
-                      <SelectItem value="ПО">ПО</SelectItem>
-                      <SelectItem value="Данные">Данные</SelectItem>
-                      <SelectItem value="Другое">Другое</SelectItem>
+                      <SelectItem value="Низкая">Низкая</SelectItem>
+                      <SelectItem value="Средняя">Средняя</SelectItem>
+                      <SelectItem value="Высокая">Высокая</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Название</Label>
+                <Label>Название актива</Label>
                 <Input
                   data-testid="asset-name-input"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Категория</Label>
+                  <Input
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Владелец</Label>
+                  <Input
+                    value={formData.owner}
+                    onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Формат</Label>
+                  <Input
+                    value={formData.format}
+                    onChange={(e) => setFormData({ ...formData, format: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Месторасположение</Label>
+                  <Input
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Права RW</Label>
+                  <Input
+                    value={formData.rights_rw}
+                    onChange={(e) => setFormData({ ...formData, rights_rw: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Права RO</Label>
+                  <Input
+                    value={formData.rights_ro}
+                    onChange={(e) => setFormData({ ...formData, rights_ro: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Классификация</Label>
+                  <Input
+                    value={formData.classification}
+                    onChange={(e) => setFormData({ ...formData, classification: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Статус</Label>
+                  <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Актуален">Актуален</SelectItem>
+                      <SelectItem value="Не актуален">Не актуален</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Угрозы (выберите несколько)</Label>
+                <div className="border rounded-lg p-4 space-y-2 max-h-40 overflow-y-auto">
+                  {settings?.threats?.map((threat) => (
+                    <div key={threat} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`threat-${threat}`}
+                        checked={formData.threats.includes(threat)}
+                        onCheckedChange={() => toggleThreat(threat)}
+                      />
+                      <label
+                        htmlFor={`threat-${threat}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {threat}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Меры защиты</Label>
+                <Textarea
+                  value={formData.protection_measures}
+                  onChange={(e) => setFormData({ ...formData, protection_measures: e.target.value })}
+                  rows={2}
                 />
               </div>
 
@@ -237,54 +384,12 @@ const Assets = ({ user }) => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Критичность</Label>
-                  <Select value={formData.criticality} onValueChange={(v) => setFormData({ ...formData, criticality: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Низкая">Низкая</SelectItem>
-                      <SelectItem value="Средняя">Средняя</SelectItem>
-                      <SelectItem value="Высокая">Высокая</SelectItem>
-                      <SelectItem value="Критическая">Критическая</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Статус</Label>
-                  <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Активен">Активен</SelectItem>
-                      <SelectItem value="Неактивен">Неактивен</SelectItem>
-                      <SelectItem value="На обслуживании">На обслуживании</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Ответственный</Label>
-                  <Input
-                    value={formData.owner}
-                    onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Расположение</Label>
-                  <Input
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label>Примечание</Label>
+                <Input
+                  value={formData.note}
+                  onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                />
               </div>
 
               <div className="flex justify-end gap-2">
@@ -314,17 +419,14 @@ const Assets = ({ user }) => {
                 className="pl-10"
               />
             </div>
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger data-testid="filter-asset-type-select">
-                <SelectValue placeholder="Все типы" />
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger data-testid="filter-asset-status-select">
+                <SelectValue placeholder="Все статусы" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Все типы</SelectItem>
-                <SelectItem value="Сервер">Сервер</SelectItem>
-                <SelectItem value="Рабочая станция">Рабочая станция</SelectItem>
-                <SelectItem value="Сеть">Сеть</SelectItem>
-                <SelectItem value="ПО">ПО</SelectItem>
-                <SelectItem value="Данные">Данные</SelectItem>
+                <SelectItem value="all">Все статусы</SelectItem>
+                <SelectItem value="Актуален">Актуален</SelectItem>
+                <SelectItem value="Не актуален">Не актуален</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -338,13 +440,13 @@ const Assets = ({ user }) => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50">
-                  <TableHead>Номер</TableHead>
+                  <TableHead>ID</TableHead>
                   <TableHead>Название</TableHead>
-                  <TableHead>Тип</TableHead>
+                  <TableHead>Категория</TableHead>
                   <TableHead>Критичность</TableHead>
                   <TableHead>Статус</TableHead>
-                  <TableHead>Ответственный</TableHead>
-                  <TableHead>Расположение</TableHead>
+                  <TableHead>Владелец</TableHead>
+                  <TableHead>Дата пересмотра</TableHead>
                   <TableHead className="text-right">Действия</TableHead>
                 </TableRow>
               </TableHeader>
@@ -367,9 +469,7 @@ const Assets = ({ user }) => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-slate-700">{asset.asset_type}</span>
-                      </TableCell>
+                      <TableCell className="text-sm text-slate-700">{asset.category || '-'}</TableCell>
                       <TableCell>
                         <Badge className={getCriticalityColor(asset.criticality)} variant="outline">
                           {asset.criticality}
@@ -380,10 +480,20 @@ const Assets = ({ user }) => {
                           {asset.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-slate-700">{asset.owner}</TableCell>
-                      <TableCell className="text-sm text-slate-600">{asset.location || '-'}</TableCell>
+                      <TableCell className="text-sm text-slate-700">{asset.owner || '-'}</TableCell>
+                      <TableCell className="text-sm text-slate-600">
+                        {asset.review_date ? new Date(asset.review_date).toLocaleDateString('ru-RU') : '-'}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleReview(asset.id)}
+                            title="Пересмотр актива"
+                          >
+                            <RefreshCw className="w-4 h-4" />
+                          </Button>
                           <Button
                             data-testid={`edit-asset-${asset.id}`}
                             variant="ghost"
