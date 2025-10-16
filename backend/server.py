@@ -151,19 +151,23 @@ class IncidentCreate(BaseModel):
 
 class IncidentUpdate(BaseModel):
     incident_number: Optional[str] = None
-    title: Optional[str] = None
-    description: Optional[str] = None
+    incident_time: Optional[datetime] = None
+    detection_time: Optional[datetime] = None
+    reaction_start_time: Optional[datetime] = None
+    violator: Optional[str] = None
+    subject_type: Optional[str] = None
+    login: Optional[str] = None
+    system: Optional[str] = None
     incident_type: Optional[str] = None
-    severity: Optional[str] = None
+    detection_source: Optional[str] = None
+    criticality: Optional[str] = None
+    detected_by: Optional[str] = None
     status: Optional[str] = None
-    detected_at: Optional[datetime] = None
-    acknowledged_at: Optional[datetime] = None
-    resolved_at: Optional[datetime] = None
     closed_at: Optional[datetime] = None
-    source: Optional[str] = None
-    affected_assets: Optional[str] = None
-    owner: Optional[str] = None
-    actions: Optional[str] = None
+    description: Optional[str] = None
+    measures: Optional[str] = None
+    is_repeat: Optional[bool] = None
+    comment: Optional[str] = None
 
 class Asset(BaseModel):
     model_config = ConfigDict(extra="ignore")
