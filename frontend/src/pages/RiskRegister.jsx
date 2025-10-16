@@ -248,16 +248,18 @@ const RiskRegister = ({ user }) => {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              {editingRisk && (
                 <div className="space-y-2">
                   <Label>Номер риска</Label>
                   <Input
-                    data-testid="risk-number-input"
-                    value={formData.risk_number}
-                    onChange={(e) => setFormData({ ...formData, risk_number: e.target.value })}
-                    required
+                    value={editingRisk.risk_number}
+                    disabled
+                    className="bg-slate-100"
                   />
                 </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Категория</Label>
                   <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
