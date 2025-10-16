@@ -686,34 +686,6 @@ async def delete_incident(incident_id: str, current_user: User = Depends(get_cur
         raise HTTPException(status_code=404, detail="Incident not found")
     return {"message": "Incident deleted"}
 
-@api_router.get("/incidents/metrics/summary", response_model=IncidentMetrics)
-async def get_incident_metrics(current_user: User = Depends(get_current_user)):
-    incidents = await db.incidents.find({}, {"_id": 0}).to_list(1000)
-    
-    total_incidents = len(incidents)
-    closed_incidents = 0
-    
-    mtta_values = []
-    mttr_values = []
-    mttc_values = []
-    
-    for incident in incidents:
-        if incident.get('mtta'):
-            mtta_values.append(incident['mtta'])
-        if incident.get('mttr'):
-            mttr_values.append(incident['mttr'])
-        if incident.get('mttc'):
-            mttc_values.append(incident['mttc'])
-            closed_incidents += 1
-    
-    return IncidentMetrics(
-        avg_mtta=round(sum(mtta_values) / len(mtta_values), 2) if mtta_values else None,
-        avg_mttr=round(sum(mttr_values) / len(mttr_values), 2) if mttr_values else None,
-        avg_mttc=round(sum(mttc_values) / len(mttc_values), 2) if mttc_values else None,
-        total_incidents=total_incidents,
-        closed_incidents=closed_incidents
-    )
-
 # ==================== ASSET ENDPOINTS ====================
 
 @api_router.post("/assets", response_model=Asset)
