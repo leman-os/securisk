@@ -194,12 +194,19 @@ class Asset(BaseModel):
 class AssetCreate(BaseModel):
     asset_number: str
     name: str
-    asset_type: str
+    category: Optional[str] = None
+    owner: Optional[str] = None
     criticality: str
-    owner: str
+    format: Optional[str] = None
     location: Optional[str] = None
+    rights_rw: Optional[str] = None
+    rights_ro: Optional[str] = None
+    classification: Optional[str] = None
     status: str
+    threats: List[str] = Field(default_factory=list)
+    protection_measures: Optional[str] = None
     description: Optional[str] = None
+    note: Optional[str] = None
 
 class AssetUpdate(BaseModel):
     asset_number: Optional[str] = None
