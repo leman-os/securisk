@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API } from '../App';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, AlertCircle, Server, TrendingUp, Activity, Shield } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Server, TrendingUp, Activity, Shield, Clock, Timer, CheckCircle2 } from 'lucide-react';
 
 const Dashboard = ({ user }) => {
   const [stats, setStats] = useState(null);
