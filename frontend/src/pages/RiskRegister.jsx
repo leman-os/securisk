@@ -129,7 +129,6 @@ const RiskRegister = ({ user }) => {
   const resetForm = () => {
     setEditingRisk(null);
     setFormData({
-      risk_number: '',
       title: '',
       description: '',
       category: 'Технический',
