@@ -259,6 +259,60 @@ class IncidentMetrics(BaseModel):
 
 # ==================== HELPERS ====================
 
+async def generate_incident_number() -> str:
+    """Generate next incident number in format INC000001"""
+    incidents = await db.incidents.find({}, {"incident_number": 1}).to_list(None)
+    if not incidents:
+        return "INC000001"
+    
+    # Extract numbers and find max
+    numbers = []
+    for inc in incidents:
+        num_str = inc.get('incident_number', '').replace('INC', '')
+        try:
+            numbers.append(int(num_str))
+        except ValueError:
+            continue
+    
+    next_num = max(numbers) + 1 if numbers else 1
+    return f"INC{next_num:06d}"
+
+async def generate_asset_number() -> str:
+    """Generate next asset number in format ACT000001"""
+    assets = await db.assets.find({}, {"asset_number": 1}).to_list(None)
+    if not assets:
+        return "ACT000001"
+    
+    # Extract numbers and find max
+    numbers = []
+    for asset in assets:
+        num_str = asset.get('asset_number', '').replace('ACT', '')
+        try:
+            numbers.append(int(num_str))
+        except ValueError:
+            continue
+    
+    next_num = max(numbers) + 1 if numbers else 1
+    return f"ACT{next_num:06d}"
+
+async def generate_risk_number() -> str:
+    """Generate next risk number in format RSK000001"""
+    risks = await db.risks.find({}, {"risk_number": 1}).to_list(None)
+    if not risks:
+        return "RSK000001"
+    
+    # Extract numbers and find max
+    numbers = []
+    for risk in risks:
+        num_str = risk.get('risk_number', '').replace('RSK', '')
+        try:
+            numbers.append(int(num_str))
+        except ValueError:
+            continue
+    
+    next_num = max(numbers) + 1 if numbers else 1
+    return f"RSK{next_num:06d}"
+
 def calculate_incident_metrics(incident_dict: dict) -> dict:
     """Calculate MTTA, MTTR, MTTC for an incident in minutes"""
     incident_time = incident_dict.get('incident_time')
