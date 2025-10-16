@@ -234,17 +234,18 @@ const Assets = ({ user }) => {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              {editingAsset && (
                 <div className="space-y-2">
                   <Label>ID актива</Label>
                   <Input
-                    data-testid="asset-number-input"
-                    value={formData.asset_number}
-                    onChange={(e) => setFormData({ ...formData, asset_number: e.target.value })}
-                    placeholder="ACT00001"
-                    required
+                    value={editingAsset.asset_number}
+                    disabled
+                    className="bg-slate-100"
                   />
                 </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Критичность</Label>
                   <Select value={formData.criticality} onValueChange={(v) => setFormData({ ...formData, criticality: v })}>
