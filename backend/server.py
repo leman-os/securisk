@@ -106,23 +106,27 @@ class RiskUpdate(BaseModel):
 class Incident(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    incident_number: str
-    title: str
-    description: str
-    incident_type: str  # "Утечка данных", "Вирус", "Взлом", "DDoS", etc.
-    severity: str  # "Низкая", "Средняя", "Высокая", "Критическая"
-    status: str  # "Новый", "В работе", "Решен", "Закрыт"
-    detected_at: datetime
-    acknowledged_at: Optional[datetime] = None  # Когда взят в работу
-    resolved_at: Optional[datetime] = None  # Когда решен
-    closed_at: Optional[datetime] = None  # Когда закрыт
-    source: Optional[str] = None
-    affected_assets: Optional[str] = None
-    owner: str
-    actions: Optional[str] = None
-    mtta: Optional[float] = None  # Mean Time To Acknowledge (в часах)
-    mttr: Optional[float] = None  # Mean Time To Resolve (в часах)
-    mttc: Optional[float] = None  # Mean Time To Close (в часах)
+    incident_number: str  # INC00001
+    incident_time: datetime  # Время инцидента
+    detection_time: datetime  # Время обнаружения
+    reaction_start_time: Optional[datetime] = None  # Время начала реакции
+    violator: Optional[str] = None  # Нарушитель
+    subject_type: Optional[str] = None  # Тип субъекта (из настроек)
+    login: Optional[str] = None  # Логин
+    system: Optional[str] = None  # Система (из настроек)
+    incident_type: Optional[str] = None  # Тип инцидента
+    detection_source: Optional[str] = None  # Источник выявления
+    criticality: str  # Низкая, Средняя, Высокая
+    detected_by: Optional[str] = None  # Выявил (ФИО)
+    status: str  # Открыт, Закрыт
+    closed_at: Optional[datetime] = None  # Время закрытия
+    mtta: Optional[float] = None  # Время от инцидента до обнаружения (минуты)
+    mttr: Optional[float] = None  # Время от обнаружения до начала реакции (минуты)
+    mttc: Optional[float] = None  # Время от инцидента до закрытия (минуты)
+    description: Optional[str] = None  # Описание
+    measures: Optional[str] = None  # Меры
+    is_repeat: bool = False  # Повтор
+    comment: Optional[str] = None  # Комментарий
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
