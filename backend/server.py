@@ -132,16 +132,22 @@ class Incident(BaseModel):
 
 class IncidentCreate(BaseModel):
     incident_number: str
-    title: str
-    description: str
-    incident_type: str
-    severity: str
+    incident_time: datetime
+    detection_time: datetime
+    reaction_start_time: Optional[datetime] = None
+    violator: Optional[str] = None
+    subject_type: Optional[str] = None
+    login: Optional[str] = None
+    system: Optional[str] = None
+    incident_type: Optional[str] = None
+    detection_source: Optional[str] = None
+    criticality: str
+    detected_by: Optional[str] = None
     status: str
-    detected_at: datetime
-    source: Optional[str] = None
-    affected_assets: Optional[str] = None
-    owner: str
-    actions: Optional[str] = None
+    description: Optional[str] = None
+    measures: Optional[str] = None
+    is_repeat: bool = False
+    comment: Optional[str] = None
 
 class IncidentUpdate(BaseModel):
     incident_number: Optional[str] = None
