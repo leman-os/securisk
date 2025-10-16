@@ -25,7 +25,6 @@ const Assets = ({ user }) => {
   const [filterStatus, setFilterStatus] = useState('all');
 
   const [formData, setFormData] = useState({
-    asset_number: '',
     name: '',
     category: '',
     owner: '',
