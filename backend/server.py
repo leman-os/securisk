@@ -131,7 +131,7 @@ class Incident(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class IncidentCreate(BaseModel):
-    incident_number: str
+    incident_number: Optional[str] = None  # Auto-generated if not provided
     incident_time: datetime
     detection_time: datetime
     reaction_start_time: Optional[datetime] = None
