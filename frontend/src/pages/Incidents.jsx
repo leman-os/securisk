@@ -25,7 +25,6 @@ const Incidents = ({ user }) => {
   const [filterStatus, setFilterStatus] = useState('all');
 
   const [formData, setFormData] = useState({
-    incident_number: '',
     incident_time: new Date().toISOString().slice(0, 16),
     detection_time: new Date().toISOString().slice(0, 16),
     reaction_start_time: '',
