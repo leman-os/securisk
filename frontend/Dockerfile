@@ -4,10 +4,10 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Копирование файлов зависимостей
-COPY package.json yarn.lock ./
+COPY package.json ./
 
-# Установка зависимостей
-RUN yarn install --frozen-lockfile --network-timeout 100000
+# Установка зависимостей через npm
+RUN npm install --legacy-peer-deps
 
 # Копирование исходного кода
 COPY . .
@@ -17,7 +17,7 @@ ARG REACT_APP_BACKEND_URL=http://localhost/api
 ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
 
 # Сборка приложения
-RUN yarn build
+RUN npm run build
 
 # Этап 2: Production сервер
 FROM node:18-alpine
