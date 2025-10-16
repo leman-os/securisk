@@ -356,6 +356,56 @@ const Incidents = ({ user }) => {
         </Dialog>
       </div>
 
+      {/* Metrics Cards */}
+      {metrics && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="border-slate-200">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">MTTA</CardTitle>
+              <div className="p-2 rounded-lg bg-blue-50">
+                <Clock className="w-5 h-5 text-blue-700" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">
+                {metrics.avg_mtta ? `${metrics.avg_mtta}ч` : 'N/A'}
+              </div>
+              <p className="text-xs text-slate-500 mt-1">Среднее время подтверждения</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">MTTR</CardTitle>
+              <div className="p-2 rounded-lg bg-teal-50">
+                <Timer className="w-5 h-5 text-teal-700" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold bg-gradient-to-r from-teal-500 to-teal-600 bg-clip-text text-transparent">
+                {metrics.avg_mttr ? `${metrics.avg_mttr}ч` : 'N/A'}
+              </div>
+              <p className="text-xs text-slate-500 mt-1">Среднее время решения</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">MTTC</CardTitle>
+              <div className="p-2 rounded-lg bg-emerald-50">
+                <CheckCircle2 className="w-5 h-5 text-emerald-700" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 bg-clip-text text-transparent">
+                {metrics.avg_mttc ? `${metrics.avg_mttc}ч` : 'N/A'}
+              </div>
+              <p className="text-xs text-slate-500 mt-1">Среднее время закрытия</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Filters */}
       <Card className="border-slate-200">
         <CardContent className="pt-6">
