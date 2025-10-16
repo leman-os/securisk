@@ -39,6 +39,7 @@ const Incidents = ({ user }) => {
 
   useEffect(() => {
     fetchIncidents();
+    fetchMetrics();
   }, []);
 
   useEffect(() => {
@@ -53,6 +54,15 @@ const Incidents = ({ user }) => {
       toast.error('Ошибка загрузки инцидентов');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMetrics = async () => {
+    try {
+      const response = await axios.get(`${API}/incidents/metrics/summary`);
+      setMetrics(response.data);
+    } catch (error) {
+      console.error('Error fetching metrics:', error);
     }
   };
 
