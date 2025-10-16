@@ -192,7 +192,7 @@ class Asset(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class AssetCreate(BaseModel):
-    asset_number: str
+    asset_number: Optional[str] = None  # Auto-generated if not provided
     name: str
     category: Optional[str] = None
     owner: Optional[str] = None
