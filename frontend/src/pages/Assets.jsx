@@ -152,7 +152,6 @@ const Assets = ({ user }) => {
   const resetForm = () => {
     setEditingAsset(null);
     setFormData({
-      asset_number: '',
       name: '',
       category: '',
       owner: '',
