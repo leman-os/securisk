@@ -505,6 +505,11 @@ async def create_incident(incident_data: IncidentCreate, current_user: User = De
         doc['closed_at'] = datetime.now(timezone.utc)
         doc = calculate_incident_metrics(doc)
     
+    # Update incident object with calculated metrics
+    incident.mtta = doc.get('mtta')
+    incident.mttr = doc.get('mttr')
+    incident.mttc = doc.get('mttc')
+    
     # Serialize datetimes
     doc['incident_time'] = doc['incident_time'].isoformat()
     doc['detection_time'] = doc['detection_time'].isoformat()
