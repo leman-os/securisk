@@ -16,7 +16,6 @@ import { Textarea } from '@/components/ui/textarea';
 const Incidents = ({ user }) => {
   const [incidents, setIncidents] = useState([]);
   const [filteredIncidents, setFilteredIncidents] = useState([]);
-  const [settings, setSettings] = useState(null);
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -26,26 +25,19 @@ const Incidents = ({ user }) => {
 
   const [formData, setFormData] = useState({
     incident_number: '',
-    incident_time: new Date().toISOString().slice(0, 16),
-    detection_time: new Date().toISOString().slice(0, 16),
-    reaction_start_time: '',
-    violator: '',
-    subject_type: '',
-    login: '',
-    system: '',
-    incident_type: '',
-    detection_source: '',
-    criticality: 'Средняя',
-    detected_by: user?.full_name || '',
-    status: 'Открыт',
+    title: '',
     description: '',
-    measures: '',
-    is_repeat: false,
-    comment: '',
+    incident_type: 'Утечка данных',
+    severity: 'Средняя',
+    status: 'Новый',
+    detected_at: new Date().toISOString().slice(0, 16),
+    source: '',
+    affected_assets: '',
+    owner: user?.username || '',
+    actions: '',
   });
 
   useEffect(() => {
-    fetchSettings();
     fetchIncidents();
     fetchMetrics();
   }, []);
@@ -53,15 +45,6 @@ const Incidents = ({ user }) => {
   useEffect(() => {
     applyFilters();
   }, [incidents, searchTerm, filterStatus]);
-
-  const fetchSettings = async () => {
-    try {
-      const response = await axios.get(`${API}/settings`);
-      setSettings(response.data);
-    } catch (error) {
-      console.error('Error fetching settings:', error);
-    }
-  };
 
   const fetchIncidents = async () => {
     try {
@@ -89,9 +72,8 @@ const Incidents = ({ user }) => {
     if (searchTerm) {
       filtered = filtered.filter(
         (incident) =>
-          incident.incident_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (incident.violator && incident.violator.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (incident.incident_type && incident.incident_type.toLowerCase().includes(searchTerm.toLowerCase()))
+          incident.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          incident.incident_number.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -107,9 +89,7 @@ const Incidents = ({ user }) => {
     try {
       const payload = {
         ...formData,
-        incident_time: new Date(formData.incident_time).toISOString(),
-        detection_time: new Date(formData.detection_time).toISOString(),
-        reaction_start_time: formData.reaction_start_time ? new Date(formData.reaction_start_time).toISOString() : null,
+        detected_at: new Date(formData.detected_at).toISOString(),
       };
 
       if (editingIncident) {
@@ -122,7 +102,6 @@ const Incidents = ({ user }) => {
       setDialogOpen(false);
       resetForm();
       fetchIncidents();
-      fetchMetrics();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Ошибка при сохранении');
     }
@@ -134,7 +113,6 @@ const Incidents = ({ user }) => {
       await axios.delete(`${API}/incidents/${id}`);
       toast.success('Инцидент удален');
       fetchIncidents();
-      fetchMetrics();
     } catch (error) {
       toast.error('Ошибка при удалении');
     }
@@ -144,22 +122,16 @@ const Incidents = ({ user }) => {
     setEditingIncident(incident);
     setFormData({
       incident_number: incident.incident_number,
-      incident_time: new Date(incident.incident_time).toISOString().slice(0, 16),
-      detection_time: new Date(incident.detection_time).toISOString().slice(0, 16),
-      reaction_start_time: incident.reaction_start_time ? new Date(incident.reaction_start_time).toISOString().slice(0, 16) : '',
-      violator: incident.violator || '',
-      subject_type: incident.subject_type || '',
-      login: incident.login || '',
-      system: incident.system || '',
-      incident_type: incident.incident_type || '',
-      detection_source: incident.detection_source || '',
-      criticality: incident.criticality,
-      detected_by: incident.detected_by || '',
+      title: incident.title,
+      description: incident.description,
+      incident_type: incident.incident_type,
+      severity: incident.severity,
       status: incident.status,
-      description: incident.description || '',
-      measures: incident.measures || '',
-      is_repeat: incident.is_repeat,
-      comment: incident.comment || '',
+      detected_at: new Date(incident.detected_at).toISOString().slice(0, 16),
+      source: incident.source || '',
+      affected_assets: incident.affected_assets || '',
+      owner: incident.owner,
+      actions: incident.actions || '',
     });
     setDialogOpen(true);
   };
@@ -168,29 +140,25 @@ const Incidents = ({ user }) => {
     setEditingIncident(null);
     setFormData({
       incident_number: '',
-      incident_time: new Date().toISOString().slice(0, 16),
-      detection_time: new Date().toISOString().slice(0, 16),
-      reaction_start_time: '',
-      violator: '',
-      subject_type: '',
-      login: '',
-      system: '',
-      incident_type: '',
-      detection_source: '',
-      criticality: 'Средняя',
-      detected_by: user?.full_name || '',
-      status: 'Открыт',
+      title: '',
       description: '',
-      measures: '',
-      is_repeat: false,
-      comment: '',
+      incident_type: 'Утечка данных',
+      severity: 'Средняя',
+      status: 'Новый',
+      detected_at: new Date().toISOString().slice(0, 16),
+      source: '',
+      affected_assets: '',
+      owner: user?.username || '',
+      actions: '',
     });
   };
 
-  const getCriticalityColor = (criticality) => {
-    switch (criticality) {
-      case 'Высокая':
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case 'Критическая':
         return 'bg-red-100 text-red-800 border-red-300';
+      case 'Высокая':
+        return 'bg-orange-100 text-orange-800 border-orange-300';
       case 'Средняя':
         return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'Низкая':
@@ -202,8 +170,12 @@ const Incidents = ({ user }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Открыт':
+      case 'Новый':
         return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'В работе':
+        return 'bg-amber-100 text-amber-800 border-amber-300';
+      case 'Решен':
+        return 'bg-teal-100 text-teal-800 border-teal-300';
       case 'Закрыт':
         return 'bg-slate-100 text-slate-800 border-slate-300';
       default:
@@ -223,7 +195,7 @@ const Incidents = ({ user }) => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Реестр инцидентов</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Инциденты ИБ</h1>
           <p className="text-slate-600">Управление инцидентами информационной безопасности</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -237,7 +209,7 @@ const Incidents = ({ user }) => {
               Создать инцидент
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingIncident ? 'Редактировать инцидент' : 'Создать новый инцидент'}</DialogTitle>
               <DialogDescription>
@@ -247,142 +219,40 @@ const Incidents = ({ user }) => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>№ инцидента</Label>
+                  <Label>Номер инцидента</Label>
                   <Input
                     data-testid="incident-number-input"
                     value={formData.incident_number}
                     onChange={(e) => setFormData({ ...formData, incident_number: e.target.value })}
-                    placeholder="INC00001"
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Критичность</Label>
-                  <Select value={formData.criticality} onValueChange={(v) => setFormData({ ...formData, criticality: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Низкая">Низкая</SelectItem>
-                      <SelectItem value="Средняя">Средняя</SelectItem>
-                      <SelectItem value="Высокая">Высокая</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Время инцидента</Label>
-                  <Input
-                    type="datetime-local"
-                    value={formData.incident_time}
-                    onChange={(e) => setFormData({ ...formData, incident_time: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Время обнаружения</Label>
-                  <Input
-                    type="datetime-local"
-                    value={formData.detection_time}
-                    onChange={(e) => setFormData({ ...formData, detection_time: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Время начала реакции</Label>
-                  <Input
-                    type="datetime-local"
-                    value={formData.reaction_start_time}
-                    onChange={(e) => setFormData({ ...formData, reaction_start_time: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Нарушитель</Label>
-                  <Input
-                    value={formData.violator}
-                    onChange={(e) => setFormData({ ...formData, violator: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Логин</Label>
-                  <Input
-                    value={formData.login}
-                    onChange={(e) => setFormData({ ...formData, login: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Тип субъекта</Label>
-                  <Select value={formData.subject_type} onValueChange={(v) => setFormData({ ...formData, subject_type: v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Выберите тип" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {settings?.subject_types?.map((type) => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Система</Label>
-                  <Select value={formData.system} onValueChange={(v) => setFormData({ ...formData, system: v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Выберите систему" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {settings?.systems?.map((sys) => (
-                        <SelectItem key={sys} value={sys}>{sys}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Тип инцидента</Label>
-                  <Input
-                    value={formData.incident_type}
-                    onChange={(e) => setFormData({ ...formData, incident_type: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Источник выявления</Label>
-                  <Input
-                    value={formData.detection_source}
-                    onChange={(e) => setFormData({ ...formData, detection_source: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Выявил (ФИО)</Label>
-                  <Input
-                    value={formData.detected_by}
-                    onChange={(e) => setFormData({ ...formData, detected_by: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Статус</Label>
-                  <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                  <Select value={formData.incident_type} onValueChange={(v) => setFormData({ ...formData, incident_type: v })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Открыт">Открыт</SelectItem>
-                      <SelectItem value="Закрыт">Закрыт</SelectItem>
+                      <SelectItem value="Утечка данных">Утечка данных</SelectItem>
+                      <SelectItem value="Вирус">Вирус</SelectItem>
+                      <SelectItem value="Взлом">Взлом</SelectItem>
+                      <SelectItem value="DDoS">DDoS</SelectItem>
+                      <SelectItem value="Фишинг">Фишинг</SelectItem>
+                      <SelectItem value="Другое">Другое</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Название</Label>
+                <Input
+                  data-testid="incident-title-input"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  required
+                />
               </div>
 
               <div className="space-y-2">
@@ -390,39 +260,87 @@ const Incidents = ({ user }) => {
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={2}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Меры</Label>
-                <Textarea
-                  value={formData.measures}
-                  onChange={(e) => setFormData({ ...formData, measures: e.target.value })}
-                  rows={2}
+                  rows={3}
+                  required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Повтор</Label>
-                  <Select value={formData.is_repeat ? 'yes' : 'no'} onValueChange={(v) => setFormData({ ...formData, is_repeat: v === 'yes' })}>
+                  <Label>Серьезность</Label>
+                  <Select value={formData.severity} onValueChange={(v) => setFormData({ ...formData, severity: v })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="no">Нет</SelectItem>
-                      <SelectItem value="yes">Да</SelectItem>
+                      <SelectItem value="Низкая">Низкая</SelectItem>
+                      <SelectItem value="Средняя">Средняя</SelectItem>
+                      <SelectItem value="Высокая">Высокая</SelectItem>
+                      <SelectItem value="Критическая">Критическая</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div className="space-y-2">
-                  <Label>Комментарий</Label>
+                  <Label>Статус</Label>
+                  <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Новый">Новый</SelectItem>
+                      <SelectItem value="В работе">В работе</SelectItem>
+                      <SelectItem value="Решен">Решен</SelectItem>
+                      <SelectItem value="Закрыт">Закрыт</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Дата обнаружения</Label>
                   <Input
-                    value={formData.comment}
-                    onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
+                    type="datetime-local"
+                    value={formData.detected_at}
+                    onChange={(e) => setFormData({ ...formData, detected_at: e.target.value })}
+                    required
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label>Ответственный</Label>
+                  <Input
+                    value={formData.owner}
+                    onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Источник инцидента</Label>
+                <Input
+                  value={formData.source}
+                  onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Затронутые активы</Label>
+                <Input
+                  value={formData.affected_assets}
+                  onChange={(e) => setFormData({ ...formData, affected_assets: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Действия по устранению</Label>
+                <Textarea
+                  value={formData.actions}
+                  onChange={(e) => setFormData({ ...formData, actions: e.target.value })}
+                  rows={2}
+                />
               </div>
 
               <div className="flex justify-end gap-2">
@@ -450,9 +368,9 @@ const Incidents = ({ user }) => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">
-                {metrics.avg_mtta ? `${metrics.avg_mtta} мин` : 'N/A'}
+                {metrics.avg_mtta ? `${metrics.avg_mtta}ч` : 'N/A'}
               </div>
-              <p className="text-xs text-slate-500 mt-1">Среднее время обнаружения</p>
+              <p className="text-xs text-slate-500 mt-1">Среднее время подтверждения</p>
             </CardContent>
           </Card>
 
@@ -465,9 +383,9 @@ const Incidents = ({ user }) => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold bg-gradient-to-r from-teal-500 to-teal-600 bg-clip-text text-transparent">
-                {metrics.avg_mttr ? `${metrics.avg_mttr} мин` : 'N/A'}
+                {metrics.avg_mttr ? `${metrics.avg_mttr}ч` : 'N/A'}
               </div>
-              <p className="text-xs text-slate-500 mt-1">Среднее время реакции</p>
+              <p className="text-xs text-slate-500 mt-1">Среднее время решения</p>
             </CardContent>
           </Card>
 
@@ -480,7 +398,7 @@ const Incidents = ({ user }) => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 bg-clip-text text-transparent">
-                {metrics.avg_mttc ? `${metrics.avg_mttc} мин` : 'N/A'}
+                {metrics.avg_mttc ? `${metrics.avg_mttc}ч` : 'N/A'}
               </div>
               <p className="text-xs text-slate-500 mt-1">Среднее время закрытия</p>
             </CardContent>
@@ -496,7 +414,7 @@ const Incidents = ({ user }) => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 data-testid="incident-search-input"
-                placeholder="Поиск по номеру, нарушителю, типу..."
+                placeholder="Поиск по названию, номеру..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -508,7 +426,9 @@ const Incidents = ({ user }) => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Все статусы</SelectItem>
-                <SelectItem value="Открыт">Открыт</SelectItem>
+                <SelectItem value="Новый">Новый</SelectItem>
+                <SelectItem value="В работе">В работе</SelectItem>
+                <SelectItem value="Решен">Решен</SelectItem>
                 <SelectItem value="Закрыт">Закрыт</SelectItem>
               </SelectContent>
             </Select>
@@ -523,15 +443,15 @@ const Incidents = ({ user }) => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50">
-                  <TableHead>№</TableHead>
-                  <TableHead>Нарушитель</TableHead>
+                  <TableHead>Номер</TableHead>
+                  <TableHead>Название</TableHead>
                   <TableHead>Тип</TableHead>
-                  <TableHead>Критичность</TableHead>
+                  <TableHead>Серьезность</TableHead>
                   <TableHead>Статус</TableHead>
                   <TableHead>MTTA</TableHead>
                   <TableHead>MTTR</TableHead>
                   <TableHead>MTTC</TableHead>
-                  <TableHead>Выявил</TableHead>
+                  <TableHead>Ответственный</TableHead>
                   <TableHead className="text-right">Действия</TableHead>
                 </TableRow>
               </TableHeader>
@@ -546,11 +466,18 @@ const Incidents = ({ user }) => {
                   filteredIncidents.map((incident) => (
                     <TableRow key={incident.id} data-testid={`incident-row-${incident.id}`} className="hover:bg-slate-50">
                       <TableCell className="font-medium">{incident.incident_number}</TableCell>
-                      <TableCell className="text-sm text-slate-700">{incident.violator || '-'}</TableCell>
-                      <TableCell className="text-sm text-slate-700">{incident.incident_type || '-'}</TableCell>
                       <TableCell>
-                        <Badge className={getCriticalityColor(incident.criticality)} variant="outline">
-                          {incident.criticality}
+                        <div className="max-w-xs">
+                          <p className="font-medium text-slate-900">{incident.title}</p>
+                          <p className="text-sm text-slate-600 truncate">{incident.description}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-slate-700">{incident.incident_type}</span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getSeverityColor(incident.severity)} variant="outline">
+                          {incident.severity}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -559,15 +486,15 @@ const Incidents = ({ user }) => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-slate-700 text-center">
-                        {incident.mtta ? `${incident.mtta} мин` : '-'}
+                        {incident.mtta ? `${incident.mtta}ч` : '-'}
                       </TableCell>
                       <TableCell className="text-sm text-slate-700 text-center">
-                        {incident.mttr ? `${incident.mttr} мин` : '-'}
+                        {incident.mttr ? `${incident.mttr}ч` : '-'}
                       </TableCell>
                       <TableCell className="text-sm text-slate-700 text-center">
-                        {incident.mttc ? `${incident.mttc} мин` : '-'}
+                        {incident.mttc ? `${incident.mttc}ч` : '-'}
                       </TableCell>
-                      <TableCell className="text-sm text-slate-700">{incident.detected_by || '-'}</TableCell>
+                      <TableCell className="text-sm text-slate-700">{incident.owner}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button
