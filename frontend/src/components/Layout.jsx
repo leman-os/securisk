@@ -18,6 +18,7 @@ const Layout = ({ user, setUser, children }) => {
     { path: '/incidents', icon: AlertCircle, label: 'Инциденты' },
     { path: '/assets', icon: Server, label: 'Активы' },
     { path: '/users', icon: Users, label: 'Пользователи' },
+    { path: '/settings', icon: Settings, label: 'Настройки' },
   ];
 
   return (
