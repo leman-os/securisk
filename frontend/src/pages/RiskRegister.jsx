@@ -25,7 +25,6 @@ const RiskRegister = ({ user }) => {
   const [draggedItem, setDraggedItem] = useState(null);
 
   const [formData, setFormData] = useState({
-    risk_number: '',
     title: '',
     description: '',
     category: 'Технический',
