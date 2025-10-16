@@ -211,12 +211,20 @@ class AssetCreate(BaseModel):
 class AssetUpdate(BaseModel):
     asset_number: Optional[str] = None
     name: Optional[str] = None
-    asset_type: Optional[str] = None
-    criticality: Optional[str] = None
+    category: Optional[str] = None
     owner: Optional[str] = None
+    criticality: Optional[str] = None
+    format: Optional[str] = None
     location: Optional[str] = None
+    rights_rw: Optional[str] = None
+    rights_ro: Optional[str] = None
+    classification: Optional[str] = None
+    review_date: Optional[datetime] = None
     status: Optional[str] = None
+    threats: Optional[List[str]] = None
+    protection_measures: Optional[str] = None
     description: Optional[str] = None
+    note: Optional[str] = None
 
 class DashboardStats(BaseModel):
     total_risks: int
