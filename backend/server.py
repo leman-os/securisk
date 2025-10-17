@@ -610,11 +610,14 @@ async def get_incident_metrics(current_user: User = Depends(get_current_user)):
     
     for incident in incidents:
         if incident.get('mtta'):
-            mtta_values.append(incident['mtta'])
+            # Конвертируем минуты в часы
+            mtta_values.append(incident['mtta'] / 60)
         if incident.get('mttr'):
-            mttr_values.append(incident['mttr'])
+            # Конвертируем минуты в часы
+            mttr_values.append(incident['mttr'] / 60)
         if incident.get('mttc'):
-            mttc_values.append(incident['mttc'])
+            # Конвертируем минуты в часы
+            mttc_values.append(incident['mttc'] / 60)
             closed_incidents += 1
     
     return IncidentMetrics(
