@@ -495,56 +495,15 @@ const Incidents = ({ user }) => {
       <Card>
         <CardContent className="pt-6">
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <Input
-                placeholder="Поиск..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="md:col-span-2"
-              />
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Статус" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Все">Все статусы</SelectItem>
-                  <SelectItem value="Открыт">Открыт</SelectItem>
-                  <SelectItem value="Закрыт">Закрыт</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={criticalityFilter} onValueChange={setCriticalityFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Критичность" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Все">Все</SelectItem>
-                  <SelectItem value="Высокая">Высокая</SelectItem>
-                  <SelectItem value="Средняя">Средняя</SelectItem>
-                  <SelectItem value="Низкая">Низкая</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs">Дата от:</Label>
-                <Input
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Дата до:</Label>
-                <Input
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                />
-              </div>
-            </div>
-
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                Фильтры {showFilters ? '▲' : '▼'}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -562,6 +521,110 @@ const Incidents = ({ user }) => {
                 Экспорт CSV
               </Button>
             </div>
+
+            {showFilters && (
+              <Card className="p-4 bg-slate-50">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Статус</Label>
+                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Все статусы" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Все">Все статусы</SelectItem>
+                          <SelectItem value="Открыт">Открыт</SelectItem>
+                          <SelectItem value="Закрыт">Закрыт</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Критичность</Label>
+                      <Select value={criticalityFilter} onValueChange={setCriticalityFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Все" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Все">Все</SelectItem>
+                          <SelectItem value="Высокая">Высокая</SelectItem>
+                          <SelectItem value="Средняя">Средняя</SelectItem>
+                          <SelectItem value="Низкая">Низкая</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Обнаружил</Label>
+                      <Input
+                        placeholder="Введите имя..."
+                        value={detectedByFilter}
+                        onChange={(e) => setDetectedByFilter(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Нарушитель</Label>
+                      <Input
+                        placeholder="Введите имя..."
+                        value={violatorFilter}
+                        onChange={(e) => setViolatorFilter(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Система</Label>
+                      <Input
+                        placeholder="Введите систему..."
+                        value={systemFilter}
+                        onChange={(e) => setSystemFilter(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Общий поиск</Label>
+                      <Input
+                        placeholder="Поиск..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Дата от:</Label>
+                      <Input
+                        type="date"
+                        value={dateFrom}
+                        onChange={(e) => setDateFrom(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Дата до:</Label>
+                      <Input
+                        type="date"
+                        value={dateTo}
+                        onChange={(e) => setDateTo(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={resetFilters}
+                        className="w-full"
+                      >
+                        Сбросить фильтры
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
 
             {showColumnSelector && (
               <Card className="p-4 bg-slate-50">
