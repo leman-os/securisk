@@ -564,10 +564,7 @@ async def create_incident(incident_data: IncidentCreate, current_user: User = De
     # Calculate metrics
     doc = calculate_incident_metrics(doc)
     
-    # Auto-close if status is "Закрыт" and no closed_at
-    if doc['status'] == "Закрыт" and not doc.get('closed_at'):
-        doc['closed_at'] = datetime.now(timezone.utc)
-        doc = calculate_incident_metrics(doc)
+    # Removed auto-close logic - users must manually set closed_at
     
     # Update incident object with calculated metrics
     incident.mtta = doc.get('mtta')
