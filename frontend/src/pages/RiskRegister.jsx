@@ -94,7 +94,23 @@ const RiskRegister = ({ user }) => {
       filtered = filtered.filter((risk) => risk.status === filterStatus);
     }
 
+    if (filterRiskLevel !== 'all') {
+      filtered = filtered.filter((risk) => risk.risk_level === filterRiskLevel);
+    }
+
+    if (filterOwner) {
+      filtered = filtered.filter((risk) => risk.owner?.toLowerCase().includes(filterOwner.toLowerCase()));
+    }
+
     setFilteredRisks(filtered);
+  };
+
+  const resetFilters = () => {
+    setSearchTerm('');
+    setFilterCategory('all');
+    setFilterStatus('all');
+    setFilterRiskLevel('all');
+    setFilterOwner('');
   };
 
   const handleSubmit = async (e) => {
