@@ -104,7 +104,27 @@ const Assets = ({ user }) => {
       filtered = filtered.filter((asset) => asset.status === filterStatus);
     }
 
+    if (filterCriticality !== 'all') {
+      filtered = filtered.filter((asset) => asset.criticality === filterCriticality);
+    }
+
+    if (filterCategory) {
+      filtered = filtered.filter((asset) => asset.category?.toLowerCase().includes(filterCategory.toLowerCase()));
+    }
+
+    if (filterOwner) {
+      filtered = filtered.filter((asset) => asset.owner?.toLowerCase().includes(filterOwner.toLowerCase()));
+    }
+
     setFilteredAssets(filtered);
+  };
+
+  const resetFilters = () => {
+    setSearchTerm('');
+    setFilterStatus('all');
+    setFilterCriticality('all');
+    setFilterCategory('');
+    setFilterOwner('');
   };
 
   const handleSubmit = async (e) => {
