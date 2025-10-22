@@ -57,7 +57,17 @@ const RiskRegister = ({ user }) => {
 
   useEffect(() => {
     fetchRisks();
+    // Load visible columns from localStorage
+    const savedColumns = localStorage.getItem('risks_visible_columns');
+    if (savedColumns) {
+      setVisibleColumns(JSON.parse(savedColumns));
+    }
   }, []);
+
+  useEffect(() => {
+    // Save visible columns to localStorage
+    localStorage.setItem('risks_visible_columns', JSON.stringify(visibleColumns));
+  }, [visibleColumns]);
 
   useEffect(() => {
     applyFilters();
