@@ -448,41 +448,143 @@ const RiskRegister = ({ user }) => {
       {/* Filters */}
       <Card className="border-slate-200">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                data-testid="risk-search-input"
-                placeholder="Поиск по названию, номеру..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                Фильтры {showFilters ? '▲' : '▼'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowColumnSelector(!showColumnSelector)}
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Столбцы
+              </Button>
             </div>
-            <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger data-testid="filter-category-select">
-                <SelectValue placeholder="Все категории" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все категории</SelectItem>
-                <SelectItem value="Технический">Технический</SelectItem>
-                <SelectItem value="Организационный">Организационный</SelectItem>
-                <SelectItem value="Физический">Физический</SelectItem>
-                <SelectItem value="Юридический">Юридический</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger data-testid="filter-status-select">
-                <SelectValue placeholder="Все статусы" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все статусы</SelectItem>
-                <SelectItem value="Идентифицирован">Идентифицирован</SelectItem>
-                <SelectItem value="Оценен">Оценен</SelectItem>
-                <SelectItem value="В обработке">В обработке</SelectItem>
-                <SelectItem value="Закрыт">Закрыт</SelectItem>
-              </SelectContent>
-            </Select>
+
+            {showFilters && (
+              <Card className="p-4 bg-slate-50">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Категория</Label>
+                      <Select value={filterCategory} onValueChange={setFilterCategory}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Все категории" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Все категории</SelectItem>
+                          <SelectItem value="Технический">Технический</SelectItem>
+                          <SelectItem value="Организационный">Организационный</SelectItem>
+                          <SelectItem value="Физический">Физический</SelectItem>
+                          <SelectItem value="Юридический">Юридический</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Статус</Label>
+                      <Select value={filterStatus} onValueChange={setFilterStatus}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Все статусы" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Все статусы</SelectItem>
+                          <SelectItem value="Идентифицирован">Идентифицирован</SelectItem>
+                          <SelectItem value="Оценен">Оценен</SelectItem>
+                          <SelectItem value="В обработке">В обработке</SelectItem>
+                          <SelectItem value="Закрыт">Закрыт</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Уровень риска</Label>
+                      <Select value={filterRiskLevel} onValueChange={setFilterRiskLevel}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Все уровни" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Все уровни</SelectItem>
+                          <SelectItem value="Критический">Критический</SelectItem>
+                          <SelectItem value="Высокий">Высокий</SelectItem>
+                          <SelectItem value="Средний">Средний</SelectItem>
+                          <SelectItem value="Низкий">Низкий</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Ответственный</Label>
+                      <Input
+                        placeholder="Введите имя..."
+                        value={filterOwner}
+                        onChange={(e) => setFilterOwner(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Общий поиск</Label>
+                      <Input
+                        placeholder="Поиск..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="flex items-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={resetFilters}
+                        className="w-full"
+                      >
+                        Сбросить фильтры
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {showColumnSelector && (
+              <Card className="p-4 bg-slate-50">
+                <h3 className="font-semibold mb-3 text-sm">Выберите столбцы для отображения:</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {Object.keys(visibleColumns).map(key => (
+                    <div key={key} className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={visibleColumns[key]}
+                        onCheckedChange={(checked) => 
+                          setVisibleColumns({ ...visibleColumns, [key]: checked })
+                        }
+                      />
+                      <Label className="text-sm cursor-pointer">
+                        {key === 'risk_number' ? 'Номер' :
+                         key === 'title' ? 'Название' :
+                         key === 'category' ? 'Категория' :
+                         key === 'risk_level' ? 'Уровень риска' :
+                         key === 'status' ? 'Статус' :
+                         key === 'owner' ? 'Ответственный' :
+                         key === 'likelihood' ? 'Вероятность' :
+                         key === 'impact' ? 'Воздействие' :
+                         key === 'treatment_measures' ? 'Меры' :
+                         key === 'deadline' ? 'Срок' :
+                         key === 'description' ? 'Описание' : key}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
           </div>
         </CardContent>
       </Card>
