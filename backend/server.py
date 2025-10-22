@@ -320,7 +320,7 @@ def calculate_incident_metrics(incident_dict: dict) -> dict:
     reaction_start_time = incident_dict.get('reaction_start_time')
     closed_at = incident_dict.get('closed_at')
     
-    # Parse datetime if strings
+    # Parse datetime if strings and ensure timezone awareness
     if isinstance(incident_time, str):
         incident_time = datetime.fromisoformat(incident_time)
     if isinstance(detection_time, str):
@@ -329,6 +329,16 @@ def calculate_incident_metrics(incident_dict: dict) -> dict:
         reaction_start_time = datetime.fromisoformat(reaction_start_time)
     if isinstance(closed_at, str):
         closed_at = datetime.fromisoformat(closed_at)
+    
+    # Make timezone naive if needed for calculation
+    if incident_time and incident_time.tzinfo:
+        incident_time = incident_time.replace(tzinfo=None)
+    if detection_time and detection_time.tzinfo:
+        detection_time = detection_time.replace(tzinfo=None)
+    if reaction_start_time and reaction_start_time.tzinfo:
+        reaction_start_time = reaction_start_time.replace(tzinfo=None)
+    if closed_at and closed_at.tzinfo:
+        closed_at = closed_at.replace(tzinfo=None)
     
     # MTTA (время от инцидента до обнаружения) - in minutes
     if detection_time and incident_time:
