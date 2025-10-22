@@ -22,8 +22,12 @@ const Incidents = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Все');
   const [criticalityFilter, setCriticalityFilter] = useState('Все');
+  const [detectedByFilter, setDetectedByFilter] = useState('');
+  const [violatorFilter, setViolatorFilter] = useState('');
+  const [systemFilter, setSystemFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
   // Выбор столбцов для отображения
   const [visibleColumns, setVisibleColumns] = useState({
