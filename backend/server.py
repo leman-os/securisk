@@ -646,9 +646,7 @@ async def update_incident(incident_id: str, incident_data: IncidentUpdate, curre
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
     
-    # Auto-close if status changed to "Закрыт"
-    if 'status' in update_dict and update_dict['status'] == "Закрыт" and not current_incident.get('closed_at'):
-        update_dict['closed_at'] = datetime.now(timezone.utc)
+    # Removed auto-close logic - users must manually set closed_at
     
     # Merge with current data for metric calculation
     merged_data = {**current_incident, **update_dict}
