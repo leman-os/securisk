@@ -22,7 +22,25 @@ const RiskRegister = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterRiskLevel, setFilterRiskLevel] = useState('all');
+  const [filterOwner, setFilterOwner] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
   const [draggedItem, setDraggedItem] = useState(null);
+
+  const [visibleColumns, setVisibleColumns] = useState({
+    risk_number: true,
+    title: true,
+    category: true,
+    risk_level: true,
+    status: true,
+    owner: true,
+    likelihood: false,
+    impact: false,
+    treatment_measures: false,
+    deadline: false,
+    description: false,
+  });
 
   const [formData, setFormData] = useState({
     title: '',
