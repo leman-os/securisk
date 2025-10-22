@@ -63,7 +63,17 @@ const Assets = ({ user }) => {
   useEffect(() => {
     fetchSettings();
     fetchAssets();
+    // Load visible columns from localStorage
+    const savedColumns = localStorage.getItem('assets_visible_columns');
+    if (savedColumns) {
+      setVisibleColumns(JSON.parse(savedColumns));
+    }
   }, []);
+
+  useEffect(() => {
+    // Save visible columns to localStorage
+    localStorage.setItem('assets_visible_columns', JSON.stringify(visibleColumns));
+  }, [visibleColumns]);
 
   useEffect(() => {
     applyFilters();
