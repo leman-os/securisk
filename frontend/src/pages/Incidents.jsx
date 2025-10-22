@@ -219,12 +219,27 @@ const Incidents = ({ user }) => {
       
       const matchesStatus = statusFilter === 'Все' || incident.status === statusFilter;
       const matchesCriticality = criticalityFilter === 'Все' || incident.criticality === criticalityFilter;
+      const matchesDetectedBy = !detectedByFilter || incident.detected_by?.toLowerCase().includes(detectedByFilter.toLowerCase());
+      const matchesViolator = !violatorFilter || incident.violator?.toLowerCase().includes(violatorFilter.toLowerCase());
+      const matchesSystem = !systemFilter || incident.system?.toLowerCase().includes(systemFilter.toLowerCase());
       
       const matchesDateFrom = !dateFrom || new Date(incident.incident_time) >= new Date(dateFrom);
       const matchesDateTo = !dateTo || new Date(incident.incident_time) <= new Date(dateTo);
 
-      return matchesSearch && matchesStatus && matchesCriticality && matchesDateFrom && matchesDateTo;
+      return matchesSearch && matchesStatus && matchesCriticality && matchesDetectedBy && 
+             matchesViolator && matchesSystem && matchesDateFrom && matchesDateTo;
     });
+  };
+
+  const resetFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('Все');
+    setCriticalityFilter('Все');
+    setDetectedByFilter('');
+    setViolatorFilter('');
+    setSystemFilter('');
+    setDateFrom('');
+    setDateTo('');
   };
 
   const getCriticalityColor = (criticality) => {
