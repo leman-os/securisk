@@ -23,6 +23,25 @@ const Assets = ({ user }) => {
   const [editingAsset, setEditingAsset] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterCriticality, setFilterCriticality] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterOwner, setFilterOwner] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
+
+  const [visibleColumns, setVisibleColumns] = useState({
+    asset_number: true,
+    name: true,
+    category: true,
+    criticality: true,
+    status: true,
+    owner: true,
+    review_date: true,
+    format: false,
+    location: false,
+    classification: false,
+    description: false,
+  });
 
   const [formData, setFormData] = useState({
     name: '',
