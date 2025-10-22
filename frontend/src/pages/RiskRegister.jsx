@@ -597,19 +597,24 @@ const RiskRegister = ({ user }) => {
               <TableHeader>
                 <TableRow className="bg-slate-50">
                   <TableHead className="w-12"></TableHead>
-                  <TableHead>Номер</TableHead>
-                  <TableHead>Название</TableHead>
-                  <TableHead>Категория</TableHead>
-                  <TableHead>Уровень</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead>Ответственный</TableHead>
+                  {visibleColumns.risk_number && <TableHead>Номер</TableHead>}
+                  {visibleColumns.title && <TableHead>Название</TableHead>}
+                  {visibleColumns.category && <TableHead>Категория</TableHead>}
+                  {visibleColumns.risk_level && <TableHead>Уровень</TableHead>}
+                  {visibleColumns.status && <TableHead>Статус</TableHead>}
+                  {visibleColumns.owner && <TableHead>Ответственный</TableHead>}
+                  {visibleColumns.likelihood && <TableHead>Вероятность</TableHead>}
+                  {visibleColumns.impact && <TableHead>Воздействие</TableHead>}
+                  {visibleColumns.treatment_measures && <TableHead>Меры</TableHead>}
+                  {visibleColumns.deadline && <TableHead>Срок</TableHead>}
+                  {visibleColumns.description && <TableHead>Описание</TableHead>}
                   <TableHead className="text-right">Действия</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredRisks.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-slate-500">
+                    <TableCell colSpan={13} className="text-center py-8 text-slate-500">
                       Риски не найдены
                     </TableCell>
                   </TableRow>
@@ -627,27 +632,39 @@ const RiskRegister = ({ user }) => {
                       <TableCell>
                         <GripVertical className="w-4 h-4 text-slate-400" />
                       </TableCell>
-                      <TableCell className="font-medium">{risk.risk_number}</TableCell>
-                      <TableCell>
-                        <div className="max-w-xs">
-                          <p className="font-medium text-slate-900">{risk.title}</p>
-                          <p className="text-sm text-slate-600 truncate">{risk.description}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-slate-700">{risk.category}</span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getRiskLevelColor(risk.risk_level)} variant="outline">
-                          {risk.risk_level}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(risk.status)} variant="outline">
-                          {risk.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-700">{risk.owner}</TableCell>
+                      {visibleColumns.risk_number && <TableCell className="font-medium">{risk.risk_number}</TableCell>}
+                      {visibleColumns.title && (
+                        <TableCell>
+                          <div className="max-w-xs">
+                            <p className="font-medium text-slate-900">{risk.title}</p>
+                          </div>
+                        </TableCell>
+                      )}
+                      {visibleColumns.category && (
+                        <TableCell>
+                          <span className="text-sm text-slate-700">{risk.category}</span>
+                        </TableCell>
+                      )}
+                      {visibleColumns.risk_level && (
+                        <TableCell>
+                          <Badge className={getRiskLevelColor(risk.risk_level)} variant="outline">
+                            {risk.risk_level}
+                          </Badge>
+                        </TableCell>
+                      )}
+                      {visibleColumns.status && (
+                        <TableCell>
+                          <Badge className={getStatusColor(risk.status)} variant="outline">
+                            {risk.status}
+                          </Badge>
+                        </TableCell>
+                      )}
+                      {visibleColumns.owner && <TableCell className="text-sm text-slate-700">{risk.owner}</TableCell>}
+                      {visibleColumns.likelihood && <TableCell className="text-sm text-slate-700">{risk.likelihood}</TableCell>}
+                      {visibleColumns.impact && <TableCell className="text-sm text-slate-700">{risk.impact}</TableCell>}
+                      {visibleColumns.treatment_measures && <TableCell className="max-w-xs truncate text-sm text-slate-700">{risk.treatment_measures || '-'}</TableCell>}
+                      {visibleColumns.deadline && <TableCell className="text-sm text-slate-700">{risk.deadline ? new Date(risk.deadline).toLocaleDateString('ru-RU') : '-'}</TableCell>}
+                      {visibleColumns.description && <TableCell className="max-w-xs truncate text-sm text-slate-700">{risk.description}</TableCell>}
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button
