@@ -594,50 +594,63 @@ const Assets = ({ user }) => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50">
-                  <TableHead>ID</TableHead>
-                  <TableHead>Название</TableHead>
-                  <TableHead>Категория</TableHead>
-                  <TableHead>Критичность</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead>Владелец</TableHead>
-                  <TableHead>Дата пересмотра</TableHead>
+                  {visibleColumns.asset_number && <TableHead>ID</TableHead>}
+                  {visibleColumns.name && <TableHead>Название</TableHead>}
+                  {visibleColumns.category && <TableHead>Категория</TableHead>}
+                  {visibleColumns.criticality && <TableHead>Критичность</TableHead>}
+                  {visibleColumns.status && <TableHead>Статус</TableHead>}
+                  {visibleColumns.owner && <TableHead>Владелец</TableHead>}
+                  {visibleColumns.format && <TableHead>Формат</TableHead>}
+                  {visibleColumns.location && <TableHead>Местоположение</TableHead>}
+                  {visibleColumns.classification && <TableHead>Классификация</TableHead>}
+                  {visibleColumns.review_date && <TableHead>Дата пересмотра</TableHead>}
+                  {visibleColumns.description && <TableHead>Описание</TableHead>}
                   <TableHead className="text-right">Действия</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAssets.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-slate-500">
+                    <TableCell colSpan={12} className="text-center py-8 text-slate-500">
                       Активы не найдены
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredAssets.map((asset) => (
                     <TableRow key={asset.id} data-testid={`asset-row-${asset.id}`} className="hover:bg-slate-50">
-                      <TableCell className="font-medium">{asset.asset_number}</TableCell>
-                      <TableCell>
-                        <div className="max-w-xs">
-                          <p className="font-medium text-slate-900">{asset.name}</p>
-                          {asset.description && (
-                            <p className="text-sm text-slate-600 truncate">{asset.description}</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-700">{asset.category || '-'}</TableCell>
-                      <TableCell>
-                        <Badge className={getCriticalityColor(asset.criticality)} variant="outline">
-                          {asset.criticality}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(asset.status)} variant="outline">
-                          {asset.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-700">{asset.owner || '-'}</TableCell>
-                      <TableCell className="text-sm text-slate-600">
-                        {asset.review_date ? new Date(asset.review_date).toLocaleDateString('ru-RU') : '-'}
-                      </TableCell>
+                      {visibleColumns.asset_number && <TableCell className="font-medium">{asset.asset_number}</TableCell>}
+                      {visibleColumns.name && (
+                        <TableCell>
+                          <div className="max-w-xs">
+                            <p className="font-medium text-slate-900">{asset.name}</p>
+                          </div>
+                        </TableCell>
+                      )}
+                      {visibleColumns.category && <TableCell className="text-sm text-slate-700">{asset.category || '-'}</TableCell>}
+                      {visibleColumns.criticality && (
+                        <TableCell>
+                          <Badge className={getCriticalityColor(asset.criticality)} variant="outline">
+                            {asset.criticality}
+                          </Badge>
+                        </TableCell>
+                      )}
+                      {visibleColumns.status && (
+                        <TableCell>
+                          <Badge className={getStatusColor(asset.status)} variant="outline">
+                            {asset.status}
+                          </Badge>
+                        </TableCell>
+                      )}
+                      {visibleColumns.owner && <TableCell className="text-sm text-slate-700">{asset.owner || '-'}</TableCell>}
+                      {visibleColumns.format && <TableCell className="text-sm text-slate-700">{asset.format || '-'}</TableCell>}
+                      {visibleColumns.location && <TableCell className="text-sm text-slate-700">{asset.location || '-'}</TableCell>}
+                      {visibleColumns.classification && <TableCell className="text-sm text-slate-700">{asset.classification || '-'}</TableCell>}
+                      {visibleColumns.review_date && (
+                        <TableCell className="text-sm text-slate-600">
+                          {asset.review_date ? new Date(asset.review_date).toLocaleDateString('ru-RU') : '-'}
+                        </TableCell>
+                      )}
+                      {visibleColumns.description && <TableCell className="max-w-xs truncate text-sm text-slate-700">{asset.description || '-'}</TableCell>}
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button
