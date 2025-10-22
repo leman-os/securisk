@@ -792,9 +792,10 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
     mttr_values = [inc['mttr'] for inc in incidents if inc.get('mttr')]
     mttc_values = [inc['mttc'] for inc in incidents if inc.get('mttc')]
     
-    avg_mtta = round(sum(mtta_values) / len(mtta_values), 2) if mtta_values else None
-    avg_mttr = round(sum(mttr_values) / len(mttr_values), 2) if mttr_values else None
-    avg_mttc = round(sum(mttc_values) / len(mttc_values), 2) if mttc_values else None
+    # Convert from minutes to hours
+    avg_mtta = round(sum(mtta_values) / len(mtta_values) / 60, 2) if mtta_values else None
+    avg_mttr = round(sum(mttr_values) / len(mttr_values) / 60, 2) if mttr_values else None
+    avg_mttc = round(sum(mttc_values) / len(mttc_values) / 60, 2) if mttc_values else None
     
     return DashboardStats(
         total_risks=total_risks,
