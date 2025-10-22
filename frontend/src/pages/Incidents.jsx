@@ -72,7 +72,17 @@ const Incidents = ({ user }) => {
   useEffect(() => {
     fetchIncidents();
     fetchMetrics();
+    // Load visible columns from localStorage
+    const savedColumns = localStorage.getItem('incidents_visible_columns');
+    if (savedColumns) {
+      setVisibleColumns(JSON.parse(savedColumns));
+    }
   }, []);
+
+  useEffect(() => {
+    // Save visible columns to localStorage
+    localStorage.setItem('incidents_visible_columns', JSON.stringify(visibleColumns));
+  }, [visibleColumns]);
 
   const fetchIncidents = async () => {
     try {
