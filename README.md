@@ -693,11 +693,7 @@ REACT_APP_BACKEND_URL=http://securisk.oos.ru:8001
 Потом сборка заново и перезагрузка 
 
 ```bash
-cd /opt/securisk/frontend
-yarn build
-
-sudo systemctl reload nginx
-sudo supervisorctl restart securisk-frontend
+cd /opt/securisk/frontend && yarn build && sudo systemctl reload nginx && sudo supervisorctl restart securisk-frontend && sudo supervisorctl restart securisk-backend
 ```
 
 ### Способ 2: Docker (Development/Production)
