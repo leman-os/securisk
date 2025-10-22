@@ -456,27 +456,133 @@ const Assets = ({ user }) => {
       {/* Filters */}
       <Card className="border-slate-200">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                data-testid="asset-search-input"
-                placeholder="Поиск по названию, номеру..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                Фильтры {showFilters ? '▲' : '▼'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowColumnSelector(!showColumnSelector)}
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Столбцы
+              </Button>
             </div>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger data-testid="filter-asset-status-select">
-                <SelectValue placeholder="Все статусы" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все статусы</SelectItem>
-                <SelectItem value="Актуален">Актуален</SelectItem>
-                <SelectItem value="Не актуален">Не актуален</SelectItem>
-              </SelectContent>
-            </Select>
+
+            {showFilters && (
+              <Card className="p-4 bg-slate-50">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Статус</Label>
+                      <Select value={filterStatus} onValueChange={setFilterStatus}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Все статусы" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Все статусы</SelectItem>
+                          <SelectItem value="Актуален">Актуален</SelectItem>
+                          <SelectItem value="Не актуален">Не актуален</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Критичность</Label>
+                      <Select value={filterCriticality} onValueChange={setFilterCriticality}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Все" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Все</SelectItem>
+                          <SelectItem value="Высокая">Высокая</SelectItem>
+                          <SelectItem value="Средняя">Средняя</SelectItem>
+                          <SelectItem value="Низкая">Низкая</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Владелец</Label>
+                      <Input
+                        placeholder="Введите владельца..."
+                        value={filterOwner}
+                        onChange={(e) => setFilterOwner(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Категория</Label>
+                      <Input
+                        placeholder="Введите категорию..."
+                        value={filterCategory}
+                        onChange={(e) => setFilterCategory(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Общий поиск</Label>
+                      <Input
+                        placeholder="Поиск..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="flex items-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={resetFilters}
+                        className="w-full"
+                      >
+                        Сбросить фильтры
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {showColumnSelector && (
+              <Card className="p-4 bg-slate-50">
+                <h3 className="font-semibold mb-3 text-sm">Выберите столбцы для отображения:</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {Object.keys(visibleColumns).map(key => (
+                    <div key={key} className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={visibleColumns[key]}
+                        onCheckedChange={(checked) => 
+                          setVisibleColumns({ ...visibleColumns, [key]: checked })
+                        }
+                      />
+                      <Label className="text-sm cursor-pointer">
+                        {key === 'asset_number' ? 'ID' :
+                         key === 'name' ? 'Название' :
+                         key === 'category' ? 'Категория' :
+                         key === 'criticality' ? 'Критичность' :
+                         key === 'status' ? 'Статус' :
+                         key === 'owner' ? 'Владелец' :
+                         key === 'review_date' ? 'Дата пересмотра' :
+                         key === 'format' ? 'Формат' :
+                         key === 'location' ? 'Местоположение' :
+                         key === 'classification' ? 'Классификация' :
+                         key === 'description' ? 'Описание' : key}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
           </div>
         </CardContent>
       </Card>
