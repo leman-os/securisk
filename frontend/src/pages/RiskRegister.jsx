@@ -503,67 +503,104 @@ const RiskRegister = ({ user }) => {
               <DialogDescription>Подробная информация о риске информационной безопасности</DialogDescription>
             </DialogHeader>
             {viewingRisk && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Номер риска</Label>
-                    <p className="text-sm">{viewingRisk.risk_number}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Статус</Label>
-                    <Badge className={viewingRisk.status === 'Выявлен' ? 'bg-blue-100 text-blue-800' : viewingRisk.status === 'Принят' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                      {viewingRisk.status}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <Label className="text-xs font-semibold text-slate-500">Название</Label>
-                    <p className="text-sm font-medium">{viewingRisk.title}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Категория</Label>
-                    <p className="text-sm">{viewingRisk.category}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Уровень риска</Label>
-                    <Badge className={viewingRisk.risk_level === 'Высокий' ? 'bg-red-100 text-red-800' : viewingRisk.risk_level === 'Средний' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}>
-                      {viewingRisk.risk_level}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Вероятность</Label>
-                    <p className="text-sm">{viewingRisk.likelihood}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Воздействие</Label>
-                    <p className="text-sm">{viewingRisk.impact}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Ответственный</Label>
-                    <p className="text-sm">{viewingRisk.owner || '-'}</p>
-                  </div>
-                  {viewingRisk.deadline && (
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-slate-500">Срок</Label>
-                      <p className="text-sm">{new Date(viewingRisk.deadline).toLocaleDateString('ru-RU')}</p>
+              <div className="space-y-6">
+                {/* Основная информация */}
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Основная информация</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Номер риска:</span>
+                      <p className="text-sm mt-1">{viewingRisk.risk_number}</p>
                     </div>
-                  )}
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Приоритет</Label>
-                    <p className="text-sm">{viewingRisk.priority}</p>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Статус:</span>
+                      <p className="text-sm mt-1">{viewingRisk.status}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Название:</span>
+                      <p className="text-sm mt-1 font-medium">{viewingRisk.title}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Категория:</span>
+                      <p className="text-sm mt-1">{viewingRisk.category}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Уровень риска:</span>
+                      <p className="text-sm mt-1">{viewingRisk.risk_level}</p>
+                    </div>
                   </div>
                 </div>
-                {viewingRisk.description && (
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Описание</Label>
-                    <p className="text-sm whitespace-pre-wrap">{viewingRisk.description}</p>
+
+                {/* Оценка риска */}
+                <div className="bg-red-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Оценка риска</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Вероятность:</span>
+                      <p className="text-sm mt-1">{viewingRisk.likelihood}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Воздействие:</span>
+                      <p className="text-sm mt-1">{viewingRisk.impact}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Приоритет:</span>
+                      <p className="text-sm mt-1">{viewingRisk.priority}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Срок:</span>
+                      <p className="text-sm mt-1">{viewingRisk.deadline ? new Date(viewingRisk.deadline).toLocaleDateString('ru-RU') : '-'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Управление риском */}
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Управление</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Ответственный:</span>
+                      <p className="text-sm mt-1">{viewingRisk.owner || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Подразделение:</span>
+                      <p className="text-sm mt-1">{viewingRisk.department || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Описание и меры */}
+                {(viewingRisk.description || viewingRisk.treatment_measures) && (
+                  <div className="space-y-3">
+                    {viewingRisk.description && (
+                      <div className="bg-white border border-slate-200 p-4 rounded-lg">
+                        <span className="text-xs font-semibold text-slate-500 uppercase">Описание риска:</span>
+                        <p className="text-sm mt-2 whitespace-pre-wrap">{viewingRisk.description}</p>
+                      </div>
+                    )}
+                    {viewingRisk.treatment_measures && (
+                      <div className="bg-white border border-slate-200 p-4 rounded-lg">
+                        <span className="text-xs font-semibold text-slate-500 uppercase">Меры обработки:</span>
+                        <p className="text-sm mt-2 whitespace-pre-wrap">{viewingRisk.treatment_measures}</p>
+                      </div>
+                    )}
                   </div>
                 )}
-                {viewingRisk.treatment_measures && (
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Меры обработки</Label>
-                    <p className="text-sm whitespace-pre-wrap">{viewingRisk.treatment_measures}</p>
+
+                {/* Дополнительная информация */}
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Дополнительно</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Дата создания:</span>
+                      <p className="text-sm mt-1">{viewingRisk.created_at ? new Date(viewingRisk.created_at).toLocaleString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Последнее обновление:</span>
+                      <p className="text-sm mt-1">{viewingRisk.updated_at ? new Date(viewingRisk.updated_at).toLocaleString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
+                    </div>
                   </div>
-                )}
+                </div>
                 <div className="flex justify-end gap-2 pt-4 border-t">
                   <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleDeleteFromView} title="Удалить">
                     <Trash2 className="w-4 h-4" />
