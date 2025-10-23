@@ -594,17 +594,14 @@ const Incidents = ({ user }) => {
                   </div>
                 )}
                 <div className="flex justify-end gap-2 pt-4 border-t">
-                  <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
-                    <X className="w-4 h-4 mr-2" />
-                    Закрыть
+                  <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleDeleteFromView} title="Удалить">
+                    <Trash2 className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" onClick={handleEditFromView}>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Редактировать
+                  <Button variant="outline" onClick={handleEditFromView} title="Редактировать">
+                    <Edit className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" className="text-red-600 hover:text-red-700" onClick={handleDeleteFromView}>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Удалить
+                  <Button variant="outline" onClick={() => setViewDialogOpen(false)} title="Закрыть">
+                    <X className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
