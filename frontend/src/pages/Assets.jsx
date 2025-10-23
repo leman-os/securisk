@@ -511,61 +511,102 @@ const Assets = ({ user }) => {
               <DialogDescription>Подробная информация об информационном активе</DialogDescription>
             </DialogHeader>
             {viewingAsset && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">ID актива</Label>
-                    <p className="text-sm">{viewingAsset.asset_number}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Статус</Label>
-                    <Badge className={viewingAsset.status === 'Актуален' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                      {viewingAsset.status}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <Label className="text-xs font-semibold text-slate-500">Название</Label>
-                    <p className="text-sm font-medium">{viewingAsset.name}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Категория</Label>
-                    <p className="text-sm">{viewingAsset.category || '-'}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Критичность</Label>
-                    <Badge className={viewingAsset.criticality === 'Высокая' ? 'bg-red-100 text-red-800' : viewingAsset.criticality === 'Средняя' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}>
-                      {viewingAsset.criticality}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Владелец</Label>
-                    <p className="text-sm">{viewingAsset.owner || '-'}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Формат</Label>
-                    <p className="text-sm">{viewingAsset.format || '-'}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Местоположение</Label>
-                    <p className="text-sm">{viewingAsset.location || '-'}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Классификация</Label>
-                    <p className="text-sm">{viewingAsset.classification || '-'}</p>
-                  </div>
-                  {viewingAsset.review_date && (
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-slate-500">Дата пересмотра</Label>
-                      <p className="text-sm">{new Date(viewingAsset.review_date).toLocaleDateString('ru-RU')}</p>
+              <div className="space-y-6">
+                {/* Основная информация */}
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Основная информация</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">ID актива:</span>
+                      <p className="text-sm mt-1">{viewingAsset.asset_number}</p>
                     </div>
-                  )}
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Статус:</span>
+                      <p className="text-sm mt-1">{viewingAsset.status}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Название:</span>
+                      <p className="text-sm mt-1 font-medium">{viewingAsset.name}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Категория:</span>
+                      <p className="text-sm mt-1">{viewingAsset.category || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Критичность:</span>
+                      <p className="text-sm mt-1">{viewingAsset.criticality}</p>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Управление активом */}
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Управление активом</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Владелец:</span>
+                      <p className="text-sm mt-1">{viewingAsset.owner || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Формат:</span>
+                      <p className="text-sm mt-1">{viewingAsset.format || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Местоположение:</span>
+                      <p className="text-sm mt-1">{viewingAsset.location || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Дата пересмотра:</span>
+                      <p className="text-sm mt-1">{viewingAsset.review_date ? new Date(viewingAsset.review_date).toLocaleDateString('ru-RU') : '-'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Классификация и доступ */}
+                <div className="bg-amber-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Классификация и доступ</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Классификация:</span>
+                      <p className="text-sm mt-1">{viewingAsset.classification || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Права (R):</span>
+                      <p className="text-sm mt-1">{viewingAsset.rights_r || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Права (W):</span>
+                      <p className="text-sm mt-1">{viewingAsset.rights_w || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Права (RW):</span>
+                      <p className="text-sm mt-1">{viewingAsset.rights_rw || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Описание */}
                 {viewingAsset.description && (
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Описание</Label>
-                    <p className="text-sm whitespace-pre-wrap">{viewingAsset.description}</p>
+                  <div className="bg-white border border-slate-200 p-4 rounded-lg">
+                    <span className="text-xs font-semibold text-slate-500 uppercase">Описание:</span>
+                    <p className="text-sm mt-2 whitespace-pre-wrap">{viewingAsset.description}</p>
                   </div>
                 )}
+
+                {/* Дополнительная информация */}
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Дополнительно</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Дата создания:</span>
+                      <p className="text-sm mt-1">{viewingAsset.created_at ? new Date(viewingAsset.created_at).toLocaleString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Последнее обновление:</span>
+                      <p className="text-sm mt-1">{viewingAsset.updated_at ? new Date(viewingAsset.updated_at).toLocaleString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
+                    </div>
+                  </div>
+                </div>
                 <div className="flex justify-end gap-2 pt-4 border-t">
                   <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleDeleteFromView} title="Удалить">
                     <Trash2 className="w-4 h-4" />
