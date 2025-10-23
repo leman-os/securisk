@@ -905,10 +905,15 @@ const Incidents = ({ user }) => {
                     {visibleColumns.measures && <TableCell className="max-w-xs truncate">{incident.measures}</TableCell>}
                     {visibleColumns.comment && <TableCell className="max-w-xs truncate">{incident.comment}</TableCell>}
                     <TableCell>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => handleEdit(incident)}>Изменить</Button>
-                        <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleDelete(incident.id)}>
-                          <Trash2 className="w-4 h-4" />
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => handleView(incident)} className="h-8 w-8 p-0">
+                          <Eye className="w-4 h-4 text-cyan-600" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleEdit(incident)} className="h-8 w-8 p-0">
+                          <Edit className="w-4 h-4 text-slate-600" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleDelete(incident.id)} className="h-8 w-8 p-0">
+                          <Trash2 className="w-4 h-4 text-red-600" />
                         </Button>
                       </div>
                     </TableCell>
