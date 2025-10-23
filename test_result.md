@@ -301,9 +301,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Backend API pagination and sorting"
-    - "Frontend Incidents pagination UI"
-    - "Incident closed_at field fix"
+    - "Test Incidents page filters functionality"
+    - "Test Assets page filters functionality"
+    - "Test RiskRegister page filters functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
