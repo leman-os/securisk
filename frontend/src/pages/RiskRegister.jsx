@@ -65,13 +65,16 @@ const RiskRegister = ({ user }) => {
   });
 
   useEffect(() => {
-    fetchRisks();
     // Load visible columns from localStorage
     const savedColumns = localStorage.getItem('risks_visible_columns');
     if (savedColumns) {
       setVisibleColumns(JSON.parse(savedColumns));
     }
   }, []);
+
+  useEffect(() => {
+    fetchRisks();
+  }, [page, limit, sortBy, sortOrder]);
 
   useEffect(() => {
     // Save visible columns to localStorage
