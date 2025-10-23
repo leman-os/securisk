@@ -822,21 +822,33 @@ const RiskRegister = ({ user }) => {
                       {visibleColumns.deadline && <TableCell className="text-sm text-slate-700">{risk.deadline ? new Date(risk.deadline).toLocaleDateString('ru-RU') : '-'}</TableCell>}
                       {visibleColumns.description && <TableCell className="max-w-xs truncate text-sm text-slate-700">{risk.description}</TableCell>}
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleView(risk)}
+                            className="h-8 w-8 p-0"
+                            title="Просмотр"
+                          >
+                            <Eye className="w-4 h-4 text-cyan-600" />
+                          </Button>
                           <Button
                             data-testid={`edit-risk-${risk.id}`}
                             variant="ghost"
                             size="sm"
                             onClick={() => handleEdit(risk)}
+                            className="h-8 w-8 p-0"
+                            title="Редактировать"
                           >
-                            <Edit className="w-4 h-4" />
+                            <Edit className="w-4 h-4 text-slate-600" />
                           </Button>
                           <Button
                             data-testid={`delete-risk-${risk.id}`}
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDelete(risk.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            title="Удалить"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
