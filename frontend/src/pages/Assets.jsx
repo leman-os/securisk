@@ -614,21 +614,126 @@ const Assets = ({ user }) => {
 
       {/* Table */}
       <Card className="border-slate-200">
-        <CardContent className="p-0">
+        <CardContent className="p-6">
+          {/* Pagination controls */}
+          <div className="flex justify-between items-center mb-4 gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm">Показать:</Label>
+              <Select value={limit.toString()} onValueChange={(val) => { setLimit(Number(val)); setPage(1); }}>
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="30">30</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-sm text-slate-600">Всего: {total}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setPage(1)} 
+                disabled={page === 1}
+              >
+                <ChevronsLeft className="w-4 h-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setPage(page - 1)} 
+                disabled={page === 1}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="text-sm px-2">
+                Страница {page} из {totalPages}
+              </span>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setPage(page + 1)} 
+                disabled={page === totalPages}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setPage(totalPages)} 
+                disabled={page === totalPages}
+              >
+                <ChevronsRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50">
-                  {visibleColumns.asset_number && <TableHead>ID</TableHead>}
-                  {visibleColumns.name && <TableHead>Название</TableHead>}
-                  {visibleColumns.category && <TableHead>Категория</TableHead>}
-                  {visibleColumns.criticality && <TableHead>Критичность</TableHead>}
-                  {visibleColumns.status && <TableHead>Статус</TableHead>}
-                  {visibleColumns.owner && <TableHead>Владелец</TableHead>}
+                  {visibleColumns.asset_number && (
+                    <TableHead onClick={() => handleSort('asset_number')} className="cursor-pointer hover:bg-slate-100">
+                      <div className="flex items-center gap-1">
+                        ID
+                        {sortBy === 'asset_number' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
+                  {visibleColumns.name && (
+                    <TableHead onClick={() => handleSort('name')} className="cursor-pointer hover:bg-slate-100">
+                      <div className="flex items-center gap-1">
+                        Название
+                        {sortBy === 'name' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
+                  {visibleColumns.category && (
+                    <TableHead onClick={() => handleSort('category')} className="cursor-pointer hover:bg-slate-100">
+                      <div className="flex items-center gap-1">
+                        Категория
+                        {sortBy === 'category' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
+                  {visibleColumns.criticality && (
+                    <TableHead onClick={() => handleSort('criticality')} className="cursor-pointer hover:bg-slate-100">
+                      <div className="flex items-center gap-1">
+                        Критичность
+                        {sortBy === 'criticality' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
+                  {visibleColumns.status && (
+                    <TableHead onClick={() => handleSort('status')} className="cursor-pointer hover:bg-slate-100">
+                      <div className="flex items-center gap-1">
+                        Статус
+                        {sortBy === 'status' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
+                  {visibleColumns.owner && (
+                    <TableHead onClick={() => handleSort('owner')} className="cursor-pointer hover:bg-slate-100">
+                      <div className="flex items-center gap-1">
+                        Владелец
+                        {sortBy === 'owner' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
                   {visibleColumns.format && <TableHead>Формат</TableHead>}
                   {visibleColumns.location && <TableHead>Местоположение</TableHead>}
                   {visibleColumns.classification && <TableHead>Классификация</TableHead>}
-                  {visibleColumns.review_date && <TableHead>Дата пересмотра</TableHead>}
+                  {visibleColumns.review_date && (
+                    <TableHead onClick={() => handleSort('review_date')} className="cursor-pointer hover:bg-slate-100">
+                      <div className="flex items-center gap-1">
+                        Дата пересмотра
+                        {sortBy === 'review_date' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
                   {visibleColumns.description && <TableHead>Описание</TableHead>}
                   <TableHead className="text-right">Действия</TableHead>
                 </TableRow>
