@@ -534,15 +534,42 @@ async def create_risk(risk_data: RiskCreate, current_user: User = Depends(get_cu
     await db.risks.insert_one(doc)
     return risk
 
-@api_router.get("/risks", response_model=List[Risk])
-async def get_risks(current_user: User = Depends(get_current_user)):
-    risks = await db.risks.find({}, {"_id": 0}).sort("priority", 1).to_list(1000)
+@api_router.get("/risks", response_model=PaginatedRisks)
+async def get_risks(
+    page: int = 1,
+    limit: int = 20,
+    sort_by: Optional[str] = "created_at",
+    sort_order: Optional[str] = "desc",
+    current_user: User = Depends(get_current_user)
+):
+    # Calculate skip
+    skip = (page - 1) * limit
+    
+    # Determine sort direction
+    sort_direction = -1 if sort_order == "desc" else 1
+    
+    # Get total count
+    total = await db.risks.count_documents({})
+    
+    # Get paginated and sorted risks
+    risks = await db.risks.find({}, {"_id": 0}).sort(sort_by, sort_direction).skip(skip).limit(limit).to_list(limit)
+    
     for risk in risks:
         if isinstance(risk.get('created_at'), str):
             risk['created_at'] = datetime.fromisoformat(risk['created_at'])
         if isinstance(risk.get('updated_at'), str):
             risk['updated_at'] = datetime.fromisoformat(risk['updated_at'])
-    return risks
+    
+    # Calculate total pages
+    total_pages = (total + limit - 1) // limit
+    
+    return PaginatedRisks(
+        items=risks,
+        total=total,
+        page=page,
+        limit=limit,
+        total_pages=total_pages
+    )
 
 @api_router.get("/risks/{risk_id}", response_model=Risk)
 async def get_risk(risk_id: str, current_user: User = Depends(get_current_user)):
