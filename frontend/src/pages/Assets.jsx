@@ -975,6 +975,63 @@ const Assets = ({ user }) => {
               </TableBody>
             </Table>
           </div>
+          
+          {/* Pagination controls bottom */}
+          <div className="flex justify-between items-center mt-4 gap-4 flex-wrap border-t pt-4">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm">Показать:</Label>
+              <Select value={limit.toString()} onValueChange={(val) => { setLimit(Number(val)); setPage(1); }}>
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="30">30</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-sm text-slate-600">Всего: {total}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setPage(1)} 
+                disabled={page === 1}
+              >
+                <ChevronsLeft className="w-4 h-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setPage(page - 1)} 
+                disabled={page === 1}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="text-sm px-2">
+                Страница {page} из {totalPages}
+              </span>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setPage(page + 1)} 
+                disabled={page === totalPages}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setPage(totalPages)} 
+                disabled={page === totalPages}
+              >
+                <ChevronsRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
