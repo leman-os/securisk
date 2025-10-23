@@ -690,17 +690,94 @@ const Incidents = ({ user }) => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  {visibleColumns.incident_number && <TableHead>Номер</TableHead>}
-                  {visibleColumns.incident_time && <TableHead>Время</TableHead>}
-                  {visibleColumns.violator && <TableHead>Нарушитель</TableHead>}
-                  {visibleColumns.system && <TableHead>Система</TableHead>}
-                  {visibleColumns.incident_type && <TableHead>Тип</TableHead>}
-                  {visibleColumns.criticality && <TableHead>Критичность</TableHead>}
-                  {visibleColumns.status && <TableHead>Статус</TableHead>}
-                  {visibleColumns.mtta && <TableHead>MTTA (ч)</TableHead>}
-                  {visibleColumns.mttr && <TableHead>MTTR (ч)</TableHead>}
-                  {visibleColumns.mttc && <TableHead>MTTC (ч)</TableHead>}
-                  {visibleColumns.detected_by && <TableHead>Обнаружил</TableHead>}
+                  {visibleColumns.incident_number && (
+                    <TableHead onClick={() => handleSort('incident_number')} className="cursor-pointer hover:bg-slate-50">
+                      <div className="flex items-center gap-1">
+                        Номер
+                        {sortBy === 'incident_number' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
+                  {visibleColumns.incident_time && (
+                    <TableHead onClick={() => handleSort('incident_time')} className="cursor-pointer hover:bg-slate-50">
+                      <div className="flex items-center gap-1">
+                        Время
+                        {sortBy === 'incident_time' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
+                  {visibleColumns.violator && (
+                    <TableHead onClick={() => handleSort('violator')} className="cursor-pointer hover:bg-slate-50">
+                      <div className="flex items-center gap-1">
+                        Нарушитель
+                        {sortBy === 'violator' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
+                  {visibleColumns.system && (
+                    <TableHead onClick={() => handleSort('system')} className="cursor-pointer hover:bg-slate-50">
+                      <div className="flex items-center gap-1">
+                        Система
+                        {sortBy === 'system' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
+                  {visibleColumns.incident_type && (
+                    <TableHead onClick={() => handleSort('incident_type')} className="cursor-pointer hover:bg-slate-50">
+                      <div className="flex items-center gap-1">
+                        Тип
+                        {sortBy === 'incident_type' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
+                  {visibleColumns.criticality && (
+                    <TableHead onClick={() => handleSort('criticality')} className="cursor-pointer hover:bg-slate-50">
+                      <div className="flex items-center gap-1">
+                        Критичность
+                        {sortBy === 'criticality' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
+                  {visibleColumns.status && (
+                    <TableHead onClick={() => handleSort('status')} className="cursor-pointer hover:bg-slate-50">
+                      <div className="flex items-center gap-1">
+                        Статус
+                        {sortBy === 'status' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
+                  {visibleColumns.mtta && (
+                    <TableHead onClick={() => handleSort('mtta')} className="cursor-pointer hover:bg-slate-50">
+                      <div className="flex items-center gap-1">
+                        MTTA (ч)
+                        {sortBy === 'mtta' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
+                  {visibleColumns.mttr && (
+                    <TableHead onClick={() => handleSort('mttr')} className="cursor-pointer hover:bg-slate-50">
+                      <div className="flex items-center gap-1">
+                        MTTR (ч)
+                        {sortBy === 'mttr' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
+                  {visibleColumns.mttc && (
+                    <TableHead onClick={() => handleSort('mttc')} className="cursor-pointer hover:bg-slate-50">
+                      <div className="flex items-center gap-1">
+                        MTTC (ч)
+                        {sortBy === 'mttc' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
+                  {visibleColumns.detected_by && (
+                    <TableHead onClick={() => handleSort('detected_by')} className="cursor-pointer hover:bg-slate-50">
+                      <div className="flex items-center gap-1">
+                        Обнаружил
+                        {sortBy === 'detected_by' && <ArrowUpDown className="w-3 h-3" />}
+                      </div>
+                    </TableHead>
+                  )}
                   {visibleColumns.description && <TableHead>Описание</TableHead>}
                   {visibleColumns.measures && <TableHead>Меры</TableHead>}
                   {visibleColumns.comment && <TableHead>Комментарий</TableHead>}
