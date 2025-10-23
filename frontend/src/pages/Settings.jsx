@@ -79,6 +79,18 @@ const Settings = ({ user }) => {
     updateSettings({ threats: updated });
   };
 
+  const addAssetStatus = () => {
+    if (!newAssetStatus.trim()) return;
+    const updated = [...(settings?.asset_statuses || []), newAssetStatus.trim()];
+    updateSettings({ asset_statuses: updated });
+    setNewAssetStatus('');
+  };
+
+  const removeAssetStatus = (status) => {
+    const updated = settings.asset_statuses.filter((s) => s !== status);
+    updateSettings({ asset_statuses: updated });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
