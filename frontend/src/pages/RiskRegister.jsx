@@ -84,8 +84,12 @@ const RiskRegister = ({ user }) => {
 
   const fetchRisks = async () => {
     try {
-      const response = await axios.get(`${API}/risks`);
-      setRisks(response.data);
+      const response = await axios.get(`${API}/risks`, {
+        params: { page, limit, sort_by: sortBy, sort_order: sortOrder }
+      });
+      setRisks(response.data.items);
+      setTotal(response.data.total);
+      setTotalPages(response.data.total_pages);
     } catch (error) {
       toast.error('Ошибка загрузки рисков');
     } finally {
