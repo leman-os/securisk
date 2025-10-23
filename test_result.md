@@ -309,10 +309,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Test Incidents page filters functionality"
-    - "Test Assets page filters functionality"
-    - "Test RiskRegister page filters functionality"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
