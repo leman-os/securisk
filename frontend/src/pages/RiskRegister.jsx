@@ -28,6 +28,14 @@ const RiskRegister = ({ user }) => {
   const [showFilters, setShowFilters] = useState(false);
   const [showColumnSelector, setShowColumnSelector] = useState(false);
   const [draggedItem, setDraggedItem] = useState(null);
+  
+  // Pagination and sorting
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [sortBy, setSortBy] = useState('created_at');
+  const [sortOrder, setSortOrder] = useState('desc');
 
   const [visibleColumns, setVisibleColumns] = useState({
     risk_number: true,
