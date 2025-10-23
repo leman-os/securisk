@@ -83,7 +83,7 @@ const RiskRegister = ({ user }) => {
 
   useEffect(() => {
     applyFilters();
-  }, [risks, searchTerm, filterCategory, filterStatus]);
+  }, [risks, searchTerm, filterCategory, filterStatus, filterRiskLevel, filterOwner]);
 
   const fetchRisks = async () => {
     try {
