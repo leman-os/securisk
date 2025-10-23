@@ -808,29 +808,42 @@ const Assets = ({ user }) => {
                       )}
                       {visibleColumns.description && <TableCell className="max-w-xs truncate text-sm text-slate-700">{asset.description || '-'}</TableCell>}
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleReview(asset.id)}
-                            title="Пересмотр актива"
+                            onClick={() => handleView(asset)}
+                            className="h-8 w-8 p-0"
+                            title="Просмотр"
                           >
-                            <RefreshCw className="w-4 h-4" />
+                            <Eye className="w-4 h-4 text-cyan-600" />
                           </Button>
                           <Button
                             data-testid={`edit-asset-${asset.id}`}
                             variant="ghost"
                             size="sm"
                             onClick={() => handleEdit(asset)}
+                            className="h-8 w-8 p-0"
+                            title="Редактировать"
                           >
-                            <Edit className="w-4 h-4" />
+                            <Edit className="w-4 h-4 text-slate-600" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleReview(asset.id)}
+                            className="h-8 w-8 p-0"
+                            title="Пересмотр актива"
+                          >
+                            <RefreshCw className="w-4 h-4 text-blue-600" />
                           </Button>
                           <Button
                             data-testid={`delete-asset-${asset.id}`}
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDelete(asset.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            title="Удалить"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
