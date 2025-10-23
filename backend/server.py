@@ -239,6 +239,7 @@ class Settings(BaseModel):
 class SettingsUpdate(BaseModel):
     subject_types: Optional[List[str]] = None
     systems: Optional[List[str]] = None
+    threats: Optional[List[str]] = None
     asset_statuses: Optional[List[str]] = None
     threats: Optional[List[str]] = None
 
