@@ -19,7 +19,9 @@ const RiskRegister = ({ user }) => {
   const [filteredRisks, setFilteredRisks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editingRisk, setEditingRisk] = useState(null);
+  const [viewingRisk, setViewingRisk] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
