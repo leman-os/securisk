@@ -20,7 +20,9 @@ const Assets = ({ user }) => {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState(null);
+  const [viewingAsset, setViewingAsset] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCriticality, setFilterCriticality] = useState('all');
