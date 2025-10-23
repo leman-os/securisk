@@ -98,8 +98,12 @@ const Assets = ({ user }) => {
 
   const fetchAssets = async () => {
     try {
-      const response = await axios.get(`${API}/assets`);
-      setAssets(response.data);
+      const response = await axios.get(`${API}/assets`, {
+        params: { page, limit, sort_by: sortBy, sort_order: sortOrder }
+      });
+      setAssets(response.data.items);
+      setTotal(response.data.total);
+      setTotalPages(response.data.total_pages);
     } catch (error) {
       toast.error('Ошибка загрузки активов');
     } finally {
