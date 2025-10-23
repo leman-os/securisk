@@ -199,7 +199,13 @@ const Incidents = ({ user }) => {
             return incident[key] ? `${(incident[key] / 60).toFixed(2)}ч` : 'N/A';
           }
           if (key === 'incident_time' || key === 'detection_time') {
-            return incident[key] ? new Date(incident[key]).toLocaleString('ru-RU') : '';
+            return incident[key] ? new Date(incident[key]).toLocaleString('ru-RU', { 
+              year: 'numeric', 
+              month: '2-digit', 
+              day: '2-digit', 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            }) : '';
           }
           return incident[key] || '';
         });
