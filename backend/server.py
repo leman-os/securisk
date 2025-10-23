@@ -258,6 +258,27 @@ class IncidentMetrics(BaseModel):
     total_incidents: int
     closed_incidents: int
 
+class PaginatedIncidents(BaseModel):
+    items: List[Incident]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
+class PaginatedRisks(BaseModel):
+    items: List[Risk]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
+class PaginatedAssets(BaseModel):
+    items: List[Asset]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
 # ==================== HELPERS ====================
 
 async def generate_incident_number() -> str:
