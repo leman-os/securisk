@@ -88,7 +88,7 @@ const Assets = ({ user }) => {
 
   useEffect(() => {
     applyFilters();
-  }, [assets, searchTerm, filterStatus]);
+  }, [assets, searchTerm, filterStatus, filterCriticality, filterCategory, filterOwner]);
 
   const fetchSettings = async () => {
     try {
