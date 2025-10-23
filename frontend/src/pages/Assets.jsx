@@ -739,14 +739,14 @@ const Assets = ({ user }) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {assets.length === 0 ? (
+                {filteredAssets.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={12} className="text-center py-8 text-slate-500">
                       Активы не найдены
                     </TableCell>
                   </TableRow>
                 ) : (
-                  assets.map((asset) => (
+                  filteredAssets.map((asset) => (
                     <TableRow key={asset.id} data-testid={`asset-row-${asset.id}`} className="hover:bg-slate-50">
                       {visibleColumns.asset_number && <TableCell className="font-medium">{asset.asset_number}</TableCell>}
                       {visibleColumns.name && (
