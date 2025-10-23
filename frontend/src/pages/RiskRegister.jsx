@@ -169,6 +169,30 @@ const RiskRegister = ({ user }) => {
     }
   };
 
+  const handleView = (risk) => {
+    setViewingRisk(risk);
+    setViewDialogOpen(true);
+  };
+
+  const handleEditFromView = () => {
+    setEditingRisk(viewingRisk);
+    setFormData(viewingRisk);
+    setViewDialogOpen(false);
+    setDialogOpen(true);
+  };
+
+  const handleDeleteFromView = async () => {
+    if (!window.confirm('Удалить риск?')) return;
+    try {
+      await axios.delete(`${API}/risks/${viewingRisk.id}`);
+      toast.success('Риск удален');
+      setViewDialogOpen(false);
+      fetchRisks();
+    } catch (error) {
+      toast.error('Ошибка при удалении');
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm('Удалить риск?')) return;
     try {
