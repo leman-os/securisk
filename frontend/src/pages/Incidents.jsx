@@ -94,8 +94,12 @@ const Incidents = ({ user }) => {
 
   const fetchIncidents = async () => {
     try {
-      const response = await axios.get(`${API}/incidents`);
-      setIncidents(response.data);
+      const response = await axios.get(`${API}/incidents`, {
+        params: { page, limit, sort_by: sortBy, sort_order: sortOrder }
+      });
+      setIncidents(response.data.items);
+      setTotal(response.data.total);
+      setTotalPages(response.data.total_pages);
     } catch (error) {
       toast.error('Ошибка загрузки инцидентов');
     } finally {
