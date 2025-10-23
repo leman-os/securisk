@@ -115,11 +115,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Added closed_at field to IncidentCreate model (line 147)"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Created incident with status 'Закрыт' and closed_at field. Field is properly saved and returned in response. Test incident ID: c6de0d83-8fde-4f1a-a9ea-a2f39f274784"
         
   - task: "Add pagination and sorting to incidents endpoint"
     implemented: true
@@ -127,11 +130,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Modified GET /api/incidents endpoint to support page, limit, sort_by, sort_order parameters. Returns PaginatedIncidents response"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Pagination works correctly with all required fields (items, total, page, limit, total_pages). Sorting by incident_time works in both ASC and DESC order. Tested limits: 10, 20, 30, 50, 100. Pagination calculation is accurate."
         
   - task: "Add pagination and sorting to risks endpoint"
     implemented: true
@@ -139,11 +145,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Modified GET /api/risks endpoint to support page, limit, sort_by, sort_order parameters. Returns PaginatedRisks response"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Risks pagination endpoint works correctly. Response structure includes all required fields. Tested with page=1, limit=20, sort_by=created_at, sort_order=asc. Created test risk successfully."
         
   - task: "Add pagination and sorting to assets endpoint"
     implemented: true
@@ -151,11 +160,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Modified GET /api/assets endpoint to support page, limit, sort_by, sort_order parameters. Returns PaginatedAssets response"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Assets pagination endpoint works correctly. Response structure includes all required fields. Tested with page=1, limit=30. Created test asset successfully."
 
 frontend:
   - task: "Update Incidents page with pagination and sorting UI"
