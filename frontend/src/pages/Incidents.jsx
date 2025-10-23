@@ -140,6 +140,31 @@ const Incidents = ({ user }) => {
     }
   };
 
+  const handleView = (incident) => {
+    setViewingIncident(incident);
+    setViewDialogOpen(true);
+  };
+
+  const handleEditFromView = () => {
+    setEditingIncident(viewingIncident);
+    setFormData(viewingIncident);
+    setViewDialogOpen(false);
+    setDialogOpen(true);
+  };
+
+  const handleDeleteFromView = async () => {
+    if (!window.confirm('Удалить инцидент?')) return;
+    try {
+      await axios.delete(`${API}/incidents/${viewingIncident.id}`);
+      toast.success('Инцидент удален');
+      setViewDialogOpen(false);
+      fetchIncidents();
+      fetchMetrics();
+    } catch (error) {
+      toast.error('Ошибка удаления');
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm('Удалить инцидент?')) return;
     try {
