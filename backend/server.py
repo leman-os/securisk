@@ -788,9 +788,26 @@ async def create_asset(asset_data: AssetCreate, current_user: User = Depends(get
     await db.assets.insert_one(doc)
     return asset
 
-@api_router.get("/assets", response_model=List[Asset])
-async def get_assets(current_user: User = Depends(get_current_user)):
-    assets = await db.assets.find({}, {"_id": 0}).to_list(1000)
+@api_router.get("/assets", response_model=PaginatedAssets)
+async def get_assets(
+    page: int = 1,
+    limit: int = 20,
+    sort_by: Optional[str] = "created_at",
+    sort_order: Optional[str] = "desc",
+    current_user: User = Depends(get_current_user)
+):
+    # Calculate skip
+    skip = (page - 1) * limit
+    
+    # Determine sort direction
+    sort_direction = -1 if sort_order == "desc" else 1
+    
+    # Get total count
+    total = await db.assets.count_documents({})
+    
+    # Get paginated and sorted assets
+    assets = await db.assets.find({}, {"_id": 0}).sort(sort_by, sort_direction).skip(skip).limit(limit).to_list(limit)
+    
     for asset in assets:
         if isinstance(asset.get('created_at'), str):
             asset['created_at'] = datetime.fromisoformat(asset['created_at'])
@@ -798,7 +815,17 @@ async def get_assets(current_user: User = Depends(get_current_user)):
             asset['updated_at'] = datetime.fromisoformat(asset['updated_at'])
         if isinstance(asset.get('review_date'), str):
             asset['review_date'] = datetime.fromisoformat(asset['review_date'])
-    return assets
+    
+    # Calculate total pages
+    total_pages = (total + limit - 1) // limit
+    
+    return PaginatedAssets(
+        items=assets,
+        total=total,
+        page=page,
+        limit=limit,
+        total_pages=total_pages
+    )
 
 @api_router.get("/assets/{asset_id}", response_model=Asset)
 async def get_asset(asset_id: str, current_user: User = Depends(get_current_user)):
