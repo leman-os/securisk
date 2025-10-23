@@ -267,6 +267,16 @@ const Incidents = ({ user }) => {
     setDateTo('');
   };
 
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+    setPage(1); // Reset to first page on sort
+  };
+
   const getCriticalityColor = (criticality) => {
     switch (criticality) {
       case 'Высокая': return 'bg-red-100 text-red-800';
