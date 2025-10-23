@@ -70,13 +70,16 @@ const Assets = ({ user }) => {
 
   useEffect(() => {
     fetchSettings();
-    fetchAssets();
     // Load visible columns from localStorage
     const savedColumns = localStorage.getItem('assets_visible_columns');
     if (savedColumns) {
       setVisibleColumns(JSON.parse(savedColumns));
     }
   }, []);
+
+  useEffect(() => {
+    fetchAssets();
+  }, [page, limit, sortBy, sortOrder]);
 
   useEffect(() => {
     // Save visible columns to localStorage
