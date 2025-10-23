@@ -847,7 +847,7 @@ const Incidents = ({ user }) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {incidents.map((incident) => (
+                {getFilteredIncidents().map((incident) => (
                   <TableRow key={incident.id}>
                     {visibleColumns.incident_number && <TableCell className="font-medium">{incident.incident_number}</TableCell>}
                     {visibleColumns.incident_time && <TableCell>{new Date(incident.incident_time).toLocaleString('ru-RU', { 
