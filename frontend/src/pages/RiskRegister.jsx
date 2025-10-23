@@ -494,6 +494,94 @@ const RiskRegister = ({ user }) => {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* View Dialog */}
+        <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Просмотр риска</DialogTitle>
+              <DialogDescription>Подробная информация о риске информационной безопасности</DialogDescription>
+            </DialogHeader>
+            {viewingRisk && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Номер риска</Label>
+                    <p className="text-sm">{viewingRisk.risk_number}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Статус</Label>
+                    <Badge className={viewingRisk.status === 'Выявлен' ? 'bg-blue-100 text-blue-800' : viewingRisk.status === 'Принят' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                      {viewingRisk.status}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label className="text-xs font-semibold text-slate-500">Название</Label>
+                    <p className="text-sm font-medium">{viewingRisk.title}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Категория</Label>
+                    <p className="text-sm">{viewingRisk.category}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Уровень риска</Label>
+                    <Badge className={viewingRisk.risk_level === 'Высокий' ? 'bg-red-100 text-red-800' : viewingRisk.risk_level === 'Средний' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}>
+                      {viewingRisk.risk_level}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Вероятность</Label>
+                    <p className="text-sm">{viewingRisk.likelihood}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Воздействие</Label>
+                    <p className="text-sm">{viewingRisk.impact}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Ответственный</Label>
+                    <p className="text-sm">{viewingRisk.owner || '-'}</p>
+                  </div>
+                  {viewingRisk.deadline && (
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold text-slate-500">Срок</Label>
+                      <p className="text-sm">{new Date(viewingRisk.deadline).toLocaleDateString('ru-RU')}</p>
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Приоритет</Label>
+                    <p className="text-sm">{viewingRisk.priority}</p>
+                  </div>
+                </div>
+                {viewingRisk.description && (
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Описание</Label>
+                    <p className="text-sm whitespace-pre-wrap">{viewingRisk.description}</p>
+                  </div>
+                )}
+                {viewingRisk.treatment_measures && (
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Меры обработки</Label>
+                    <p className="text-sm whitespace-pre-wrap">{viewingRisk.treatment_measures}</p>
+                  </div>
+                )}
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
+                    <X className="w-4 h-4 mr-2" />
+                    Закрыть
+                  </Button>
+                  <Button variant="outline" onClick={handleEditFromView}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Редактировать
+                  </Button>
+                  <Button variant="outline" className="text-red-600 hover:text-red-700" onClick={handleDeleteFromView}>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Удалить
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Filters */}
