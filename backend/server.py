@@ -144,6 +144,7 @@ class IncidentCreate(BaseModel):
     criticality: str
     detected_by: Optional[str] = None
     status: str
+    closed_at: Optional[datetime] = None  # Время закрытия
     description: Optional[str] = None
     measures: Optional[str] = None
     is_repeat: bool = False
