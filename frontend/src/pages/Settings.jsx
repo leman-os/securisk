@@ -16,6 +16,7 @@ const Settings = ({ user }) => {
   const [newSubjectType, setNewSubjectType] = useState('');
   const [newSystem, setNewSystem] = useState('');
   const [newThreat, setNewThreat] = useState('');
+  const [newAssetStatus, setNewAssetStatus] = useState('');
 
   useEffect(() => {
     fetchSettings();
