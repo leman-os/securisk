@@ -524,75 +524,143 @@ const Incidents = ({ user }) => {
               <DialogDescription>Подробная информация об инциденте</DialogDescription>
             </DialogHeader>
             {viewingIncident && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Номер инцидента</Label>
-                    <p className="text-sm">{viewingIncident.incident_number}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Статус</Label>
-                    <Badge className={viewingIncident.status === 'Открыт' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}>
-                      {viewingIncident.status}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Время инцидента</Label>
-                    <p className="text-sm">{viewingIncident.incident_time ? new Date(viewingIncident.incident_time).toLocaleString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Время обнаружения</Label>
-                    <p className="text-sm">{viewingIncident.detection_time ? new Date(viewingIncident.detection_time).toLocaleString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Нарушитель</Label>
-                    <p className="text-sm">{viewingIncident.violator || '-'}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Система</Label>
-                    <p className="text-sm">{viewingIncident.system || '-'}</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Критичность</Label>
-                    <Badge className={viewingIncident.criticality === 'Высокая' ? 'bg-red-100 text-red-800' : viewingIncident.criticality === 'Средняя' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}>
-                      {viewingIncident.criticality}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Обнаружил</Label>
-                    <p className="text-sm">{viewingIncident.detected_by || '-'}</p>
-                  </div>
-                  {viewingIncident.mtta && (
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-slate-500">MTTA</Label>
-                      <p className="text-sm">{(viewingIncident.mtta / 60).toFixed(2)} ч</p>
+              <div className="space-y-6">
+                {/* Основная информация */}
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Основная информация</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Номер инцидента:</span>
+                      <p className="text-sm mt-1">{viewingIncident.incident_number}</p>
                     </div>
-                  )}
-                  {viewingIncident.mttr && (
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-slate-500">MTTR</Label>
-                      <p className="text-sm">{(viewingIncident.mttr / 60).toFixed(2)} ч</p>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Статус:</span>
+                      <p className="text-sm mt-1">{viewingIncident.status}</p>
                     </div>
-                  )}
-                  {viewingIncident.mttc && (
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-slate-500">MTTC</Label>
-                      <p className="text-sm">{(viewingIncident.mttc / 60).toFixed(2)} ч</p>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Критичность:</span>
+                      <p className="text-sm mt-1">{viewingIncident.criticality}</p>
                     </div>
-                  )}
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Тип инцидента:</span>
+                      <p className="text-sm mt-1">{viewingIncident.incident_type || '-'}</p>
+                    </div>
+                  </div>
                 </div>
-                {viewingIncident.description && (
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Описание</Label>
-                    <p className="text-sm whitespace-pre-wrap">{viewingIncident.description}</p>
+
+                {/* Временные метки */}
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Временные данные</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Время инцидента:</span>
+                      <p className="text-sm mt-1">{viewingIncident.incident_time ? new Date(viewingIncident.incident_time).toLocaleString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Время обнаружения:</span>
+                      <p className="text-sm mt-1">{viewingIncident.detection_time ? new Date(viewingIncident.detection_time).toLocaleString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Время начала реакции:</span>
+                      <p className="text-sm mt-1">{viewingIncident.reaction_start_time ? new Date(viewingIncident.reaction_start_time).toLocaleString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Время закрытия:</span>
+                      <p className="text-sm mt-1">{viewingIncident.closed_at ? new Date(viewingIncident.closed_at).toLocaleString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Участники и системы */}
+                <div className="bg-amber-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Участники и системы</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Нарушитель:</span>
+                      <p className="text-sm mt-1">{viewingIncident.violator || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Тип субъекта:</span>
+                      <p className="text-sm mt-1">{viewingIncident.subject_type || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Логин:</span>
+                      <p className="text-sm mt-1">{viewingIncident.login || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Система:</span>
+                      <p className="text-sm mt-1">{viewingIncident.system || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Источник обнаружения:</span>
+                      <p className="text-sm mt-1">{viewingIncident.detection_source || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Обнаружил:</span>
+                      <p className="text-sm mt-1">{viewingIncident.detected_by || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Метрики */}
+                {(viewingIncident.mtta || viewingIncident.mttr || viewingIncident.mttc) && (
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-sm text-slate-700 mb-3">Метрики</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <span className="text-xs font-semibold text-slate-500 uppercase">MTTA (Время подтверждения):</span>
+                        <p className="text-sm mt-1">{viewingIncident.mtta ? `${(viewingIncident.mtta / 60).toFixed(2)} ч` : '-'}</p>
+                      </div>
+                      <div>
+                        <span className="text-xs font-semibold text-slate-500 uppercase">MTTR (Время реакции):</span>
+                        <p className="text-sm mt-1">{viewingIncident.mttr ? `${(viewingIncident.mttr / 60).toFixed(2)} ч` : '-'}</p>
+                      </div>
+                      <div>
+                        <span className="text-xs font-semibold text-slate-500 uppercase">MTTC (Время закрытия):</span>
+                        <p className="text-sm mt-1">{viewingIncident.mttc ? `${(viewingIncident.mttc / 60).toFixed(2)} ч` : '-'}</p>
+                      </div>
+                    </div>
                   </div>
                 )}
-                {viewingIncident.measures && (
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-500">Принятые меры</Label>
-                    <p className="text-sm whitespace-pre-wrap">{viewingIncident.measures}</p>
+
+                {/* Описание и меры */}
+                {(viewingIncident.description || viewingIncident.measures || viewingIncident.comment) && (
+                  <div className="space-y-3">
+                    {viewingIncident.description && (
+                      <div className="bg-white border border-slate-200 p-4 rounded-lg">
+                        <span className="text-xs font-semibold text-slate-500 uppercase">Описание:</span>
+                        <p className="text-sm mt-2 whitespace-pre-wrap">{viewingIncident.description}</p>
+                      </div>
+                    )}
+                    {viewingIncident.measures && (
+                      <div className="bg-white border border-slate-200 p-4 rounded-lg">
+                        <span className="text-xs font-semibold text-slate-500 uppercase">Принятые меры:</span>
+                        <p className="text-sm mt-2 whitespace-pre-wrap">{viewingIncident.measures}</p>
+                      </div>
+                    )}
+                    {viewingIncident.comment && (
+                      <div className="bg-white border border-slate-200 p-4 rounded-lg">
+                        <span className="text-xs font-semibold text-slate-500 uppercase">Комментарий:</span>
+                        <p className="text-sm mt-2 whitespace-pre-wrap">{viewingIncident.comment}</p>
+                      </div>
+                    )}
                   </div>
                 )}
+
+                {/* Дополнительная информация */}
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Дополнительно</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Повторный инцидент:</span>
+                      <p className="text-sm mt-1">{viewingIncident.is_repeat ? 'Да' : 'Нет'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-500 uppercase">Дата создания:</span>
+                      <p className="text-sm mt-1">{viewingIncident.created_at ? new Date(viewingIncident.created_at).toLocaleString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
+                    </div>
+                  </div>
+                </div>
                 <div className="flex justify-end gap-2 pt-4 border-t">
                   <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleDeleteFromView} title="Удалить">
                     <Trash2 className="w-4 h-4" />
