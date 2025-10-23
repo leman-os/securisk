@@ -182,7 +182,7 @@ backend:
         comment: "✅ TESTED: Assets pagination endpoint works correctly. Response structure includes all required fields. Tested with page=1, limit=30. Created test asset successfully."
 
 frontend:
-  - task: "Update Incidents page with pagination and sorting UI"
+  - task: "Test Incidents page filters functionality"
     implemented: true
     working: "NA"
     file: "frontend/src/pages/Incidents.jsx"
@@ -191,10 +191,10 @@ frontend:
     needs_retesting: true
     status_history:
       - working: "NA"
-        agent: "main"
-        comment: "Added pagination controls (10/20/30/50/100 items per page), sortable table headers, page navigation buttons. Updated fetchIncidents to use new API params"
+        agent: "testing"
+        comment: "НОВОЕ ТЕСТИРОВАНИЕ: Нужно проверить работу фильтров Статус, Критичность, Общий поиск на странице Инциденты. Фильтры должны применяться мгновенно при изменении значений."
         
-  - task: "Update Assets page with pagination and sorting"
+  - task: "Test Assets page filters functionality"
     implemented: true
     working: "NA"
     file: "frontend/src/pages/Assets.jsx"
@@ -203,10 +203,10 @@ frontend:
     needs_retesting: true
     status_history:
       - working: "NA"
-        agent: "main"
-        comment: "Added pagination state, updated fetchAssets, added handleSort function. UI updates pending"
+        agent: "testing"
+        comment: "НОВОЕ ТЕСТИРОВАНИЕ: Нужно проверить работу фильтров Статус, Критичность, Общий поиск на странице Активы. Фильтры должны применяться мгновенно при изменении значений."
         
-  - task: "Update RiskRegister page with pagination and sorting"
+  - task: "Test RiskRegister page filters functionality"
     implemented: true
     working: "NA"
     file: "frontend/src/pages/RiskRegister.jsx"
@@ -215,32 +215,83 @@ frontend:
     needs_retesting: true
     status_history:
       - working: "NA"
+        agent: "testing"
+        comment: "НОВОЕ ТЕСТИРОВАНИЕ: Нужно проверить работу фильтров Категория, Статус, Уровень риска, Общий поиск на странице Реестр рисков. Фильтры должны применяться мгновенно при изменении значений."
+
+  - task: "Update Incidents page with pagination and sorting UI"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/Incidents.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added pagination controls (10/20/30/50/100 items per page), sortable table headers, page navigation buttons. Updated fetchIncidents to use new API params"
+      - working: true
+        agent: "testing"
+        comment: "✅ ПРЕДЫДУЩЕЕ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Пагинация и сортировка работают корректно"
+        
+  - task: "Update Assets page with pagination and sorting"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/Assets.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added pagination state, updated fetchAssets, added handleSort function. UI updates pending"
+      - working: true
+        agent: "testing"
+        comment: "✅ ПРЕДЫДУЩЕЕ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Пагинация и сортировка работают корректно"
+        
+  - task: "Update RiskRegister page with pagination and sorting"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/RiskRegister.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
         agent: "main"
         comment: "Added pagination state, updated fetchRisks, added handleSort function. UI updates pending"
+      - working: true
+        agent: "testing"
+        comment: "✅ ПРЕДЫДУЩЕЕ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Пагинация и сортировка работают корректно"
         
   - task: "Change site title and favicon"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/public/index.html"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Changed title to 'Securisk. Менеджмент ИБ', created custom SVG favicon with shield and lock icon"
+      - working: true
+        agent: "testing"
+        comment: "✅ ПРЕДЫДУЩЕЕ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Заголовок и иконка обновлены корректно"
         
   - task: "Reduce padding from sidebar to content area"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/components/Layout.jsx"
     stuck_count: 0
     priority: "low"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Changed padding from p-8 to p-4 in main content area"
+      - working: true
+        agent: "testing"
+        comment: "✅ ПРЕДЫДУЩЕЕ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Отступы уменьшены корректно"
 
 metadata:
   created_by: "main_agent"
