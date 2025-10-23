@@ -182,6 +182,30 @@ const Assets = ({ user }) => {
     }
   };
 
+  const handleView = (asset) => {
+    setViewingAsset(asset);
+    setViewDialogOpen(true);
+  };
+
+  const handleEditFromView = () => {
+    setEditingAsset(viewingAsset);
+    setFormData(viewingAsset);
+    setViewDialogOpen(false);
+    setDialogOpen(true);
+  };
+
+  const handleDeleteFromView = async () => {
+    if (!window.confirm('Удалить актив?')) return;
+    try {
+      await axios.delete(`${API}/assets/${viewingAsset.id}`);
+      toast.success('Актив удален');
+      setViewDialogOpen(false);
+      fetchAssets();
+    } catch (error) {
+      toast.error('Ошибка при удалении');
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm('Удалить актив?')) return;
     try {
