@@ -850,7 +850,13 @@ const Incidents = ({ user }) => {
                 {incidents.map((incident) => (
                   <TableRow key={incident.id}>
                     {visibleColumns.incident_number && <TableCell className="font-medium">{incident.incident_number}</TableCell>}
-                    {visibleColumns.incident_time && <TableCell>{new Date(incident.incident_time).toLocaleString('ru-RU')}</TableCell>}
+                    {visibleColumns.incident_time && <TableCell>{new Date(incident.incident_time).toLocaleString('ru-RU', { 
+                      year: 'numeric', 
+                      month: '2-digit', 
+                      day: '2-digit', 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}</TableCell>}
                     {visibleColumns.violator && <TableCell>{incident.violator}</TableCell>}
                     {visibleColumns.system && <TableCell>{incident.system}</TableCell>}
                     {visibleColumns.incident_type && <TableCell>{incident.incident_type}</TableCell>}
