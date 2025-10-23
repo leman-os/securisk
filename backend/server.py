@@ -233,11 +233,13 @@ class Settings(BaseModel):
     subject_types: List[str] = Field(default_factory=lambda: ["Внутренний", "Внешний", "Привилегированный"])
     systems: List[str] = Field(default_factory=lambda: ["Windows", "Linux", "MacOS", "Web-приложение"])
     threats: List[str] = Field(default_factory=lambda: ["Несанкционированный доступ", "Утечка данных", "DDoS", "Вредоносное ПО"])
+    asset_statuses: List[str] = Field(default_factory=lambda: ["Актуален", "Не актуален", "В работе", "Архив"])
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class SettingsUpdate(BaseModel):
     subject_types: Optional[List[str]] = None
     systems: Optional[List[str]] = None
+    asset_statuses: Optional[List[str]] = None
     threats: Optional[List[str]] = None
 
 class DashboardStats(BaseModel):
