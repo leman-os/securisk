@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Download, Settings, Clock, Timer, CheckCircle2, Filter } from 'lucide-react';
+import { Plus, Trash2, Download, Settings, Clock, Timer, CheckCircle2, Filter, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Incidents = ({ user }) => {
