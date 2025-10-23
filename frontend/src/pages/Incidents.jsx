@@ -18,7 +18,9 @@ const Incidents = ({ user }) => {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editingIncident, setEditingIncident] = useState(null);
+  const [viewingIncident, setViewingIncident] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('Все');
   const [criticalityFilter, setCriticalityFilter] = useState('Все');
