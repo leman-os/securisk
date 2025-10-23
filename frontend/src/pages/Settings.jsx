@@ -265,6 +265,53 @@ const Settings = ({ user }) => {
         </CardContent>
       </Card>
 
+      {/* Asset Statuses */}
+      <Card className="border-slate-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <SettingsIcon className="w-5 h-5 text-cyan-600" />
+            Статусы активов
+          </CardTitle>
+          <CardDescription>
+            Список статусов для классификации информационных активов
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {settings?.asset_statuses?.map((status) => (
+              <Badge
+                key={status}
+                className="bg-green-100 text-green-800 border-green-300 px-3 py-1.5 text-sm"
+                variant="outline"
+              >
+                {status}
+                <button
+                  onClick={() => removeAssetStatus(status)}
+                  className="ml-2 hover:text-green-900"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              data-testid="new-asset-status-input"
+              placeholder="Добавить новый статус актива"
+              value={newAssetStatus}
+              onChange={(e) => setNewAssetStatus(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addAssetStatus()}
+            />
+            <Button
+              onClick={addAssetStatus}
+              className="bg-gradient-to-r from-cyan-500 to-cyan-600"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-slate-200 bg-slate-50">
         <CardContent className="pt-6">
           <p className="text-sm text-slate-600">
