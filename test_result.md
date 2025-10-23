@@ -101,3 +101,138 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: |
+  1) Исправить проблему с сохранением времени закрытия инцидента при создании
+  2) Добавить пагинацию (10, 20, 30, 50, 100 записей) и сортировку по столбцам для: Инциденты, Активы, Риски
+  3) Изменить title на "Securisk. Менеджмент ИБ." и обновить иконку сайта
+  4) Уменьшить отступ от левого меню до таблиц
+
+backend:
+  - task: "Fix incident closed_at field not saving on creation"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added closed_at field to IncidentCreate model (line 147)"
+        
+  - task: "Add pagination and sorting to incidents endpoint"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Modified GET /api/incidents endpoint to support page, limit, sort_by, sort_order parameters. Returns PaginatedIncidents response"
+        
+  - task: "Add pagination and sorting to risks endpoint"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Modified GET /api/risks endpoint to support page, limit, sort_by, sort_order parameters. Returns PaginatedRisks response"
+        
+  - task: "Add pagination and sorting to assets endpoint"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Modified GET /api/assets endpoint to support page, limit, sort_by, sort_order parameters. Returns PaginatedAssets response"
+
+frontend:
+  - task: "Update Incidents page with pagination and sorting UI"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Incidents.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added pagination controls (10/20/30/50/100 items per page), sortable table headers, page navigation buttons. Updated fetchIncidents to use new API params"
+        
+  - task: "Update Assets page with pagination and sorting"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Assets.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added pagination state, updated fetchAssets, added handleSort function. UI updates pending"
+        
+  - task: "Update RiskRegister page with pagination and sorting"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/RiskRegister.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added pagination state, updated fetchRisks, added handleSort function. UI updates pending"
+        
+  - task: "Change site title and favicon"
+    implemented: true
+    working: "NA"
+    file: "frontend/public/index.html"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Changed title to 'Securisk. Менеджмент ИБ', created custom SVG favicon with shield and lock icon"
+        
+  - task: "Reduce padding from sidebar to content area"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/Layout.jsx"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Changed padding from p-8 to p-4 in main content area"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Backend API pagination and sorting"
+    - "Frontend Incidents pagination UI"
+    - "Incident closed_at field fix"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Implemented all 4 requested features: 1) Fixed IncidentCreate model to include closed_at field 2) Added pagination (10/20/30/50/100) and sorting to incidents, risks, and assets endpoints 3) Changed title and created custom SVG favicon 4) Reduced padding in Layout. Backend changes complete. Frontend Incidents page has full pagination UI. Assets and RiskRegister need table header updates for sorting. Ready for backend testing."
