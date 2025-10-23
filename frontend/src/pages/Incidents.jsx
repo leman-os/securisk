@@ -878,7 +878,7 @@ const Incidents = ({ user }) => {
               </TableBody>
             </Table>
           </div>
-          {getFilteredIncidents().length === 0 && (
+          {incidents.length === 0 && !loading && (
             <div className="text-center py-8 text-slate-500">Нет инцидентов</div>
           )}
         </CardContent>
