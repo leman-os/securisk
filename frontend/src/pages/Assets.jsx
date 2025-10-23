@@ -502,6 +502,88 @@ const Assets = ({ user }) => {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* View Dialog */}
+        <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Просмотр актива</DialogTitle>
+              <DialogDescription>Подробная информация об информационном активе</DialogDescription>
+            </DialogHeader>
+            {viewingAsset && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">ID актива</Label>
+                    <p className="text-sm">{viewingAsset.asset_number}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Статус</Label>
+                    <Badge className={viewingAsset.status === 'Актуален' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                      {viewingAsset.status}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label className="text-xs font-semibold text-slate-500">Название</Label>
+                    <p className="text-sm font-medium">{viewingAsset.name}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Категория</Label>
+                    <p className="text-sm">{viewingAsset.category || '-'}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Критичность</Label>
+                    <Badge className={viewingAsset.criticality === 'Высокая' ? 'bg-red-100 text-red-800' : viewingAsset.criticality === 'Средняя' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}>
+                      {viewingAsset.criticality}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Владелец</Label>
+                    <p className="text-sm">{viewingAsset.owner || '-'}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Формат</Label>
+                    <p className="text-sm">{viewingAsset.format || '-'}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Местоположение</Label>
+                    <p className="text-sm">{viewingAsset.location || '-'}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Классификация</Label>
+                    <p className="text-sm">{viewingAsset.classification || '-'}</p>
+                  </div>
+                  {viewingAsset.review_date && (
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold text-slate-500">Дата пересмотра</Label>
+                      <p className="text-sm">{new Date(viewingAsset.review_date).toLocaleDateString('ru-RU')}</p>
+                    </div>
+                  )}
+                </div>
+                {viewingAsset.description && (
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-slate-500">Описание</Label>
+                    <p className="text-sm whitespace-pre-wrap">{viewingAsset.description}</p>
+                  </div>
+                )}
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
+                    <X className="w-4 h-4 mr-2" />
+                    Закрыть
+                  </Button>
+                  <Button variant="outline" onClick={handleEditFromView}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Редактировать
+                  </Button>
+                  <Button variant="outline" className="text-red-600 hover:text-red-700" onClick={handleDeleteFromView}>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Удалить
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Filters */}
