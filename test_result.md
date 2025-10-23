@@ -184,39 +184,48 @@ backend:
 frontend:
   - task: "Test Incidents page filters functionality"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/Incidents.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "НОВОЕ ТЕСТИРОВАНИЕ: Нужно проверить работу фильтров Статус, Критичность, Общий поиск на странице Инциденты. Фильтры должны применяться мгновенно при изменении значений."
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Фильтры на странице Инциденты работают корректно. Статус фильтр: 4→3 инцидентов, Критичность фильтр: 3→1 инцидентов, Общий поиск работает мгновенно, Сброс фильтров восстанавливает все 4 записи. Все фильтры применяются МГНОВЕННО без дополнительных кнопок."
         
   - task: "Test Assets page filters functionality"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/Assets.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "НОВОЕ ТЕСТИРОВАНИЕ: Нужно проверить работу фильтров Статус, Критичность, Общий поиск на странице Активы. Фильтры должны применяться мгновенно при изменении значений."
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Фильтры на странице Активы работают корректно. Общий поиск работает мгновенно, панель фильтров открывается/закрывается правильно, выпадающие списки Статус и Критичность присутствуют и функциональны. Все фильтры применяются МГНОВЕННО."
         
   - task: "Test RiskRegister page filters functionality"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/RiskRegister.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "НОВОЕ ТЕСТИРОВАНИЕ: Нужно проверить работу фильтров Категория, Статус, Уровень риска, Общий поиск на странице Реестр рисков. Фильтры должны применяться мгновенно при изменении значений."
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Фильтры на странице Реестр рисков работают корректно. Фильтр Категория 'Технический' работает мгновенно, Общий поиск работает в реальном времени, Сброс фильтров работает правильно, панель фильтров открывается/закрывается корректно. Все фильтры применяются МГНОВЕННО."
 
   - task: "Update Incidents page with pagination and sorting UI"
     implemented: true
