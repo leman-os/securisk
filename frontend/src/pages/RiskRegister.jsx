@@ -742,14 +742,14 @@ const RiskRegister = ({ user }) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {risks.length === 0 ? (
+                {filteredRisks.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={13} className="text-center py-8 text-slate-500">
                       Риски не найдены
                     </TableCell>
                   </TableRow>
                 ) : (
-                  risks.map((risk) => (
+                  filteredRisks.map((risk) => (
                     <TableRow
                       key={risk.id}
                       data-testid={`risk-row-${risk.id}`}
