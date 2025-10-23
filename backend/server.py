@@ -616,15 +616,42 @@ async def create_incident(incident_data: IncidentCreate, current_user: User = De
     await db.incidents.insert_one(doc)
     return incident
 
-@api_router.get("/incidents", response_model=List[Incident])
-async def get_incidents(current_user: User = Depends(get_current_user)):
-    incidents = await db.incidents.find({}, {"_id": 0}).to_list(1000)
+@api_router.get("/incidents", response_model=PaginatedIncidents)
+async def get_incidents(
+    page: int = 1,
+    limit: int = 20,
+    sort_by: Optional[str] = "created_at",
+    sort_order: Optional[str] = "desc",
+    current_user: User = Depends(get_current_user)
+):
+    # Calculate skip
+    skip = (page - 1) * limit
+    
+    # Determine sort direction
+    sort_direction = -1 if sort_order == "desc" else 1
+    
+    # Get total count
+    total = await db.incidents.count_documents({})
+    
+    # Get paginated and sorted incidents
+    incidents = await db.incidents.find({}, {"_id": 0}).sort(sort_by, sort_direction).skip(skip).limit(limit).to_list(limit)
+    
     for incident in incidents:
         # Parse datetime fields
         for field in ['incident_time', 'detection_time', 'reaction_start_time', 'closed_at', 'created_at', 'updated_at']:
             if incident.get(field) and isinstance(incident[field], str):
                 incident[field] = datetime.fromisoformat(incident[field])
-    return incidents
+    
+    # Calculate total pages
+    total_pages = (total + limit - 1) // limit
+    
+    return PaginatedIncidents(
+        items=incidents,
+        total=total,
+        page=page,
+        limit=limit,
+        total_pages=total_pages
+    )
 
 @api_router.get("/incidents/metrics/summary", response_model=IncidentMetrics)
 async def get_incident_metrics(current_user: User = Depends(get_current_user)):
