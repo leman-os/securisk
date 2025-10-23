@@ -152,6 +152,16 @@ const Assets = ({ user }) => {
     setFilterOwner('');
   };
 
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+    setPage(1);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
