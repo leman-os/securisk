@@ -88,6 +88,10 @@ const Threats = ({ user }) => {
     }
   };
 
+  const getMitreTechnique = (id) => {
+    return mitreAttacks.find(tech => tech.id === id);
+  };
+
   const fetchThreats = async () => {
     try {
       const response = await axios.get(`${API}/threats`, {
