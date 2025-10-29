@@ -244,53 +244,6 @@ const Settings = ({ user }) => {
         </CardContent>
       </Card>
 
-      {/* Threats */}
-      <Card className="border-slate-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <SettingsIcon className="w-5 h-5 text-cyan-600" />
-            Угрозы
-          </CardTitle>
-          <CardDescription>
-            Список угроз для классификации информационных активов
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-2">
-            {settings?.threats?.map((threat) => (
-              <Badge
-                key={threat}
-                className="bg-red-100 text-red-800 border-red-300 px-3 py-1.5 text-sm"
-                variant="outline"
-              >
-                {threat}
-                <button
-                  onClick={() => removeThreat(threat)}
-                  className="ml-2 hover:text-red-900"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <Input
-              data-testid="new-threat-input"
-              placeholder="Добавить новую угрозу"
-              value={newThreat}
-              onChange={(e) => setNewThreat(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && addThreat()}
-            />
-            <Button
-              onClick={addThreat}
-              className="bg-gradient-to-r from-cyan-500 to-cyan-600"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Asset Statuses */}
       <Card className="border-slate-200">
         <CardHeader>
