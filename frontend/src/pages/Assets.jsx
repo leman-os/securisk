@@ -106,6 +106,15 @@ const Assets = ({ user }) => {
     }
   };
 
+  const fetchThreats = async () => {
+    try {
+      const response = await axios.get(`${API}/threats`, { params: { limit: 1000 } });
+      setThreats(response.data.items);
+    } catch (error) {
+      console.error('Error fetching threats:', error);
+    }
+  };
+
   const fetchAssets = async () => {
     try {
       const response = await axios.get(`${API}/assets`, {
