@@ -191,8 +191,76 @@ const RiskRegister = ({ user }) => {
       status: viewingRisk.status || 'Открыт',
       review_date: viewingRisk.review_date ? new Date(viewingRisk.review_date).toISOString().split('T')[0] : '',
     });
+    
+    // Set dynamic selects
+    setAssetSelects(viewingRisk.related_assets?.length > 0 
+      ? viewingRisk.related_assets.map((id, idx) => ({ id: idx, value: id }))
+      : [{ id: 0, value: '' }]
+    );
+    setThreatSelects(viewingRisk.related_threats?.length > 0
+      ? viewingRisk.related_threats.map((id, idx) => ({ id: idx, value: id }))
+      : [{ id: 0, value: '' }]
+    );
+    setVulnSelects(viewingRisk.related_vulnerabilities?.length > 0
+      ? viewingRisk.related_vulnerabilities.map((id, idx) => ({ id: idx, value: id }))
+      : [{ id: 0, value: '' }]
+    );
+    
     setViewDialogOpen(false);
     setDialogOpen(true);
+  };
+
+  // Dynamic select handlers
+  const addAssetSelect = () => {
+    setAssetSelects([...assetSelects, { id: Date.now(), value: '' }]);
+  };
+
+  const updateAssetSelect = (id, value) => {
+    setAssetSelects(assetSelects.map(s => s.id === id ? { ...s, value } : s));
+    // Update formData
+    const selectedAssets = assetSelects.map(s => s.id === id ? value : s.value).filter(v => v);
+    setFormData({ ...formData, related_assets: selectedAssets });
+  };
+
+  const removeAssetSelect = (id) => {
+    const updated = assetSelects.filter(s => s.id !== id);
+    setAssetSelects(updated.length > 0 ? updated : [{ id: 0, value: '' }]);
+    const selectedAssets = updated.map(s => s.value).filter(v => v);
+    setFormData({ ...formData, related_assets: selectedAssets });
+  };
+
+  const addThreatSelect = () => {
+    setThreatSelects([...threatSelects, { id: Date.now(), value: '' }]);
+  };
+
+  const updateThreatSelect = (id, value) => {
+    setThreatSelects(threatSelects.map(s => s.id === id ? { ...s, value } : s));
+    const selectedThreats = threatSelects.map(s => s.id === id ? value : s.value).filter(v => v);
+    setFormData({ ...formData, related_threats: selectedThreats });
+  };
+
+  const removeThreatSelect = (id) => {
+    const updated = threatSelects.filter(s => s.id !== id);
+    setThreatSelects(updated.length > 0 ? updated : [{ id: 0, value: '' }]);
+    const selectedThreats = updated.map(s => s.value).filter(v => v);
+    setFormData({ ...formData, related_threats: selectedThreats });
+  };
+
+  const addVulnSelect = () => {
+    setVulnSelects([...vulnSelects, { id: Date.now(), value: '' }]);
+  };
+
+  const updateVulnSelect = (id, value) => {
+    setVulnSelects(vulnSelects.map(s => s.id === id ? { ...s, value } : s));
+    const selectedVulns = vulnSelects.map(s => s.id === id ? value : s.value).filter(v => v);
+    setFormData({ ...formData, related_vulnerabilities: selectedVulns });
+  };
+
+  const removeVulnSelect = (id) => {
+    const updated = vulnSelects.filter(s => s.id !== id);
+    setVulnSelects(updated.length > 0 ? updated : [{ id: 0, value: '' }]);
+    const selectedVulns = updated.map(s => s.value).filter(v => v);
+    setFormData({ ...formData, related_vulnerabilities: selectedVulns });
   };
 
   const handleDelete = async (id) => {
