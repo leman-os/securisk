@@ -222,6 +222,21 @@ const RiskRegister = ({ user }) => {
       status: risk.status || 'Открыт',
       review_date: risk.review_date ? new Date(risk.review_date).toISOString().split('T')[0] : '',
     });
+    
+    // Set dynamic selects based on existing data
+    setAssetSelects(risk.related_assets?.length > 0 
+      ? risk.related_assets.map((id, idx) => ({ id: idx, value: id }))
+      : [{ id: 0, value: '' }]
+    );
+    setThreatSelects(risk.related_threats?.length > 0
+      ? risk.related_threats.map((id, idx) => ({ id: idx, value: id }))
+      : [{ id: 0, value: '' }]
+    );
+    setVulnSelects(risk.related_vulnerabilities?.length > 0
+      ? risk.related_vulnerabilities.map((id, idx) => ({ id: idx, value: id }))
+      : [{ id: 0, value: '' }]
+    );
+    
     setDialogOpen(true);
   };
 
