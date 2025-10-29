@@ -131,6 +131,21 @@ user_problem_statement: |
   5) Протестировать работу фильтров в приложении SecuRisk
 
 backend:
+  - task: "Test asset creation with empty threats array"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "НОВОЕ ТЕСТИРОВАНИЕ: Нужно протестировать создание актива через POST /api/assets с пустым массивом threats. Проверить что backend корректно принимает и сохраняет пустой массив."
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Создание актива с пустым массивом threats работает корректно. POST запрос на /api/assets успешно создал актив с ID: 74ce7240-14cf-453d-87e3-6b4b48774763. Поле threats корректно сохранено как пустой массив []. Все обязательные поля присутствуют в ответе. Backend правильно обрабатывает пустой массив threats."
+
   - task: "Fix incident closed_at field not saving on creation"
     implemented: true
     working: true
