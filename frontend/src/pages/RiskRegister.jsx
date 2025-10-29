@@ -52,6 +52,11 @@ const RiskRegister = ({ user }) => {
     review_date: '',
   });
 
+  // Dynamic select fields
+  const [assetSelects, setAssetSelects] = useState([{ id: 0, value: '' }]);
+  const [threatSelects, setThreatSelects] = useState([{ id: 0, value: '' }]);
+  const [vulnSelects, setVulnSelects] = useState([{ id: 0, value: '' }]);
+
   useEffect(() => {
     fetchAssets();
     fetchThreats();
