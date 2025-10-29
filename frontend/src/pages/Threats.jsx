@@ -280,12 +280,12 @@ const Threats = ({ user }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Связанная уязвимость</Label>
-                <Select value={formData.related_vulnerability_id} onValueChange={(val) => setFormData({...formData, related_vulnerability_id: val})}>
+                <Select value={formData.related_vulnerability_id || 'none'} onValueChange={(val) => setFormData({...formData, related_vulnerability_id: val === 'none' ? '' : val})}>
                   <SelectTrigger>
                     <SelectValue placeholder="Выберите уязвимость" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Не выбрано</SelectItem>
+                    <SelectItem value="none">Не выбрано</SelectItem>
                     {vulnerabilities.map(vuln => (
                       <SelectItem key={vuln.id} value={vuln.id}>
                         {vuln.vulnerability_number} - {vuln.description.substring(0, 50)}
@@ -296,12 +296,12 @@ const Threats = ({ user }) => {
               </div>
               <div>
                 <Label>MITRE ATT&CK Technique</Label>
-                <Select value={formData.mitre_attack_id} onValueChange={(val) => setFormData({...formData, mitre_attack_id: val})}>
+                <Select value={formData.mitre_attack_id || 'none'} onValueChange={(val) => setFormData({...formData, mitre_attack_id: val === 'none' ? '' : val})}>
                   <SelectTrigger>
                     <SelectValue placeholder="Выберите технику" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Не выбрано</SelectItem>
+                    <SelectItem value="none">Не выбрано</SelectItem>
                     {mitreAttacks.map(tech => (
                       <SelectItem key={tech.id} value={tech.id}>
                         {tech.technique_id} - {tech.name}
