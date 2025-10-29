@@ -350,7 +350,11 @@ const Threats = ({ user }) => {
                   </div>
                   <div>
                     <span className="text-xs font-semibold text-slate-500 uppercase">MITRE ATT&CK:</span>
-                    <p className="text-sm mt-1">{viewingThreat.mitre_attack_id || '-'}</p>
+                    <p className="text-sm mt-1">
+                      {viewingThreat.mitre_attack_id ? 
+                        `${getMitreTechnique(viewingThreat.mitre_attack_id)?.technique_id} - ${getMitreTechnique(viewingThreat.mitre_attack_id)?.name}` 
+                        : '-'}
+                    </p>
                   </div>
                 </div>
               </div>
