@@ -986,30 +986,24 @@ async def review_asset(asset_id: str, current_user: User = Depends(get_current_u
 
 # ==================== THREATS ====================
 
-def generate_threat_number():
+async def generate_threat_number():
     """Generate unique threat number like THR-2024-001"""
-    import asyncio
-    loop = asyncio.get_event_loop()
+    existing = await db.threats.find({}, {"threat_number": 1, "_id": 0}).to_list(1000)
+    if not existing:
+        return "THR-2024-001"
     
-    async def _generate():
-        existing = await db.threats.find({}, {"threat_number": 1, "_id": 0}).to_list(1000)
-        if not existing:
-            return "THR-2024-001"
-        
-        numbers = []
-        for threat in existing:
-            if threat.get('threat_number') and threat['threat_number'].startswith('THR-'):
-                try:
-                    num = int(threat['threat_number'].split('-')[-1])
-                    numbers.append(num)
-                except:
-                    pass
-        
-        next_num = max(numbers) + 1 if numbers else 1
-        year = datetime.now().year
-        return f"THR-{year}-{next_num:03d}"
+    numbers = []
+    for threat in existing:
+        if threat.get('threat_number') and threat['threat_number'].startswith('THR-'):
+            try:
+                num = int(threat['threat_number'].split('-')[-1])
+                numbers.append(num)
+            except:
+                pass
     
-    return loop.run_until_complete(_generate())
+    next_num = max(numbers) + 1 if numbers else 1
+    year = datetime.now().year
+    return f"THR-{year}-{next_num:03d}"
 
 @api_router.post("/threats", response_model=Threat)
 async def create_threat(threat: ThreatCreate, current_user: User = Depends(get_current_user)):
