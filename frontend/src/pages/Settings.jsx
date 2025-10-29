@@ -338,10 +338,102 @@ const Settings = ({ user }) => {
         </CardContent>
       </Card>
 
+      {/* Threat Categories */}
+      <Card className="border-slate-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <SettingsIcon className="w-5 h-5 text-cyan-600" />
+            Категории угроз
+          </CardTitle>
+          <CardDescription>
+            Список категорий для классификации угроз ИБ
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {settings?.threat_categories?.map((category) => (
+              <Badge
+                key={category}
+                className="bg-red-100 text-red-800 border-red-300 px-3 py-1.5 text-sm"
+                variant="outline"
+              >
+                {category}
+                <button
+                  onClick={() => removeThreatCategory(category)}
+                  className="ml-2 hover:text-red-900"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Добавить новую категорию угрозы"
+              value={newThreatCategory}
+              onChange={(e) => setNewThreatCategory(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addThreatCategory()}
+            />
+            <Button
+              onClick={addThreatCategory}
+              className="bg-gradient-to-r from-cyan-500 to-cyan-600"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Threat Sources */}
+      <Card className="border-slate-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <SettingsIcon className="w-5 h-5 text-cyan-600" />
+            Источники угроз
+          </CardTitle>
+          <CardDescription>
+            Список источников угроз для реестра угроз
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {settings?.threat_sources?.map((source) => (
+              <Badge
+                key={source}
+                className="bg-orange-100 text-orange-800 border-orange-300 px-3 py-1.5 text-sm"
+                variant="outline"
+              >
+                {source}
+                <button
+                  onClick={() => removeThreatSource(source)}
+                  className="ml-2 hover:text-orange-900"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Добавить новый источник угрозы"
+              value={newThreatSource}
+              onChange={(e) => setNewThreatSource(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addThreatSource()}
+            />
+            <Button
+              onClick={addThreatSource}
+              className="bg-gradient-to-r from-cyan-500 to-cyan-600"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-slate-200 bg-slate-50">
         <CardContent className="pt-6">
           <p className="text-sm text-slate-600">
-            <strong>Примечание:</strong> Изменения в справочниках сразу отражаются при создании и редактировании инцидентов и активов.
+            <strong>Примечание:</strong> Изменения в справочниках сразу отражаются при создании и редактировании инцидентов, активов, угроз и уязвимостей.
           </p>
         </CardContent>
       </Card>
