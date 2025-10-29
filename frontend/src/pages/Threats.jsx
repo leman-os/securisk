@@ -98,6 +98,14 @@ const Threats = ({ user }) => {
     return vulnerabilities.find(vuln => vuln.id === id);
   };
 
+  const handleViewVuln = (vulnId) => {
+    const vuln = vulnerabilities.find(v => v.id === vulnId);
+    if (vuln) {
+      setViewingVuln(vuln);
+      setViewVulnDialogOpen(true);
+    }
+  };
+
   const fetchThreats = async () => {
     try {
       const response = await axios.get(`${API}/threats`, {
