@@ -540,7 +540,7 @@ const Assets = ({ user }) => {
                       <SelectContent>
                         {threats.map(threat => (
                           <SelectItem key={threat.id} value={threat.id}>
-                            {threat.threat_number} - {threat.description.substring(0, 60)}
+                            {threat.threat_number} - {(threat.description || '').substring(0, 60)}
                           </SelectItem>
                         ))}
                       </SelectContent>
