@@ -722,6 +722,30 @@ async def update_risk(risk_id: str, risk_data: RiskUpdate, current_user: User = 
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
     
+    # If probability or impact changed, recalculate risk_level and criticality
+    if 'probability' in update_dict or 'impact' in update_dict:
+        # Get current risk to get missing values
+        current_risk = await db.risks.find_one({"id": risk_id}, {"_id": 0})
+        if not current_risk:
+            raise HTTPException(status_code=404, detail="Risk not found")
+        
+        probability = update_dict.get('probability', current_risk.get('probability'))
+        impact = update_dict.get('impact', current_risk.get('impact'))
+        
+        # Calculate risk_level
+        risk_level = probability * impact
+        update_dict['risk_level'] = risk_level
+        
+        # Calculate criticality
+        if risk_level >= 15:
+            update_dict['criticality'] = 'Критический'
+        elif risk_level >= 10:
+            update_dict['criticality'] = 'Высокий'
+        elif risk_level >= 5:
+            update_dict['criticality'] = 'Средний'
+        else:
+            update_dict['criticality'] = 'Низкий'
+    
     update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
     
     result = await db.risks.update_one({"id": risk_id}, {"$set": update_dict})
