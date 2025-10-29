@@ -616,11 +616,15 @@ const Vulnerabilities = ({ user }) => {
                       onClick={() => handleView(vuln)}
                     >
                       <TableCell className="font-medium">{vuln.vulnerability_number}</TableCell>
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         {vuln.related_asset_id ? (
-                          <span className="text-cyan-600 text-sm">
+                          <button
+                            onClick={() => handleViewAsset(vuln.related_asset_id)}
+                            className="text-cyan-600 text-sm hover:underline flex items-center gap-1"
+                          >
                             {getRelatedAsset(vuln.related_asset_id)?.asset_number}
-                          </span>
+                            <ExternalLink className="w-3 h-3" />
+                          </button>
                         ) : '-'}
                       </TableCell>
                       <TableCell className="max-w-md truncate">{vuln.description}</TableCell>
