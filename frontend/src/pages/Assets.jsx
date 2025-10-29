@@ -299,7 +299,7 @@ const Assets = ({ user }) => {
   const updateThreatSelect = (id, value) => {
     setThreatSelects(threatSelects.map(s => s.id === id ? { ...s, value } : s));
     const selectedThreats = threatSelects.map(s => s.id === id ? value : s.value).filter(v => v);
-    setFormData({ ...formData, threats: selectedThreats });
+    setFormData(prev => ({ ...prev, threats: selectedThreats }));
   };
 
   const removeThreatSelect = (id) => {
