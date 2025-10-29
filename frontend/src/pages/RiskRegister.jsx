@@ -161,20 +161,34 @@ const RiskRegister = ({ user }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Clean up data - remove empty strings, convert to null
+      const probability = Number(formData.probability);
+      const impact = Number(formData.impact);
+      const riskLevel = probability * impact;
+      
+      // Calculate criticality
+      let criticality;
+      if (riskLevel >= 15) criticality = 'Критический';
+      else if (riskLevel >= 10) criticality = 'Высокий';
+      else if (riskLevel >= 5) criticality = 'Средний';
+      else criticality = 'Низкий';
+      
+      // Clean up data - add required fields
       const dataToSend = {
         scenario: formData.scenario,
         related_assets: formData.related_assets || [],
         related_threats: formData.related_threats || [],
         related_vulnerabilities: formData.related_vulnerabilities || [],
-        probability: Number(formData.probability),
-        impact: Number(formData.impact),
+        probability: probability,
+        impact: impact,
+        risk_level: riskLevel,
+        criticality: criticality,
         owner: formData.owner,
         treatment_strategy: formData.treatment_strategy,
         treatment_plan: formData.treatment_plan || null,
         implementation_deadline: formData.implementation_deadline || null,
         status: formData.status,
         review_date: formData.review_date || null,
+        registration_date: new Date().toISOString(),
       };
       
       if (editingRisk) {
