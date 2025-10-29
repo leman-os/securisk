@@ -253,12 +253,12 @@ const Vulnerabilities = ({ user }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Связанный актив</Label>
-                <Select value={formData.related_asset_id} onValueChange={(val) => setFormData({...formData, related_asset_id: val})}>
+                <Select value={formData.related_asset_id || 'none'} onValueChange={(val) => setFormData({...formData, related_asset_id: val === 'none' ? '' : val})}>
                   <SelectTrigger>
                     <SelectValue placeholder="Выберите актив" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Не выбрано</SelectItem>
+                    <SelectItem value="none">Не выбрано</SelectItem>
                     {assets.map(asset => (
                       <SelectItem key={asset.id} value={asset.id}>
                         {asset.asset_number} - {asset.name}
