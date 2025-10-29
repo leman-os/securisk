@@ -333,6 +333,40 @@ const Assets = ({ user }) => {
     }
   };
 
+  const exportToCSV = () => {
+    if (filteredAssets.length === 0) {
+      toast.error('Нет данных для экспорта');
+      return;
+    }
+
+    const headers = ['ID актива', 'Название', 'Категория', 'Владелец', 'Критичность', 'Статус', 'Формат', 'Местоположение', 'Классификация'];
+    
+    const rows = filteredAssets.map(asset => [
+      asset.asset_number,
+      asset.name,
+      asset.category,
+      asset.owner,
+      asset.criticality,
+      asset.status,
+      asset.format,
+      asset.location,
+      asset.classification
+    ]);
+
+    const BOM = '\uFEFF';
+    const csv = BOM + [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell || ''}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `assets_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    toast.success('Данные экспортированы');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
