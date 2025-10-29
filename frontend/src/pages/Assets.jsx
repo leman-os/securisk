@@ -117,6 +117,15 @@ const Assets = ({ user }) => {
     }
   };
 
+  const fetchVulnerabilities = async () => {
+    try {
+      const response = await axios.get(`${API}/vulnerabilities`, { params: { limit: 1000 } });
+      setVulnerabilities(response.data.items);
+    } catch (error) {
+      console.error('Error fetching vulnerabilities:', error);
+    }
+  };
+
   const fetchAssets = async () => {
     try {
       const response = await axios.get(`${API}/assets`, {
