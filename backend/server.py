@@ -727,10 +727,9 @@ async def get_risk(risk_id: str, current_user: User = Depends(get_current_user))
     risk = await db.risks.find_one({"id": risk_id}, {"_id": 0})
     if not risk:
         raise HTTPException(status_code=404, detail="Risk not found")
-    if isinstance(risk.get('created_at'), str):
-        risk['created_at'] = datetime.fromisoformat(risk['created_at'])
-    if isinstance(risk.get('updated_at'), str):
-        risk['updated_at'] = datetime.fromisoformat(risk['updated_at'])
+    for field in ['created_at', 'updated_at', 'registration_date', 'review_date']:
+        if risk.get(field) and isinstance(risk[field], str):
+            risk[field] = datetime.fromisoformat(risk[field])
     return Risk(**risk)
 
 @api_router.put("/risks/{risk_id}", response_model=Risk)
