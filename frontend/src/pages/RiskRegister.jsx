@@ -873,7 +873,7 @@ const RiskRegister = ({ user }) => {
                               >
                                 <Link2 className="w-3 h-3 mr-1 text-red-600" />
                                 <span className="font-medium">{vuln.vulnerability_number}</span>
-                                <span className="ml-1 text-slate-600">- {vuln.description.substring(0, 40)}...</span>
+                                <span className="ml-1 text-slate-600">- {(vuln.description || '').substring(0, 40)}...</span>
                               </button>
                             ) : null;
                           })}
