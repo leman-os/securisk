@@ -291,11 +291,22 @@ const Assets = ({ user }) => {
     setThreatSelects([{ id: 0, value: '' }]);
   };
 
-  const toggleThreat = (threat) => {
-    const newThreats = formData.threats.includes(threat)
-      ? formData.threats.filter((t) => t !== threat)
-      : [...formData.threats, threat];
-    setFormData({ ...formData, threats: newThreats });
+  // Dynamic threat select handlers
+  const addThreatSelect = () => {
+    setThreatSelects([...threatSelects, { id: Date.now(), value: '' }]);
+  };
+
+  const updateThreatSelect = (id, value) => {
+    setThreatSelects(threatSelects.map(s => s.id === id ? { ...s, value } : s));
+    const selectedThreats = threatSelects.map(s => s.id === id ? value : s.value).filter(v => v);
+    setFormData({ ...formData, threats: selectedThreats });
+  };
+
+  const removeThreatSelect = (id) => {
+    const updated = threatSelects.filter(s => s.id !== id);
+    setThreatSelects(updated.length > 0 ? updated : [{ id: 0, value: '' }]);
+    const selectedThreats = updated.map(s => s.value).filter(v => v);
+    setFormData({ ...formData, threats: selectedThreats });
   };
 
   const getCriticalityColor = (criticality) => {
