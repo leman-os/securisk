@@ -71,6 +71,9 @@ const Assets = ({ user }) => {
     note: '',
   });
 
+  // Dynamic threat selects
+  const [threatSelects, setThreatSelects] = useState([{ id: 0, value: '' }]);
+
   useEffect(() => {
     fetchSettings();
     // Load visible columns from localStorage
