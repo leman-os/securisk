@@ -21,8 +21,10 @@ const Threats = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewVulnDialogOpen, setViewVulnDialogOpen] = useState(false);
   const [editingThreat, setEditingThreat] = useState(null);
   const [viewingThreat, setViewingThreat] = useState(null);
+  const [viewingVuln, setViewingVuln] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterSource, setFilterSource] = useState('all');
