@@ -521,12 +521,12 @@ const RiskRegister = ({ user }) => {
               </div>
 
               <div className="p-4 bg-slate-100 rounded">
-                <p className="text-sm font-semibold">Уровень риска: {formData.probability * formData.impact}</p>
+                <p className="text-sm font-semibold">Уровень риска: {Number(formData.probability) * Number(formData.impact)}</p>
                 <p className="text-sm text-slate-600">
                   Критичность: {
-                    formData.probability * formData.impact >= 15 ? '🔴 Критический' :
-                    formData.probability * formData.impact >= 10 ? '🟠 Высокий' :
-                    formData.probability * formData.impact >= 5 ? '🟡 Средний' : '🟢 Низкий'
+                    (Number(formData.probability) * Number(formData.impact)) >= 15 ? '🔴 Критический' :
+                    (Number(formData.probability) * Number(formData.impact)) >= 10 ? '🟠 Высокий' :
+                    (Number(formData.probability) * Number(formData.impact)) >= 5 ? '🟡 Средний' : '🟢 Низкий'
                   }
                 </p>
               </div>
