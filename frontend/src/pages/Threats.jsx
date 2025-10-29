@@ -422,6 +422,26 @@ const Threats = ({ user }) => {
         </DialogContent>
       </Dialog>
 
+      {/* Vulnerability View Dialog */}
+      <Dialog open={viewVulnDialogOpen} onOpenChange={setViewVulnDialogOpen}>
+        <DialogContent>
+          {viewingVuln && (
+            <div className="space-y-4">
+              <DialogHeader>
+                <DialogTitle>Уязвимость {viewingVuln.vulnerability_number}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div><span className="font-semibold">Описание:</span> {viewingVuln.description}</div>
+                <div><span className="font-semibold">Тип:</span> {viewingVuln.vulnerability_type}</div>
+                {viewingVuln.cvss_score && <div><span className="font-semibold">CVSS Score:</span> {viewingVuln.cvss_score}</div>}
+                {viewingVuln.severity && <div><span className="font-semibold">Критичность:</span> {viewingVuln.severity}</div>}
+                <div><span className="font-semibold">Статус:</span> {viewingVuln.status}</div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
