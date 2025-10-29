@@ -163,6 +163,14 @@ const Vulnerabilities = ({ user }) => {
     setViewDialogOpen(true);
   };
 
+  const handleViewAsset = (assetId) => {
+    const asset = assets.find(a => a.id === assetId);
+    if (asset) {
+      setViewingAsset(asset);
+      setViewAssetDialogOpen(true);
+    }
+  };
+
   const handleEditFromView = () => {
     setEditingVulnerability(viewingVulnerability);
     setFormData({
