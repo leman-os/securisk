@@ -984,6 +984,268 @@ async def review_asset(asset_id: str, current_user: User = Depends(get_current_u
     
     return {"message": "Asset reviewed", "review_date": update_dict['review_date']}
 
+# ==================== THREATS ====================
+
+def generate_threat_number():
+    """Generate unique threat number like THR-2024-001"""
+    import asyncio
+    loop = asyncio.get_event_loop()
+    
+    async def _generate():
+        existing = await db.threats.find({}, {"threat_number": 1, "_id": 0}).to_list(1000)
+        if not existing:
+            return "THR-2024-001"
+        
+        numbers = []
+        for threat in existing:
+            if threat.get('threat_number') and threat['threat_number'].startswith('THR-'):
+                try:
+                    num = int(threat['threat_number'].split('-')[-1])
+                    numbers.append(num)
+                except:
+                    pass
+        
+        next_num = max(numbers) + 1 if numbers else 1
+        year = datetime.now().year
+        return f"THR-{year}-{next_num:03d}"
+    
+    return loop.run_until_complete(_generate())
+
+@api_router.post("/threats", response_model=Threat)
+async def create_threat(threat: ThreatCreate, current_user: User = Depends(get_current_user)):
+    threat_dict = threat.model_dump()
+    
+    if not threat_dict.get('threat_number'):
+        threat_dict['threat_number'] = generate_threat_number()
+    
+    threat_dict['id'] = str(uuid.uuid4())
+    threat_dict['created_at'] = datetime.now(timezone.utc).isoformat()
+    threat_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.threats.insert_one(threat_dict)
+    return threat_dict
+
+@api_router.get("/threats", response_model=PaginatedThreats)
+async def get_threats(
+    page: int = 1,
+    limit: int = 20,
+    sort_by: Optional[str] = "created_at",
+    sort_order: Optional[str] = "desc",
+    current_user: User = Depends(get_current_user)
+):
+    skip = (page - 1) * limit
+    sort_direction = -1 if sort_order == "desc" else 1
+    total = await db.threats.count_documents({})
+    
+    threats = await db.threats.find({}, {"_id": 0}).sort(sort_by, sort_direction).skip(skip).limit(limit).to_list(limit)
+    
+    for threat in threats:
+        for field in ['created_at', 'updated_at']:
+            if threat.get(field) and isinstance(threat[field], str):
+                threat[field] = datetime.fromisoformat(threat[field])
+    
+    total_pages = (total + limit - 1) // limit
+    
+    return PaginatedThreats(
+        items=threats,
+        total=total,
+        page=page,
+        limit=limit,
+        total_pages=total_pages
+    )
+
+@api_router.get("/threats/{threat_id}", response_model=Threat)
+async def get_threat(threat_id: str, current_user: User = Depends(get_current_user)):
+    threat = await db.threats.find_one({"id": threat_id}, {"_id": 0})
+    if not threat:
+        raise HTTPException(status_code=404, detail="Threat not found")
+    
+    for field in ['created_at', 'updated_at']:
+        if threat.get(field) and isinstance(threat[field], str):
+            threat[field] = datetime.fromisoformat(threat[field])
+    
+    return threat
+
+@api_router.put("/threats/{threat_id}", response_model=Threat)
+async def update_threat(threat_id: str, threat: ThreatUpdate, current_user: User = Depends(get_current_user)):
+    update_dict = {k: v for k, v in threat.model_dump().items() if v is not None}
+    update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.threats.update_one({"id": threat_id}, {"$set": update_dict})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Threat not found")
+    
+    updated = await db.threats.find_one({"id": threat_id}, {"_id": 0})
+    for field in ['created_at', 'updated_at']:
+        if updated.get(field) and isinstance(updated[field], str):
+            updated[field] = datetime.fromisoformat(updated[field])
+    
+    return updated
+
+@api_router.delete("/threats/{threat_id}")
+async def delete_threat(threat_id: str, current_user: User = Depends(get_current_user)):
+    result = await db.threats.delete_one({"id": threat_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Threat not found")
+    return {"message": "Threat deleted"}
+
+# ==================== VULNERABILITIES ====================
+
+def generate_vulnerability_number():
+    """Generate unique vulnerability number like VUL-2024-001"""
+    import asyncio
+    loop = asyncio.get_event_loop()
+    
+    async def _generate():
+        existing = await db.vulnerabilities.find({}, {"vulnerability_number": 1, "_id": 0}).to_list(1000)
+        if not existing:
+            return "VUL-2024-001"
+        
+        numbers = []
+        for vuln in existing:
+            if vuln.get('vulnerability_number') and vuln['vulnerability_number'].startswith('VUL-'):
+                try:
+                    num = int(vuln['vulnerability_number'].split('-')[-1])
+                    numbers.append(num)
+                except:
+                    pass
+        
+        next_num = max(numbers) + 1 if numbers else 1
+        year = datetime.now().year
+        return f"VUL-{year}-{next_num:03d}"
+    
+    return loop.run_until_complete(_generate())
+
+def calculate_cvss_score(vector: str) -> tuple:
+    """Calculate CVSS v3.1 Base Score from vector string"""
+    if not vector or not vector.startswith('CVSS:3.1/'):
+        return None, None
+    
+    # Simplified CVSS calculation (you may want to use a library like cvss for accurate calculation)
+    # For now, return a placeholder
+    # TODO: Implement proper CVSS calculation
+    score = 7.5  # Placeholder
+    
+    if score >= 9.0:
+        severity = "Critical"
+    elif score >= 7.0:
+        severity = "High"
+    elif score >= 4.0:
+        severity = "Medium"
+    else:
+        severity = "Low"
+    
+    return score, severity
+
+@api_router.post("/vulnerabilities", response_model=Vulnerability)
+async def create_vulnerability(vulnerability: VulnerabilityCreate, current_user: User = Depends(get_current_user)):
+    vuln_dict = vulnerability.model_dump()
+    
+    if not vuln_dict.get('vulnerability_number'):
+        vuln_dict['vulnerability_number'] = generate_vulnerability_number()
+    
+    # Calculate CVSS score if vector is provided
+    if vuln_dict.get('cvss_vector'):
+        score, severity = calculate_cvss_score(vuln_dict['cvss_vector'])
+        vuln_dict['cvss_score'] = score
+        vuln_dict['severity'] = severity
+    
+    vuln_dict['id'] = str(uuid.uuid4())
+    vuln_dict['created_at'] = datetime.now(timezone.utc).isoformat()
+    vuln_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    # Convert datetime fields to ISO string
+    if vuln_dict.get('discovery_date'):
+        vuln_dict['discovery_date'] = vuln_dict['discovery_date'].isoformat()
+    if vuln_dict.get('closure_date'):
+        vuln_dict['closure_date'] = vuln_dict['closure_date'].isoformat()
+    
+    await db.vulnerabilities.insert_one(vuln_dict)
+    return vuln_dict
+
+@api_router.get("/vulnerabilities", response_model=PaginatedVulnerabilities)
+async def get_vulnerabilities(
+    page: int = 1,
+    limit: int = 20,
+    sort_by: Optional[str] = "created_at",
+    sort_order: Optional[str] = "desc",
+    current_user: User = Depends(get_current_user)
+):
+    skip = (page - 1) * limit
+    sort_direction = -1 if sort_order == "desc" else 1
+    total = await db.vulnerabilities.count_documents({})
+    
+    vulnerabilities = await db.vulnerabilities.find({}, {"_id": 0}).sort(sort_by, sort_direction).skip(skip).limit(limit).to_list(limit)
+    
+    for vuln in vulnerabilities:
+        for field in ['created_at', 'updated_at', 'discovery_date', 'closure_date']:
+            if vuln.get(field) and isinstance(vuln[field], str):
+                vuln[field] = datetime.fromisoformat(vuln[field])
+    
+    total_pages = (total + limit - 1) // limit
+    
+    return PaginatedVulnerabilities(
+        items=vulnerabilities,
+        total=total,
+        page=page,
+        limit=limit,
+        total_pages=total_pages
+    )
+
+@api_router.get("/vulnerabilities/{vulnerability_id}", response_model=Vulnerability)
+async def get_vulnerability(vulnerability_id: str, current_user: User = Depends(get_current_user)):
+    vuln = await db.vulnerabilities.find_one({"id": vulnerability_id}, {"_id": 0})
+    if not vuln:
+        raise HTTPException(status_code=404, detail="Vulnerability not found")
+    
+    for field in ['created_at', 'updated_at', 'discovery_date', 'closure_date']:
+        if vuln.get(field) and isinstance(vuln[field], str):
+            vuln[field] = datetime.fromisoformat(vuln[field])
+    
+    return vuln
+
+@api_router.put("/vulnerabilities/{vulnerability_id}", response_model=Vulnerability)
+async def update_vulnerability(vulnerability_id: str, vulnerability: VulnerabilityUpdate, current_user: User = Depends(get_current_user)):
+    update_dict = {k: v for k, v in vulnerability.model_dump().items() if v is not None}
+    update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    # Recalculate CVSS score if vector changed
+    if 'cvss_vector' in update_dict and update_dict['cvss_vector']:
+        score, severity = calculate_cvss_score(update_dict['cvss_vector'])
+        update_dict['cvss_score'] = score
+        update_dict['severity'] = severity
+    
+    # Convert datetime fields
+    for field in ['discovery_date', 'closure_date']:
+        if field in update_dict and update_dict[field]:
+            update_dict[field] = update_dict[field].isoformat()
+    
+    result = await db.vulnerabilities.update_one({"id": vulnerability_id}, {"$set": update_dict})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Vulnerability not found")
+    
+    updated = await db.vulnerabilities.find_one({"id": vulnerability_id}, {"_id": 0})
+    for field in ['created_at', 'updated_at', 'discovery_date', 'closure_date']:
+        if updated.get(field) and isinstance(updated[field], str):
+            updated[field] = datetime.fromisoformat(updated[field])
+    
+    return updated
+
+@api_router.delete("/vulnerabilities/{vulnerability_id}")
+async def delete_vulnerability(vulnerability_id: str, current_user: User = Depends(get_current_user)):
+    result = await db.vulnerabilities.delete_one({"id": vulnerability_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Vulnerability not found")
+    return {"message": "Vulnerability deleted"}
+
+# ==================== MITRE ATT&CK ====================
+
+@api_router.get("/mitre-attack")
+async def get_mitre_attack_techniques(current_user: User = Depends(get_current_user)):
+    """Get MITRE ATT&CK techniques from database"""
+    techniques = await db.mitre_attack.find({}, {"_id": 0}).to_list(1000)
+    return techniques
+
 # ==================== DASHBOARD ====================
 
 @api_router.get("/dashboard/stats", response_model=DashboardStats)
