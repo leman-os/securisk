@@ -284,6 +284,63 @@ def test_pagination_edge_cases():
         print(f"❌ Error testing pagination edge cases: {e}")
         return False
 
+def test_asset_creation_empty_threats():
+    """Test 6: POST /api/assets - Test asset creation with empty threats array"""
+    print("\n=== Test 6: Asset Creation with Empty Threats Array ===")
+    
+    asset_data = {
+        "name": "Тестовый актив",
+        "category": "ИТ-инфраструктура",
+        "owner": "Тестовый владелец",
+        "criticality": "Средняя",
+        "status": "Актуален",
+        "threats": []
+    }
+    
+    try:
+        response = requests.post(f"{API_URL}/assets", json=asset_data, headers=get_headers())
+        print(f"Create asset response status: {response.status_code}")
+        
+        if response.status_code == 200:
+            asset = response.json()
+            print(f"✅ Asset created successfully with ID: {asset.get('id')}")
+            
+            # Verify all required fields are present
+            required_fields = ['id', 'name', 'category', 'owner', 'criticality', 'status', 'threats']
+            missing_fields = [field for field in required_fields if field not in asset]
+            
+            if missing_fields:
+                print(f"❌ Missing fields in response: {missing_fields}")
+                return False, None
+            
+            # Verify threats field is empty array
+            if asset.get('threats') == []:
+                print(f"✅ Empty threats array handled correctly: {asset['threats']}")
+            else:
+                print(f"❌ Threats field not handled correctly: {asset.get('threats')}")
+                return False, asset.get('id')
+            
+            # Verify other fields
+            print(f"   Asset name: {asset['name']}")
+            print(f"   Category: {asset['category']}")
+            print(f"   Owner: {asset['owner']}")
+            print(f"   Criticality: {asset['criticality']}")
+            print(f"   Status: {asset['status']}")
+            print(f"   Threats: {asset['threats']}")
+            
+            return True, asset['id']
+        else:
+            print(f"❌ Failed to create asset: {response.status_code}")
+            try:
+                error_detail = response.json()
+                print(f"   Error details: {json.dumps(error_detail, indent=2, ensure_ascii=False)}")
+            except:
+                print(f"   Error text: {response.text}")
+            return False, None
+    except Exception as e:
+        print(f"❌ Error creating asset: {e}")
+        return False, None
+
 def main():
     """Main test runner"""
     print("🚀 Starting SecuRisk Backend API Tests")
