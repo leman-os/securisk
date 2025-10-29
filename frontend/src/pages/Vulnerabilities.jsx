@@ -474,6 +474,48 @@ const Vulnerabilities = ({ user }) => {
         </DialogContent>
       </Dialog>
 
+      {/* Asset View Dialog */}
+      <Dialog open={viewAssetDialogOpen} onOpenChange={setViewAssetDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          {viewingAsset && (
+            <div className="space-y-4">
+              <DialogHeader>
+                <DialogTitle>Актив {viewingAsset.asset_number}</DialogTitle>
+                <DialogDescription>{viewingAsset.name}</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-slate-500">Категория</p>
+                    <p className="text-sm font-semibold">{viewingAsset.category}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Владелец</p>
+                    <p className="text-sm font-semibold">{viewingAsset.owner}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Критичность</p>
+                    <Badge className={getCriticalityColor(viewingAsset.criticality)}>
+                      {viewingAsset.criticality}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Статус</p>
+                    <p className="text-sm">{viewingAsset.status}</p>
+                  </div>
+                </div>
+                {viewingAsset.description && (
+                  <div>
+                    <p className="text-xs text-slate-500">Описание</p>
+                    <p className="text-sm">{viewingAsset.description}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
