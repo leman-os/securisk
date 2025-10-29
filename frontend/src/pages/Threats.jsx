@@ -371,7 +371,14 @@ const Threats = ({ user }) => {
               {viewingThreat.related_vulnerability_id && (
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h3 className="font-semibold text-sm text-slate-700 mb-2">Связанная уязвимость</h3>
-                  <p className="text-sm">ID: {viewingThreat.related_vulnerability_id}</p>
+                  <button
+                    onClick={() => handleViewVuln(viewingThreat.related_vulnerability_id)}
+                    className="inline-flex items-center gap-2 text-sm text-cyan-600 hover:underline"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    {getRelatedVulnerability(viewingThreat.related_vulnerability_id)?.vulnerability_number} - 
+                    {getRelatedVulnerability(viewingThreat.related_vulnerability_id)?.description.substring(0, 50)}...
+                  </button>
                 </div>
               )}
 
