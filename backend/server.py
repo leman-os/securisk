@@ -1130,7 +1130,7 @@ async def create_vulnerability(vulnerability: VulnerabilityCreate, current_user:
     vuln_dict = vulnerability.model_dump()
     
     if not vuln_dict.get('vulnerability_number'):
-        vuln_dict['vulnerability_number'] = generate_vulnerability_number()
+        vuln_dict['vulnerability_number'] = await generate_vulnerability_number()
     
     # Calculate CVSS score if vector is provided
     if vuln_dict.get('cvss_vector'):
