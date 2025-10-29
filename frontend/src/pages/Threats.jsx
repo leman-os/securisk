@@ -542,7 +542,11 @@ const Threats = ({ user }) => {
                       <TableCell>{threat.category}</TableCell>
                       <TableCell className="max-w-md truncate">{threat.description}</TableCell>
                       <TableCell>{threat.source || '-'}</TableCell>
-                      <TableCell>{threat.mitre_attack_id || '-'}</TableCell>
+                      <TableCell className="text-sm">
+                        {threat.mitre_attack_id ? 
+                          `${getMitreTechnique(threat.mitre_attack_id)?.technique_id} - ${getMitreTechnique(threat.mitre_attack_id)?.name}` 
+                          : '-'}
+                      </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <div className="flex gap-1">
                           <Button variant="ghost" size="sm" onClick={() => handleView(threat)} className="h-8 w-8 p-0" title="Просмотр">
