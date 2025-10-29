@@ -620,7 +620,7 @@ const RiskRegister = ({ user }) => {
                       <SelectContent>
                         {vulnerabilities.map(vuln => (
                           <SelectItem key={vuln.id} value={vuln.id}>
-                            {vuln.vulnerability_number} - {vuln.description.substring(0, 60)}
+                            {vuln.vulnerability_number} - {(vuln.description || '').substring(0, 60)}
                           </SelectItem>
                         ))}
                       </SelectContent>
