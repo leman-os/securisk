@@ -192,11 +192,17 @@ const Assets = ({ user }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Ensure threats is an array of strings (IDs), not objects
+      const dataToSend = {
+        ...formData,
+        threats: Array.isArray(formData.threats) ? formData.threats : []
+      };
+      
       if (editingAsset) {
-        await axios.put(`${API}/assets/${editingAsset.id}`, formData);
+        await axios.put(`${API}/assets/${editingAsset.id}`, dataToSend);
         toast.success('Актив обновлен');
       } else {
-        await axios.post(`${API}/assets`, formData);
+        await axios.post(`${API}/assets`, dataToSend);
         toast.success('Актив создан');
       }
       setDialogOpen(false);
