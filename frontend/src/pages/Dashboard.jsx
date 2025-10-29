@@ -6,10 +6,12 @@ import { AlertTriangle, AlertCircle, Server, TrendingUp, Activity, Shield, Clock
 
 const Dashboard = ({ user }) => {
   const [stats, setStats] = useState(null);
+  const [riskAnalytics, setRiskAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
+    fetchRiskAnalytics();
   }, []);
 
   const fetchStats = async () => {
@@ -20,6 +22,15 @@ const Dashboard = ({ user }) => {
       console.error('Error fetching stats:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRiskAnalytics = async () => {
+    try {
+      const response = await axios.get(`${API}/dashboard/risk-analytics`);
+      setRiskAnalytics(response.data);
+    } catch (error) {
+      console.error('Error fetching risk analytics:', error);
     }
   };
 
@@ -82,6 +93,36 @@ const Dashboard = ({ user }) => {
     },
   ];
 
+  const getCriticalityColor = (criticality) => {
+    switch (criticality) {
+      case 'Критический':
+        return 'bg-red-500';
+      case 'Высокий':
+        return 'bg-orange-500';
+      case 'Средний':
+        return 'bg-yellow-500';
+      case 'Низкий':
+        return 'bg-green-500';
+      default:
+        return 'bg-slate-500';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Открыт':
+        return 'bg-blue-500';
+      case 'В обработке':
+        return 'bg-amber-500';
+      case 'Принят':
+        return 'bg-purple-500';
+      case 'Закрыт':
+        return 'bg-slate-500';
+      default:
+        return 'bg-slate-500';
+    }
+  };
+
   return (
     <div className="space-y-8 animate-fade-in">
       <div>
@@ -89,6 +130,7 @@ const Dashboard = ({ user }) => {
         <p className="text-slate-600">Обзор состояния информационной безопасности</p>
       </div>
 
+      {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
@@ -102,13 +144,13 @@ const Dashboard = ({ user }) => {
                 <CardTitle className="text-sm font-medium text-slate-600">
                   {stat.title}
                 </CardTitle>
-                <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                <div className={`p-3 rounded-lg ${stat.bgColor}`}>
                   <Icon className={`w-5 h-5 ${stat.textColor}`} />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className={`text-3xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
-                  {stat.value}
+                <div className="flex items-baseline gap-2">
+                  <div className="text-3xl font-bold text-slate-900">{stat.value}</div>
                 </div>
               </CardContent>
             </Card>
@@ -116,103 +158,190 @@ const Dashboard = ({ user }) => {
         })}
       </div>
 
-      {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">MTTA (Среднее время подтверждения)</CardTitle>
-            <div className="p-2 rounded-lg bg-blue-50">
-              <Clock className="w-5 h-5 text-blue-700" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">
-              {stats?.avg_mtta ? `${stats.avg_mtta}ч` : 'N/A'}
-            </div>
-            <p className="text-xs text-slate-500 mt-1">Mean Time To Acknowledge</p>
-          </CardContent>
-        </Card>
+      {/* Incident Metrics */}
+      {(stats?.avg_mtta || stats?.avg_mttr || stats?.avg_mttc) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {stats.avg_mtta && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-slate-600">
+                  Среднее время обнаружения (MTTA)
+                </CardTitle>
+                <Clock className="w-5 h-5 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">{stats.avg_mtta}ч</div>
+              </CardContent>
+            </Card>
+          )}
+          {stats.avg_mttr && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-slate-600">
+                  Среднее время реагирования (MTTR)
+                </CardTitle>
+                <Timer className="w-5 h-5 text-orange-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-orange-600">{stats.avg_mttr}ч</div>
+              </CardContent>
+            </Card>
+          )}
+          {stats.avg_mttc && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-slate-600">
+                  Среднее время закрытия (MTTC)
+                </CardTitle>
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">{stats.avg_mttc}ч</div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
 
-        <Card className="border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">MTTR (Среднее время решения)</CardTitle>
-            <div className="p-2 rounded-lg bg-teal-50">
-              <Timer className="w-5 h-5 text-teal-700" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold bg-gradient-to-r from-teal-500 to-teal-600 bg-clip-text text-transparent">
-              {stats?.avg_mttr ? `${stats.avg_mttr}ч` : 'N/A'}
-            </div>
-            <p className="text-xs text-slate-500 mt-1">Mean Time To Resolve</p>
-          </CardContent>
-        </Card>
+      {/* Risk Analytics */}
+      {riskAnalytics && (
+        <>
+          {/* Risk Distribution by Criticality and Status */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* By Criticality */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Распределение рисков по критичности</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Object.entries(riskAnalytics.risks_by_criticality || {}).map(([criticality, count]) => {
+                    const total = Object.values(riskAnalytics.risks_by_criticality).reduce((a, b) => a + b, 0);
+                    const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                    return (
+                      <div key={criticality}>
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="font-medium">{criticality}</span>
+                          <span className="text-slate-600">{count} ({percentage}%)</span>
+                        </div>
+                        <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                          <div
+                            className={`h-full ${getCriticalityColor(criticality)} transition-all duration-500`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="border-slate-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">MTTC (Среднее время закрытия)</CardTitle>
-            <div className="p-2 rounded-lg bg-emerald-50">
-              <CheckCircle2 className="w-5 h-5 text-emerald-700" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 bg-clip-text text-transparent">
-              {stats?.avg_mttc ? `${stats.avg_mttc}ч` : 'N/A'}
-            </div>
-            <p className="text-xs text-slate-500 mt-1">Mean Time To Close</p>
-          </CardContent>
-        </Card>
-      </div>
+            {/* By Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Распределение рисков по статусам</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Object.entries(riskAnalytics.risks_by_status || {}).map(([status, count]) => {
+                    const total = Object.values(riskAnalytics.risks_by_status).reduce((a, b) => a + b, 0);
+                    const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                    return (
+                      <div key={status}>
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="font-medium">{status}</span>
+                          <span className="text-slate-600">{count} ({percentage}%)</span>
+                        </div>
+                        <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                          <div
+                            className={`h-full ${getStatusColor(status)} transition-all duration-500`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-600" />
-              Статус рисков
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-slate-600 mb-4">Распределение рисков по уровням критичности</p>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-700">Критические</span>
-                <span className="font-semibold text-red-600">{stats?.critical_risks || 0}</span>
-              </div>
-              <div className="w-full bg-slate-100 rounded-full h-2">
-                <div
-                  className="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full"
-                  style={{ width: `${stats?.total_risks > 0 ? (stats?.critical_risks / stats?.total_risks) * 100 : 0}%` }}
-                ></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Top 10 Most Critical Risks */}
+          {riskAnalytics.top_risks && riskAnalytics.top_risks.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Топ-10 самых опасных рисков</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {riskAnalytics.top_risks.map((risk, index) => (
+                    <div
+                      key={risk.risk_number}
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-200 font-semibold text-sm">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-sm">{risk.risk_number}</div>
+                          <div className="text-xs text-slate-600 truncate max-w-md">{risk.scenario}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <div className="text-xs text-slate-500">Владелец</div>
+                          <div className="text-sm font-medium">{risk.owner}</div>
+                        </div>
+                        <div className="text-center min-w-[60px]">
+                          <div className="text-2xl font-bold text-slate-900">{risk.risk_level}</div>
+                          <div className={`text-xs px-2 py-1 rounded-full inline-block ${getCriticalityColor(risk.criticality)} text-white`}>
+                            {risk.criticality}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-blue-600" />
-              Статус инцидентов
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-slate-600 mb-4">Текущие активные инциденты</p>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-700">Открытые</span>
-                <span className="font-semibold text-violet-600">{stats?.open_incidents || 0}</span>
-              </div>
-              <div className="w-full bg-slate-100 rounded-full h-2">
-                <div
-                  className="bg-gradient-to-r from-violet-500 to-violet-600 h-2 rounded-full"
-                  style={{ width: `${stats?.total_incidents > 0 ? (stats?.open_incidents / stats?.total_incidents) * 100 : 0}%` }}
-                ></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          {/* Risk Distribution by Owner */}
+          {riskAnalytics.risks_by_owner && Object.keys(riskAnalytics.risks_by_owner).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold">Распределение рисков по владельцам</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Object.entries(riskAnalytics.risks_by_owner || {})
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([owner, count]) => {
+                      const total = Object.values(riskAnalytics.risks_by_owner).reduce((a, b) => a + b, 0);
+                      const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+                      return (
+                        <div key={owner}>
+                          <div className="flex justify-between text-sm mb-2">
+                            <span className="font-medium">{owner}</span>
+                            <span className="text-slate-600">{count} рисков ({percentage}%)</span>
+                          </div>
+                          <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                            <div
+                              className="h-full bg-cyan-500 transition-all duration-500"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
     </div>
   );
 };
