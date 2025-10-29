@@ -893,7 +893,12 @@ const Assets = ({ user }) => {
                   </TableRow>
                 ) : (
                   filteredAssets.map((asset) => (
-                    <TableRow key={asset.id} data-testid={`asset-row-${asset.id}`} className="hover:bg-slate-50">
+                    <TableRow 
+                      key={asset.id} 
+                      data-testid={`asset-row-${asset.id}`} 
+                      className="hover:bg-slate-50 cursor-pointer"
+                      onClick={() => handleView(asset)}
+                    >
                       {visibleColumns.asset_number && <TableCell className="font-medium">{asset.asset_number}</TableCell>}
                       {visibleColumns.name && (
                         <TableCell>
