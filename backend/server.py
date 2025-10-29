@@ -1353,7 +1353,7 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
         avg_mttc=avg_mttc
     )
 
-# ==================== INIT ADMIN ====================
+# ==================== INIT ADMIN AND MITRE ====================
 
 @app.on_event("startup")
 async def create_admin():
@@ -1370,6 +1370,49 @@ async def create_admin():
         doc['created_at'] = doc['created_at'].isoformat()
         await db.users.insert_one(doc)
         logger.info("Admin user created: username=admin, password=admin123")
+    
+    # Initialize MITRE ATT&CK techniques
+    mitre_count = await db.mitre_attack.count_documents({})
+    if mitre_count == 0:
+        mitre_techniques = [
+            {"id": str(uuid.uuid4()), "technique_id": "T1566.001", "name": "Фишинг: Вложение в письме", "tactic": "Первичный доступ", "description": "Злоумышленник отправляет фишинговое письмо с вредоносным вложением"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1566.002", "name": "Фишинг: Ссылка в письме", "tactic": "Первичный доступ", "description": "Злоумышленник отправляет фишинговое письмо со ссылкой на вредоносный сайт"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1078", "name": "Валидные учетные записи", "tactic": "Первичный доступ", "description": "Использование скомпрометированных учетных данных для доступа к системам"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1190", "name": "Эксплуатация публичного приложения", "tactic": "Первичный доступ", "description": "Использование уязвимостей в публично доступных приложениях"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1133", "name": "Внешние удаленные сервисы", "tactic": "Первичный доступ", "description": "Использование VPN, Citrix и других удаленных сервисов"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1059.001", "name": "Командная строка: PowerShell", "tactic": "Выполнение", "description": "Выполнение команд через PowerShell"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1059.003", "name": "Командная строка: Windows Command Shell", "tactic": "Выполнение", "description": "Выполнение команд через cmd.exe"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1059.006", "name": "Командная строка: Python", "tactic": "Выполнение", "description": "Выполнение Python скриптов"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1053.005", "name": "Планирование задач", "tactic": "Выполнение", "description": "Использование планировщика задач для выполнения вредоносного кода"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1204.002", "name": "Выполнение пользователем: Вредоносный файл", "tactic": "Выполнение", "description": "Обман пользователя для запуска вредоносного файла"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1547.001", "name": "Автозапуск: Registry Run Keys", "tactic": "Закрепление", "description": "Добавление записи в реестр для автозапуска"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1136.001", "name": "Создание учетной записи: Локальная", "tactic": "Закрепление", "description": "Создание локальной учетной записи для закрепления"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1098", "name": "Манипуляция учетной записью", "tactic": "Закрепление", "description": "Изменение учетных данных или прав доступа"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1003.001", "name": "Дамп учетных данных: LSASS Memory", "tactic": "Доступ к учетным данным", "description": "Извлечение учетных данных из памяти LSASS"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1003.002", "name": "Дамп учетных данных: Security Account Manager", "tactic": "Доступ к учетным данным", "description": "Извлечение хешей паролей из SAM"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1110.001", "name": "Брутфорс: Password Guessing", "tactic": "Доступ к учетным данным", "description": "Подбор пароля методом перебора"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1110.003", "name": "Брутфорс: Password Spraying", "tactic": "Доступ к учетным данным", "description": "Попытка входа с одним паролем для множества учетных записей"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1087.001", "name": "Обнаружение учетных записей: Локальные", "tactic": "Обнаружение", "description": "Перечисление локальных учетных записей системы"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1083", "name": "Обнаружение файлов и директорий", "tactic": "Обнаружение", "description": "Поиск файлов и директорий в системе"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1046", "name": "Сканирование сети", "tactic": "Обнаружение", "description": "Сканирование сети для обнаружения хостов и сервисов"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1018", "name": "Обнаружение удаленных систем", "tactic": "Обнаружение", "description": "Идентификация других систем в сети"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1082", "name": "Информация о системе", "tactic": "Обнаружение", "description": "Сбор информации о конфигурации системы"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1021.001", "name": "Удаленные сервисы: Remote Desktop Protocol", "tactic": "Латеральное перемещение", "description": "Использование RDP для доступа к другим системам"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1021.002", "name": "Удаленные сервисы: SMB/Windows Admin Shares", "tactic": "Латеральное перемещение", "description": "Использование SMB для доступа к другим системам"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1560.001", "name": "Архивирование собранных данных: Archive via Utility", "tactic": "Сбор данных", "description": "Архивирование данных перед эксфильтрацией"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1005", "name": "Данные из локальной системы", "tactic": "Сбор данных", "description": "Сбор данных из локальной файловой системы"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1114.001", "name": "Сбор электронной почты: Local Email Collection", "tactic": "Сбор данных", "description": "Доступ к локальным файлам электронной почты"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1071.001", "name": "Application Layer Protocol: Web Protocols", "tactic": "Command and Control", "description": "Использование HTTP/HTTPS для связи с C2"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1105", "name": "Передача инструментов", "tactic": "Command and Control", "description": "Загрузка дополнительных инструментов на скомпрометированный хост"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1041", "name": "Эксфильтрация через C2 канал", "tactic": "Эксфильтрация", "description": "Передача данных через канал управления"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1567.002", "name": "Эксфильтрация через веб-сервис: Облачное хранилище", "tactic": "Эксфильтрация", "description": "Загрузка данных в облачные хранилища"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1486", "name": "Шифрование данных для воздействия", "tactic": "Воздействие", "description": "Шифрование данных программами-вымогателями"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1490", "name": "Подавление восстановления", "tactic": "Воздействие", "description": "Удаление резервных копий и точек восстановления"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1489", "name": "Остановка сервиса", "tactic": "Воздействие", "description": "Остановка критических сервисов"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1491.001", "name": "Дефейс: Внутренний дефейс", "tactic": "Воздействие", "description": "Изменение внутренних данных или систем"},
+        ]
+        await db.mitre_attack.insert_many(mitre_techniques)
+        logger.info(f"Initialized {len(mitre_techniques)} MITRE ATT&CK techniques")
 
 # Include router
 app.include_router(api_router)
