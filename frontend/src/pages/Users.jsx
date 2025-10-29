@@ -66,7 +66,13 @@ const Users = ({ user }) => {
       toast.success('Пользователь удален');
       fetchUsers();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Ошибка при удалении');
+      console.error('User deletion error:', error);
+      const errorMessage = error.response?.data?.detail 
+        ? (typeof error.response.data.detail === 'string' 
+          ? error.response.data.detail 
+          : JSON.stringify(error.response.data.detail))
+        : 'Ошибка при удалении';
+      toast.error(errorMessage);
     }
   };
 
