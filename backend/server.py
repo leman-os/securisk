@@ -62,20 +62,20 @@ class Risk(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     risk_number: str  # RISK-2024-001
-    registration_date: datetime  # Дата регистрации
-    scenario: str  # Сценарий риска
+    registration_date: Optional[datetime] = None  # Дата регистрации
+    scenario: Optional[str] = None  # Сценарий риска
     related_assets: List[str] = Field(default_factory=list)  # ID активов
     related_threats: List[str] = Field(default_factory=list)  # ID угроз
     related_vulnerabilities: List[str] = Field(default_factory=list)  # ID уязвимостей
-    probability: int  # 1-5
-    impact: int  # 1-5
-    risk_level: int  # P * I (автоматически)
-    criticality: str  # Низкий, Средний, Высокий, Критический (автоматически)
-    owner: str  # Владелец риска
-    treatment_strategy: str  # Снижение, Принятие, Передача, Избегание
+    probability: Optional[int] = None  # 1-5
+    impact: Optional[int] = None  # 1-5
+    risk_level: Optional[int] = None  # P * I (автоматически)
+    criticality: Optional[str] = None  # Низкий, Средний, Высокий, Критический (автоматически)
+    owner: Optional[str] = None  # Владелец риска
+    treatment_strategy: Optional[str] = None  # Снижение, Принятие, Передача, Избегание
     treatment_plan: Optional[str] = None  # План обработки
     implementation_deadline: Optional[str] = None  # Срок реализации (Q3 2026)
-    status: str  # Открыт, В обработке, Принят, Закрыт
+    status: str = "Открыт"  # Открыт, В обработке, Принят, Закрыт
     review_date: Optional[datetime] = None  # Дата пересмотра
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
