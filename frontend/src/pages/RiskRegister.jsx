@@ -527,65 +527,119 @@ const RiskRegister = ({ user }) => {
 
               <div className="space-y-2">
                 <Label>Связанные активы</Label>
-                <div className="border rounded p-3 max-h-40 overflow-y-auto">
-                  {assets.length === 0 ? (
-                    <p className="text-sm text-slate-500">Нет доступных активов</p>
-                  ) : (
-                    assets.map(asset => (
-                      <label key={asset.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.related_assets.includes(asset.id)}
-                          onChange={() => toggleAsset(asset.id)}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{asset.asset_number} - {asset.name}</span>
-                      </label>
-                    ))
-                  )}
-                </div>
+                {assetSelects.map((select, index) => (
+                  <div key={select.id} className="flex gap-2">
+                    <Select value={select.value} onValueChange={(v) => updateAssetSelect(select.id, v)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Выберите актив" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {assets.map(asset => (
+                          <SelectItem key={asset.id} value={asset.id}>
+                            {asset.asset_number} - {asset.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {assetSelects.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeAssetSelect(select.id)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  onClick={addAssetSelect}
+                  className="text-cyan-600"
+                >
+                  + Добавить актив
+                </Button>
               </div>
 
               <div className="space-y-2">
                 <Label>Связанные угрозы</Label>
-                <div className="border rounded p-3 max-h-40 overflow-y-auto">
-                  {threats.length === 0 ? (
-                    <p className="text-sm text-slate-500">Нет доступных угроз</p>
-                  ) : (
-                    threats.map(threat => (
-                      <label key={threat.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.related_threats.includes(threat.id)}
-                          onChange={() => toggleThreat(threat.id)}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{threat.threat_number} - {threat.description.substring(0, 50)}...</span>
-                      </label>
-                    ))
-                  )}
-                </div>
+                {threatSelects.map((select, index) => (
+                  <div key={select.id} className="flex gap-2">
+                    <Select value={select.value} onValueChange={(v) => updateThreatSelect(select.id, v)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Выберите угрозу" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {threats.map(threat => (
+                          <SelectItem key={threat.id} value={threat.id}>
+                            {threat.threat_number} - {threat.description.substring(0, 60)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {threatSelects.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeThreatSelect(select.id)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  onClick={addThreatSelect}
+                  className="text-cyan-600"
+                >
+                  + Добавить угрозу
+                </Button>
               </div>
 
               <div className="space-y-2">
                 <Label>Связанные уязвимости</Label>
-                <div className="border rounded p-3 max-h-40 overflow-y-auto">
-                  {vulnerabilities.length === 0 ? (
-                    <p className="text-sm text-slate-500">Нет доступных уязвимостей</p>
-                  ) : (
-                    vulnerabilities.map(vuln => (
-                      <label key={vuln.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.related_vulnerabilities.includes(vuln.id)}
-                          onChange={() => toggleVulnerability(vuln.id)}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{vuln.vulnerability_number} - {vuln.description.substring(0, 50)}...</span>
-                      </label>
-                    ))
-                  )}
-                </div>
+                {vulnSelects.map((select, index) => (
+                  <div key={select.id} className="flex gap-2">
+                    <Select value={select.value} onValueChange={(v) => updateVulnSelect(select.id, v)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Выберите уязвимость" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vulnerabilities.map(vuln => (
+                          <SelectItem key={vuln.id} value={vuln.id}>
+                            {vuln.vulnerability_number} - {vuln.description.substring(0, 60)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {vulnSelects.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeVulnSelect(select.id)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  onClick={addVulnSelect}
+                  className="text-cyan-600"
+                >
+                  + Добавить уязвимость
+                </Button>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
