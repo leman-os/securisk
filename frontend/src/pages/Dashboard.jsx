@@ -136,11 +136,22 @@ const Dashboard = ({ user }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
+          const getNavigationPath = () => {
+            if (stat.title.includes('риск')) return '/risks';
+            if (stat.title.includes('инцидент')) return '/incidents';
+            if (stat.title.includes('актив')) return '/assets';
+            return null;
+          };
+          
           return (
             <Card
               key={index}
               data-testid={`stat-card-${index}`}
-              className="border-slate-200 hover:shadow-lg transition-shadow"
+              className="border-slate-200 hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => {
+                const path = getNavigationPath();
+                if (path) navigate(path);
+              }}
             >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-slate-600">
