@@ -690,6 +690,35 @@ const Assets = ({ user }) => {
                   </div>
                 )}
 
+                {/* Связанные уязвимости */}
+                {viewingAsset && vulnerabilities.filter(v => v.related_asset_id === viewingAsset.id).length > 0 && (
+                  <div className="bg-orange-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-sm text-slate-700 mb-3">Связанные уязвимости</h3>
+                    <div className="space-y-2">
+                      {vulnerabilities
+                        .filter(v => v.related_asset_id === viewingAsset.id)
+                        .map(vuln => (
+                          <div key={vuln.id} className="flex items-center justify-between p-2 bg-white rounded border border-orange-200">
+                            <div>
+                              <span className="font-medium text-sm">{vuln.vulnerability_number}</span>
+                              <p className="text-xs text-slate-600">{vuln.description.substring(0, 60)}...</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {vuln.severity && (
+                                <Badge variant="outline" className="text-xs">
+                                  {vuln.severity}
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className="text-xs">
+                                {vuln.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Дополнительная информация */}
                 <div className="bg-slate-50 p-4 rounded-lg">
                   <h3 className="font-semibold text-sm text-slate-700 mb-3">Дополнительно</h3>
