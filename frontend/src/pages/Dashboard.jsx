@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '../App';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, AlertCircle, Server, TrendingUp, Activity, Shield, Clock, Timer, CheckCircle2 } from 'lucide-react';
 
 const Dashboard = ({ user }) => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [riskAnalytics, setRiskAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
