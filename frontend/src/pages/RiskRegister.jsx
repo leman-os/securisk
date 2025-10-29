@@ -905,7 +905,8 @@ const RiskRegister = ({ user }) => {
                       onDragStart={(e) => handleDragStart(e, risk)}
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleDrop(e, risk)}
-                      className="hover:bg-slate-50 cursor-move"
+                      onClick={() => handleView(risk)}
+                      className="hover:bg-slate-50 cursor-pointer"
                     >
                       <TableCell>
                         <GripVertical className="w-4 h-4 text-slate-400" />
