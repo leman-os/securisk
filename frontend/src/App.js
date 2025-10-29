@@ -88,6 +88,26 @@ function App() {
             }
           />
           <Route
+            path="/threats"
+            element={
+              <ProtectedRoute>
+                <Layout user={user} setUser={setUser}>
+                  <Threats user={user} />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/vulnerabilities"
+            element={
+              <ProtectedRoute>
+                <Layout user={user} setUser={setUser}>
+                  <Vulnerabilities user={user} />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/incidents"
             element={
               <ProtectedRoute>
