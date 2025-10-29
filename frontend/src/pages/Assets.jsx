@@ -78,6 +78,7 @@ const Assets = ({ user }) => {
   useEffect(() => {
     fetchSettings();
     fetchThreats();
+    fetchVulnerabilities();
     // Load visible columns from localStorage
     const savedColumns = localStorage.getItem('assets_visible_columns');
     if (savedColumns) {
