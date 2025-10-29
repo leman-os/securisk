@@ -677,9 +677,10 @@ async def get_risks(
     risks = await db.risks.find({}, {"_id": 0}).sort(sort_by, sort_direction).skip(skip).limit(limit).to_list(limit)
     
     for risk in risks:
-        for field in ['created_at', 'updated_at', 'registration_date', 'review_date']:
-            if risk.get(field) and isinstance(risk[field], str):
-                risk[field] = datetime.fromisoformat(risk[field])
+        if isinstance(risk.get('created_at'), str):
+            risk['created_at'] = datetime.fromisoformat(risk['created_at'])
+        if isinstance(risk.get('updated_at'), str):
+            risk['updated_at'] = datetime.fromisoformat(risk['updated_at'])
     
     # Calculate total pages
     total_pages = (total + limit - 1) // limit
