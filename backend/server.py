@@ -77,19 +77,17 @@ class Risk(BaseModel):
     priority: int = Field(default=0)
 
 class RiskCreate(BaseModel):
-    risk_number: Optional[str] = None  # Auto-generated
-    scenario: str
-    related_assets: List[str] = Field(default_factory=list)
-    related_threats: List[str] = Field(default_factory=list)
-    related_vulnerabilities: List[str] = Field(default_factory=list)
-    probability: int = Field(ge=1, le=5)  # 1-5
-    impact: int = Field(ge=1, le=5)  # 1-5
+    risk_number: Optional[str] = None  # Auto-generated if not provided
+    title: str
+    description: str
+    category: str
+    likelihood: str
+    impact: str
+    risk_level: str
+    status: str
     owner: str
-    treatment_strategy: str
-    treatment_plan: Optional[str] = None
-    implementation_deadline: Optional[str] = None
-    status: str = "Открыт"
-    review_date: Optional[datetime] = None
+    treatment_measures: Optional[str] = None
+    deadline: Optional[str] = None
 
 class RiskUpdate(BaseModel):
     risk_number: Optional[str] = None
