@@ -20,8 +20,10 @@ const Vulnerabilities = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewAssetDialogOpen, setViewAssetDialogOpen] = useState(false);
   const [editingVulnerability, setEditingVulnerability] = useState(null);
   const [viewingVulnerability, setViewingVulnerability] = useState(null);
+  const [viewingAsset, setViewingAsset] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterSeverity, setFilterSeverity] = useState('all');
