@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Shield, LayoutDashboard, AlertTriangle, AlertCircle, Server, Users, LogOut, Settings } from 'lucide-react';
+import { Shield, LayoutDashboard, AlertTriangle, AlertCircle, Server, Users, LogOut, Settings, Crosshair, Bug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Layout = ({ user, setUser, children }) => {
