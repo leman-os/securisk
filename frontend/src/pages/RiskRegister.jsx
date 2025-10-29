@@ -925,6 +925,63 @@ const RiskRegister = ({ user }) => {
         </DialogContent>
       </Dialog>
 
+      {/* Asset View Dialog */}
+      <Dialog open={viewAssetDialogOpen} onOpenChange={setViewAssetDialogOpen}>
+        <DialogContent>
+          {viewingAsset && (
+            <div className="space-y-4">
+              <DialogHeader>
+                <DialogTitle>Актив {viewingAsset.asset_number}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div><span className="font-semibold">Название:</span> {viewingAsset.name}</div>
+                <div><span className="font-semibold">Категория:</span> {viewingAsset.category}</div>
+                <div><span className="font-semibold">Владелец:</span> {viewingAsset.owner}</div>
+                <div><span className="font-semibold">Критичность:</span> <Badge className={getCriticalityColor(viewingAsset.criticality)}>{viewingAsset.criticality}</Badge></div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Threat View Dialog */}
+      <Dialog open={viewThreatDialogOpen} onOpenChange={setViewThreatDialogOpen}>
+        <DialogContent>
+          {viewingThreat && (
+            <div className="space-y-4">
+              <DialogHeader>
+                <DialogTitle>Угроза {viewingThreat.threat_number}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div><span className="font-semibold">Категория:</span> {viewingThreat.category}</div>
+                <div><span className="font-semibold">Описание:</span> {viewingThreat.description}</div>
+                {viewingThreat.source && <div><span className="font-semibold">Источник:</span> {viewingThreat.source}</div>}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Vulnerability View Dialog */}
+      <Dialog open={viewVulnDialogOpen} onOpenChange={setViewVulnDialogOpen}>
+        <DialogContent>
+          {viewingVuln && (
+            <div className="space-y-4">
+              <DialogHeader>
+                <DialogTitle>Уязвимость {viewingVuln.vulnerability_number}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div><span className="font-semibold">Описание:</span> {viewingVuln.description}</div>
+                <div><span className="font-semibold">Тип:</span> {viewingVuln.vulnerability_type}</div>
+                {viewingVuln.cvss_score && <div><span className="font-semibold">CVSS Score:</span> {viewingVuln.cvss_score}</div>}
+                {viewingVuln.severity && <div><span className="font-semibold">Критичность:</span> {viewingVuln.severity}</div>}
+                <div><span className="font-semibold">Статус:</span> {viewingVuln.status}</div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
