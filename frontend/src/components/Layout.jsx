@@ -15,6 +15,8 @@ const Layout = ({ user, setUser, children }) => {
   const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Дашборд' },
     { path: '/risks', icon: AlertTriangle, label: 'Реестр рисков' },
+    { path: '/threats', icon: Crosshair, label: 'Угрозы' },
+    { path: '/vulnerabilities', icon: Bug, label: 'Уязвимости' },
     { path: '/incidents', icon: AlertCircle, label: 'Инциденты' },
     { path: '/assets', icon: Server, label: 'Активы' },
     { path: '/users', icon: Users, label: 'Пользователи' },
