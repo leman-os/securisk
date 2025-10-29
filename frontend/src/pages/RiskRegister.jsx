@@ -367,33 +367,6 @@ const RiskRegister = ({ user }) => {
     return 'bg-green-500';
   };
 
-  const toggleAsset = (assetId) => {
-    setFormData(prev => ({
-      ...prev,
-      related_assets: prev.related_assets.includes(assetId)
-        ? prev.related_assets.filter(id => id !== assetId)
-        : [...prev.related_assets, assetId]
-    }));
-  };
-
-  const toggleThreat = (threatId) => {
-    setFormData(prev => ({
-      ...prev,
-      related_threats: prev.related_threats.includes(threatId)
-        ? prev.related_threats.filter(id => id !== threatId)
-        : [...prev.related_threats, threatId]
-    }));
-  };
-
-  const toggleVulnerability = (vulnId) => {
-    setFormData(prev => ({
-      ...prev,
-      related_vulnerabilities: prev.related_vulnerabilities.includes(vulnId)
-        ? prev.related_vulnerabilities.filter(id => id !== vulnId)
-        : [...prev.related_vulnerabilities, vulnId]
-    }));
-  };
-
   const exportToCSV = () => {
     if (filteredRisks.length === 0) {
       toast.error('Нет данных для экспорта');
