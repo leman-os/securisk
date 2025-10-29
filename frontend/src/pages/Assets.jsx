@@ -932,7 +932,7 @@ const Assets = ({ user }) => {
                         </TableCell>
                       )}
                       {visibleColumns.description && <TableCell className="max-w-xs truncate text-sm text-slate-700">{asset.description || '-'}</TableCell>}
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-end gap-1">
                           <Button
                             variant="ghost"
