@@ -1142,11 +1142,61 @@ def calculate_cvss_score(vector: str) -> tuple:
     if not vector or not vector.startswith('CVSS:3.1/'):
         return None, None
     
-    # Simplified CVSS calculation (you may want to use a library like cvss for accurate calculation)
-    # For now, return a placeholder
-    # TODO: Implement proper CVSS calculation
-    score = 7.5  # Placeholder
+    # Parse CVSS v3.1 vector string
+    # Example: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+    metrics = {}
+    parts = vector.split('/')
     
+    for part in parts[1:]:  # Skip CVSS:3.1
+        if ':' in part:
+            key, value = part.split(':')
+            metrics[key] = value
+    
+    # CVSS v3.1 Scoring values
+    av_scores = {'N': 0.85, 'A': 0.62, 'L': 0.55, 'P': 0.2}
+    ac_scores = {'L': 0.77, 'H': 0.44}
+    pr_scores_unchanged = {'N': 0.85, 'L': 0.62, 'H': 0.27}
+    pr_scores_changed = {'N': 0.85, 'L': 0.68, 'H': 0.50}
+    ui_scores = {'N': 0.85, 'R': 0.62}
+    cia_scores = {'H': 0.56, 'L': 0.22, 'N': 0.0}
+    
+    try:
+        av = av_scores.get(metrics.get('AV'), 0)
+        ac = ac_scores.get(metrics.get('AC'), 0)
+        ui = ui_scores.get(metrics.get('UI'), 0)
+        scope_changed = metrics.get('S') == 'C'
+        pr = (pr_scores_changed if scope_changed else pr_scores_unchanged).get(metrics.get('PR'), 0)
+        c = cia_scores.get(metrics.get('C'), 0)
+        i = cia_scores.get(metrics.get('I'), 0)
+        a = cia_scores.get(metrics.get('A'), 0)
+        
+        # Calculate Impact Sub Score (ISS)
+        iss = 1 - ((1 - c) * (1 - i) * (1 - a))
+        
+        # Calculate Impact
+        if scope_changed:
+            impact = 7.52 * (iss - 0.029) - 3.25 * pow((iss - 0.02), 15)
+        else:
+            impact = 6.42 * iss
+        
+        # Calculate Exploitability
+        exploitability = 8.22 * av * ac * pr * ui
+        
+        # Calculate Base Score
+        if impact <= 0:
+            score = 0.0
+        elif scope_changed:
+            score = min(1.08 * (impact + exploitability), 10.0)
+        else:
+            score = min(impact + exploitability, 10.0)
+        
+        score = round(score * 10) / 10  # Round to 1 decimal place
+        
+    except Exception:
+        # Fallback to placeholder if parsing fails
+        score = 7.5
+    
+    # Determine severity
     if score >= 9.0:
         severity = "Critical"
     elif score >= 7.0:
