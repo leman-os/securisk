@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API } from '../App';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,27 +9,25 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Filter, Edit, Trash2, GripVertical, Settings, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, Eye, X } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
+import { Plus, Search, Filter, Edit, Trash2, Settings, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, Eye, X, Link2, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 
 const RiskRegister = ({ user }) => {
   const [risks, setRisks] = useState([]);
   const [filteredRisks, setFilteredRisks] = useState([]);
+  const [assets, setAssets] = useState([]);
+  const [threats, setThreats] = useState([]);
+  const [vulnerabilities, setVulnerabilities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editingRisk, setEditingRisk] = useState(null);
   const [viewingRisk, setViewingRisk] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [filterRiskLevel, setFilterRiskLevel] = useState('all');
-  const [filterOwner, setFilterOwner] = useState('');
+  const [filterCriticality, setFilterCriticality] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
-  const [showColumnSelector, setShowColumnSelector] = useState(false);
-  const [draggedItem, setDraggedItem] = useState(null);
   
   // Pagination and sorting
   const [page, setPage] = useState(1);
@@ -39,39 +37,25 @@ const RiskRegister = ({ user }) => {
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState('desc');
 
-  const [visibleColumns, setVisibleColumns] = useState({
-    risk_number: true,
-    title: true,
-    category: true,
-    risk_level: true,
-    status: true,
-    owner: true,
-    likelihood: false,
-    impact: false,
-    treatment_measures: false,
-    deadline: false,
-    description: false,
-  });
-
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: 'Технический',
-    likelihood: 'Средняя',
-    impact: 'Среднее',
-    risk_level: 'Средний',
-    status: 'Идентифицирован',
-    owner: user?.username || '',
-    treatment_measures: '',
-    deadline: '',
+    scenario: '',
+    related_assets: [],
+    related_threats: [],
+    related_vulnerabilities: [],
+    probability: 3,
+    impact: 3,
+    owner: user?.full_name || '',
+    treatment_strategy: 'Снижение',
+    treatment_plan: '',
+    implementation_deadline: '',
+    status: 'Открыт',
+    review_date: '',
   });
 
   useEffect(() => {
-    // Load visible columns from localStorage
-    const savedColumns = localStorage.getItem('risks_visible_columns');
-    if (savedColumns) {
-      setVisibleColumns(JSON.parse(savedColumns));
-    }
+    fetchAssets();
+    fetchThreats();
+    fetchVulnerabilities();
   }, []);
 
   useEffect(() => {
@@ -79,13 +63,35 @@ const RiskRegister = ({ user }) => {
   }, [page, limit, sortBy, sortOrder]);
 
   useEffect(() => {
-    // Save visible columns to localStorage
-    localStorage.setItem('risks_visible_columns', JSON.stringify(visibleColumns));
-  }, [visibleColumns]);
-
-  useEffect(() => {
     applyFilters();
-  }, [risks, searchTerm, filterCategory, filterStatus, filterRiskLevel, filterOwner]);
+  }, [risks, searchTerm, filterStatus, filterCriticality]);
+
+  const fetchAssets = async () => {
+    try {
+      const response = await axios.get(`${API}/assets`, { params: { limit: 1000 } });
+      setAssets(response.data.items);
+    } catch (error) {
+      console.error('Error fetching assets:', error);
+    }
+  };
+
+  const fetchThreats = async () => {
+    try {
+      const response = await axios.get(`${API}/threats`, { params: { limit: 1000 } });
+      setThreats(response.data.items);
+    } catch (error) {
+      console.error('Error fetching threats:', error);
+    }
+  };
+
+  const fetchVulnerabilities = async () => {
+    try {
+      const response = await axios.get(`${API}/vulnerabilities`, { params: { limit: 1000 } });
+      setVulnerabilities(response.data.items);
+    } catch (error) {
+      console.error('Error fetching vulnerabilities:', error);
+    }
+  };
 
   const fetchRisks = async () => {
     try {
@@ -108,26 +114,18 @@ const RiskRegister = ({ user }) => {
     if (searchTerm) {
       filtered = filtered.filter(
         (risk) =>
-          risk.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          risk.risk_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          risk.description.toLowerCase().includes(searchTerm.toLowerCase())
+          risk.risk_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          risk.scenario?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          risk.owner?.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    }
-
-    if (filterCategory !== 'all') {
-      filtered = filtered.filter((risk) => risk.category === filterCategory);
     }
 
     if (filterStatus !== 'all') {
       filtered = filtered.filter((risk) => risk.status === filterStatus);
     }
 
-    if (filterRiskLevel !== 'all') {
-      filtered = filtered.filter((risk) => risk.risk_level === filterRiskLevel);
-    }
-
-    if (filterOwner) {
-      filtered = filtered.filter((risk) => risk.owner?.toLowerCase().includes(filterOwner.toLowerCase()));
+    if (filterCriticality !== 'all') {
+      filtered = filtered.filter((risk) => risk.criticality === filterCriticality);
     }
 
     setFilteredRisks(filtered);
@@ -135,10 +133,8 @@ const RiskRegister = ({ user }) => {
 
   const resetFilters = () => {
     setSearchTerm('');
-    setFilterCategory('all');
     setFilterStatus('all');
-    setFilterRiskLevel('all');
-    setFilterOwner('');
+    setFilterCriticality('all');
   };
 
   const handleSort = (column) => {
@@ -176,21 +172,22 @@ const RiskRegister = ({ user }) => {
 
   const handleEditFromView = () => {
     setEditingRisk(viewingRisk);
-    setFormData(viewingRisk);
+    setFormData({
+      scenario: viewingRisk.scenario || '',
+      related_assets: viewingRisk.related_assets || [],
+      related_threats: viewingRisk.related_threats || [],
+      related_vulnerabilities: viewingRisk.related_vulnerabilities || [],
+      probability: viewingRisk.probability || 3,
+      impact: viewingRisk.impact || 3,
+      owner: viewingRisk.owner || '',
+      treatment_strategy: viewingRisk.treatment_strategy || 'Снижение',
+      treatment_plan: viewingRisk.treatment_plan || '',
+      implementation_deadline: viewingRisk.implementation_deadline || '',
+      status: viewingRisk.status || 'Открыт',
+      review_date: viewingRisk.review_date ? new Date(viewingRisk.review_date).toISOString().split('T')[0] : '',
+    });
     setViewDialogOpen(false);
     setDialogOpen(true);
-  };
-
-  const handleDeleteFromView = async () => {
-    if (!window.confirm('Удалить риск?')) return;
-    try {
-      await axios.delete(`${API}/risks/${viewingRisk.id}`);
-      toast.success('Риск удален');
-      setViewDialogOpen(false);
-      fetchRisks();
-    } catch (error) {
-      toast.error('Ошибка при удалении');
-    }
   };
 
   const handleDelete = async (id) => {
@@ -207,17 +204,18 @@ const RiskRegister = ({ user }) => {
   const handleEdit = (risk) => {
     setEditingRisk(risk);
     setFormData({
-      risk_number: risk.risk_number,
-      title: risk.title,
-      description: risk.description,
-      category: risk.category,
-      likelihood: risk.likelihood,
-      impact: risk.impact,
-      risk_level: risk.risk_level,
-      status: risk.status,
-      owner: risk.owner,
-      treatment_measures: risk.treatment_measures || '',
-      deadline: risk.deadline || '',
+      scenario: risk.scenario || '',
+      related_assets: risk.related_assets || [],
+      related_threats: risk.related_threats || [],
+      related_vulnerabilities: risk.related_vulnerabilities || [],
+      probability: risk.probability || 3,
+      impact: risk.impact || 3,
+      owner: risk.owner || '',
+      treatment_strategy: risk.treatment_strategy || 'Снижение',
+      treatment_plan: risk.treatment_plan || '',
+      implementation_deadline: risk.implementation_deadline || '',
+      status: risk.status || 'Открыт',
+      review_date: risk.review_date ? new Date(risk.review_date).toISOString().split('T')[0] : '',
     });
     setDialogOpen(true);
   };
@@ -225,63 +223,23 @@ const RiskRegister = ({ user }) => {
   const resetForm = () => {
     setEditingRisk(null);
     setFormData({
-      title: '',
-      description: '',
-      category: 'Технический',
-      likelihood: 'Средняя',
-      impact: 'Среднее',
-      risk_level: 'Средний',
-      status: 'Идентифицирован',
-      owner: user?.username || '',
-      treatment_measures: '',
-      deadline: '',
+      scenario: '',
+      related_assets: [],
+      related_threats: [],
+      related_vulnerabilities: [],
+      probability: 3,
+      impact: 3,
+      owner: user?.full_name || '',
+      treatment_strategy: 'Снижение',
+      treatment_plan: '',
+      implementation_deadline: '',
+      status: 'Открыт',
+      review_date: '',
     });
   };
 
-  const handleDragStart = (e, risk) => {
-    setDraggedItem(risk);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDrop = async (e, targetRisk) => {
-    e.preventDefault();
-    if (!draggedItem || draggedItem.id === targetRisk.id) return;
-
-    const newRisks = [...risks];
-    const draggedIndex = newRisks.findIndex((r) => r.id === draggedItem.id);
-    const targetIndex = newRisks.findIndex((r) => r.id === targetRisk.id);
-
-    newRisks.splice(draggedIndex, 1);
-    newRisks.splice(targetIndex, 0, draggedItem);
-
-    // Update priorities
-    const updates = newRisks.map((risk, index) => ({
-      ...risk,
-      priority: index,
-    }));
-
-    setRisks(updates);
-    setDraggedItem(null);
-
-    // Update priorities in backend
-    try {
-      await Promise.all(
-        updates.map((risk) => axios.put(`${API}/risks/${risk.id}`, { priority: risk.priority }))
-      );
-      toast.success('Порядок обновлен');
-    } catch (error) {
-      toast.error('Ошибка при обновлении порядка');
-      fetchRisks(); // Reload on error
-    }
-  };
-
-  const getRiskLevelColor = (level) => {
-    switch (level) {
+  const getCriticalityColor = (criticality) => {
+    switch (criticality) {
       case 'Критический':
         return 'bg-red-100 text-red-800 border-red-300';
       case 'Высокий':
@@ -297,17 +255,87 @@ const RiskRegister = ({ user }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Идентифицирован':
+      case 'Открыт':
         return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'Оценен':
-        return 'bg-cyan-100 text-cyan-800 border-cyan-300';
       case 'В обработке':
         return 'bg-amber-100 text-amber-800 border-amber-300';
+      case 'Принят':
+        return 'bg-purple-100 text-purple-800 border-purple-300';
       case 'Закрыт':
         return 'bg-slate-100 text-slate-800 border-slate-300';
       default:
         return 'bg-slate-100 text-slate-800 border-slate-300';
     }
+  };
+
+  const getRiskMatrixColor = (p, i) => {
+    const level = p * i;
+    if (level >= 15) return 'bg-red-500';
+    if (level >= 10) return 'bg-orange-500';
+    if (level >= 5) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
+  const toggleAsset = (assetId) => {
+    setFormData(prev => ({
+      ...prev,
+      related_assets: prev.related_assets.includes(assetId)
+        ? prev.related_assets.filter(id => id !== assetId)
+        : [...prev.related_assets, assetId]
+    }));
+  };
+
+  const toggleThreat = (threatId) => {
+    setFormData(prev => ({
+      ...prev,
+      related_threats: prev.related_threats.includes(threatId)
+        ? prev.related_threats.filter(id => id !== threatId)
+        : [...prev.related_threats, threatId]
+    }));
+  };
+
+  const toggleVulnerability = (vulnId) => {
+    setFormData(prev => ({
+      ...prev,
+      related_vulnerabilities: prev.related_vulnerabilities.includes(vulnId)
+        ? prev.related_vulnerabilities.filter(id => id !== vulnId)
+        : [...prev.related_vulnerabilities, vulnId]
+    }));
+  };
+
+  const exportToCSV = () => {
+    if (filteredRisks.length === 0) {
+      toast.error('Нет данных для экспорта');
+      return;
+    }
+
+    const headers = ['ID риска', 'Дата регистрации', 'Сценарий', 'Вероятность', 'Воздействие', 'Уровень риска', 'Критичность', 'Владелец', 'Стратегия', 'Статус'];
+    
+    const rows = filteredRisks.map(risk => [
+      risk.risk_number,
+      risk.registration_date ? new Date(risk.registration_date).toLocaleDateString('ru-RU') : '',
+      risk.scenario,
+      risk.probability,
+      risk.impact,
+      risk.risk_level,
+      risk.criticality,
+      risk.owner,
+      risk.treatment_strategy,
+      risk.status
+    ]);
+
+    const BOM = '\uFEFF';
+    const csv = BOM + [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell || ''}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `risks_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    toast.success('Данные экспортированы');
   };
 
   if (loading) {
@@ -329,14 +357,13 @@ const RiskRegister = ({ user }) => {
           <DialogTrigger asChild>
             <Button
               onClick={resetForm}
-              data-testid="create-risk-button"
               className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white gap-2"
             >
               <Plus className="w-4 h-4" />
               Создать риск
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingRisk ? 'Редактировать риск' : 'Создать новый риск'}</DialogTitle>
               <DialogDescription>
@@ -347,279 +374,393 @@ const RiskRegister = ({ user }) => {
               {editingRisk && (
                 <div className="space-y-2">
                   <Label>Номер риска</Label>
-                  <Input
-                    value={editingRisk.risk_number}
-                    disabled
-                    className="bg-slate-100"
-                  />
+                  <Input value={editingRisk.risk_number} disabled className="bg-slate-100" />
                 </div>
               )}
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Категория</Label>
-                  <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
-                    <SelectTrigger data-testid="risk-category-select">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Технический">Технический</SelectItem>
-                      <SelectItem value="Организационный">Организационный</SelectItem>
-                      <SelectItem value="Физический">Физический</SelectItem>
-                      <SelectItem value="Юридический">Юридический</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
               <div className="space-y-2">
-                <Label>Название</Label>
-                <Input
-                  data-testid="risk-title-input"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Описание</Label>
+                <Label>Сценарий риска *</Label>
                 <Textarea
-                  data-testid="risk-description-input"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
+                  value={formData.scenario}
+                  onChange={(e) => setFormData({ ...formData, scenario: e.target.value })}
+                  rows={4}
+                  placeholder='Например: "Злоумышленник использует уязвимость Mass Assignment (VUL-012) в API лидов (AST-001) для повышения своих привилегий и кражи базы лидов."'
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Вероятность</Label>
-                  <Select value={formData.likelihood} onValueChange={(v) => setFormData({ ...formData, likelihood: v })}>
+                  <Label>Вероятность (1-5) *</Label>
+                  <Select value={formData.probability.toString()} onValueChange={(v) => setFormData({ ...formData, probability: parseInt(v) })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Низкая">Низкая</SelectItem>
-                      <SelectItem value="Средняя">Средняя</SelectItem>
-                      <SelectItem value="Высокая">Высокая</SelectItem>
+                      <SelectItem value="1">1 - Очень низкая</SelectItem>
+                      <SelectItem value="2">2 - Низкая</SelectItem>
+                      <SelectItem value="3">3 - Средняя</SelectItem>
+                      <SelectItem value="4">4 - Высокая</SelectItem>
+                      <SelectItem value="5">5 - Очень высокая</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Воздействие</Label>
-                  <Select value={formData.impact} onValueChange={(v) => setFormData({ ...formData, impact: v })}>
+                  <Label>Воздействие (1-5) *</Label>
+                  <Select value={formData.impact.toString()} onValueChange={(v) => setFormData({ ...formData, impact: parseInt(v) })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Низкое">Низкое</SelectItem>
-                      <SelectItem value="Среднее">Среднее</SelectItem>
-                      <SelectItem value="Высокое">Высокое</SelectItem>
-                      <SelectItem value="Критическое">Критическое</SelectItem>
+                      <SelectItem value="1">1 - Незначительное</SelectItem>
+                      <SelectItem value="2">2 - Малое</SelectItem>
+                      <SelectItem value="3">3 - Серьезное</SelectItem>
+                      <SelectItem value="4">4 - Значительное</SelectItem>
+                      <SelectItem value="5">5 - Катастрофическое</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label>Уровень риска</Label>
-                  <Select value={formData.risk_level} onValueChange={(v) => setFormData({ ...formData, risk_level: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Низкий">Низкий</SelectItem>
-                      <SelectItem value="Средний">Средний</SelectItem>
-                      <SelectItem value="Высокий">Высокий</SelectItem>
-                      <SelectItem value="Критический">Критический</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <div className="p-4 bg-slate-100 rounded">
+                <p className="text-sm font-semibold">Уровень риска: {formData.probability * formData.impact}</p>
+                <p className="text-sm text-slate-600">
+                  Критичность: {
+                    formData.probability * formData.impact >= 15 ? '🔴 Критический' :
+                    formData.probability * formData.impact >= 10 ? '🟠 Высокий' :
+                    formData.probability * formData.impact >= 5 ? '🟡 Средний' : '🟢 Низкий'
+                  }
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Связанные активы</Label>
+                <div className="border rounded p-3 max-h-40 overflow-y-auto">
+                  {assets.length === 0 ? (
+                    <p className="text-sm text-slate-500">Нет доступных активов</p>
+                  ) : (
+                    assets.map(asset => (
+                      <label key={asset.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.related_assets.includes(asset.id)}
+                          onChange={() => toggleAsset(asset.id)}
+                          className="rounded"
+                        />
+                        <span className="text-sm">{asset.asset_number} - {asset.name}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Связанные угрозы</Label>
+                <div className="border rounded p-3 max-h-40 overflow-y-auto">
+                  {threats.length === 0 ? (
+                    <p className="text-sm text-slate-500">Нет доступных угроз</p>
+                  ) : (
+                    threats.map(threat => (
+                      <label key={threat.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.related_threats.includes(threat.id)}
+                          onChange={() => toggleThreat(threat.id)}
+                          className="rounded"
+                        />
+                        <span className="text-sm">{threat.threat_number} - {threat.description.substring(0, 50)}...</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Связанные уязвимости</Label>
+                <div className="border rounded p-3 max-h-40 overflow-y-auto">
+                  {vulnerabilities.length === 0 ? (
+                    <p className="text-sm text-slate-500">Нет доступных уязвимостей</p>
+                  ) : (
+                    vulnerabilities.map(vuln => (
+                      <label key={vuln.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.related_vulnerabilities.includes(vuln.id)}
+                          onChange={() => toggleVulnerability(vuln.id)}
+                          className="rounded"
+                        />
+                        <span className="text-sm">{vuln.vulnerability_number} - {vuln.description.substring(0, 50)}...</span>
+                      </label>
+                    ))
+                  )}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Статус</Label>
-                  <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Идентифицирован">Идентифицирован</SelectItem>
-                      <SelectItem value="Оценен">Оценен</SelectItem>
-                      <SelectItem value="В обработке">В обработке</SelectItem>
-                      <SelectItem value="Закрыт">Закрыт</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Ответственный</Label>
+                  <Label>Владелец риска *</Label>
                   <Input
                     value={formData.owner}
                     onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
                     required
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label>Стратегия обработки *</Label>
+                  <Select value={formData.treatment_strategy} onValueChange={(v) => setFormData({ ...formData, treatment_strategy: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Снижение">Снижение</SelectItem>
+                      <SelectItem value="Принятие">Принятие</SelectItem>
+                      <SelectItem value="Передача">Передача</SelectItem>
+                      <SelectItem value="Избегание">Избегание</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Меры по обработке</Label>
+                <Label>План обработки</Label>
                 <Textarea
-                  value={formData.treatment_measures}
-                  onChange={(e) => setFormData({ ...formData, treatment_measures: e.target.value })}
-                  rows={2}
+                  value={formData.treatment_plan}
+                  onChange={(e) => setFormData({ ...formData, treatment_plan: e.target.value })}
+                  rows={3}
+                  placeholder="1. Внедрить WAF. 2. Провести тренинг для разработчиков."
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Срок реализации</Label>
+                  <Input
+                    value={formData.implementation_deadline}
+                    onChange={(e) => setFormData({ ...formData, implementation_deadline: e.target.value })}
+                    placeholder="Q3 2026"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Дата пересмотра</Label>
+                  <Input
+                    type="date"
+                    value={formData.review_date}
+                    onChange={(e) => setFormData({ ...formData, review_date: e.target.value })}
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Срок</Label>
-                <Input
-                  type="date"
-                  value={formData.deadline}
-                  onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                />
+                <Label>Статус *</Label>
+                <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Открыт">Открыт</SelectItem>
+                    <SelectItem value="В обработке">В обработке</SelectItem>
+                    <SelectItem value="Принят">Принят</SelectItem>
+                    <SelectItem value="Закрыт">Закрыт</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                   Отмена
                 </Button>
-                <Button type="submit" data-testid="risk-submit-button" className="bg-gradient-to-r from-cyan-500 to-cyan-600">
+                <Button type="submit" className="bg-gradient-to-r from-cyan-500 to-cyan-600">
                   {editingRisk ? 'Обновить' : 'Создать'}
                 </Button>
               </div>
             </form>
           </DialogContent>
         </Dialog>
+      </div>
 
-        {/* View Dialog */}
-        <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Просмотр риска</DialogTitle>
-              <DialogDescription>Подробная информация о риске информационной безопасности</DialogDescription>
-            </DialogHeader>
-            {viewingRisk && (
-              <div className="space-y-6">
-                {/* Основная информация */}
-                <div className="bg-slate-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Основная информация</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500 uppercase">Номер риска:</span>
-                      <p className="text-sm mt-1">{viewingRisk.risk_number}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500 uppercase">Статус:</span>
-                      <p className="text-sm mt-1">{viewingRisk.status}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-xs font-semibold text-slate-500 uppercase">Название:</span>
-                      <p className="text-sm mt-1 font-medium">{viewingRisk.title}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500 uppercase">Категория:</span>
-                      <p className="text-sm mt-1">{viewingRisk.category}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500 uppercase">Уровень риска:</span>
-                      <p className="text-sm mt-1">{viewingRisk.risk_level}</p>
-                    </div>
+      {/* View Dialog */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          {viewingRisk && (
+            <div className="space-y-4">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-cyan-600" />
+                  Риск {viewingRisk.risk_number}
+                </DialogTitle>
+                <div className="flex gap-2">
+                  <Badge className={getCriticalityColor(viewingRisk.criticality)}>{viewingRisk.criticality}</Badge>
+                  <Badge className={getStatusColor(viewingRisk.status)}>{viewingRisk.status}</Badge>
+                </div>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <div className="bg-blue-50 p-4 rounded">
+                  <h3 className="font-semibold text-sm mb-2">Сценарий риска</h3>
+                  <p className="text-sm">{viewingRisk.scenario}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Card>
+                    <CardContent className="pt-4">
+                      <p className="text-xs text-slate-500 mb-1">Вероятность</p>
+                      <p className="text-2xl font-bold">{viewingRisk.probability}/5</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <p className="text-xs text-slate-500 mb-1">Воздействие</p>
+                      <p className="text-2xl font-bold">{viewingRisk.impact}/5</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <p className="text-xs text-slate-500 mb-1">Уровень риска</p>
+                      <p className="text-2xl font-bold">{viewingRisk.risk_level}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <p className="text-xs text-slate-500 mb-1">Критичность</p>
+                      <Badge className={getCriticalityColor(viewingRisk.criticality)}>{viewingRisk.criticality}</Badge>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Risk Matrix */}
+                <div className="bg-slate-50 p-4 rounded">
+                  <h3 className="font-semibold text-sm mb-3">Матрица рисков 5x5</h3>
+                  <div className="grid grid-cols-6 gap-1">
+                    <div></div>
+                    <div className="text-xs text-center font-semibold">1</div>
+                    <div className="text-xs text-center font-semibold">2</div>
+                    <div className="text-xs text-center font-semibold">3</div>
+                    <div className="text-xs text-center font-semibold">4</div>
+                    <div className="text-xs text-center font-semibold">5</div>
+                    {[5, 4, 3, 2, 1].map(p => (
+                      <>
+                        <div key={`label-${p}`} className="text-xs font-semibold flex items-center justify-center">{p}</div>
+                        {[1, 2, 3, 4, 5].map(i => (
+                          <div
+                            key={`${p}-${i}`}
+                            className={`h-12 w-12 flex items-center justify-center rounded text-white text-xs font-semibold ${getRiskMatrixColor(p, i)} ${viewingRisk.probability === p && viewingRisk.impact === i ? 'ring-4 ring-blue-600' : ''}`}
+                          >
+                            {p * i}
+                          </div>
+                        ))}
+                      </>
+                    ))}
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-green-500 rounded"></div>Низкий (1-4)</div>
+                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-yellow-500 rounded"></div>Средний (5-9)</div>
+                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-orange-500 rounded"></div>Высокий (10-14)</div>
+                    <div className="flex items-center gap-2"><div className="w-4 h-4 bg-red-500 rounded"></div>Критический (15-25)</div>
                   </div>
                 </div>
 
-                {/* Оценка риска */}
-                <div className="bg-red-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Оценка риска</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500 uppercase">Вероятность:</span>
-                      <p className="text-sm mt-1">{viewingRisk.likelihood}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500 uppercase">Воздействие:</span>
-                      <p className="text-sm mt-1">{viewingRisk.impact}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500 uppercase">Приоритет:</span>
-                      <p className="text-sm mt-1">{viewingRisk.priority}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500 uppercase">Срок:</span>
-                      <p className="text-sm mt-1">{viewingRisk.deadline ? new Date(viewingRisk.deadline).toLocaleDateString('ru-RU') : '-'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Управление риском */}
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Управление</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500 uppercase">Ответственный:</span>
-                      <p className="text-sm mt-1">{viewingRisk.owner || '-'}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500 uppercase">Подразделение:</span>
-                      <p className="text-sm mt-1">{viewingRisk.department || '-'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Описание и меры */}
-                {(viewingRisk.description || viewingRisk.treatment_measures) && (
+                {(viewingRisk.related_assets?.length > 0 || viewingRisk.related_threats?.length > 0 || viewingRisk.related_vulnerabilities?.length > 0) && (
                   <div className="space-y-3">
-                    {viewingRisk.description && (
-                      <div className="bg-white border border-slate-200 p-4 rounded-lg">
-                        <span className="text-xs font-semibold text-slate-500 uppercase">Описание риска:</span>
-                        <p className="text-sm mt-2 whitespace-pre-wrap">{viewingRisk.description}</p>
+                    {viewingRisk.related_assets?.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-sm mb-2">Связанные активы ({viewingRisk.related_assets.length})</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {viewingRisk.related_assets.map(assetId => {
+                            const asset = assets.find(a => a.id === assetId);
+                            return asset ? (
+                              <Badge key={assetId} variant="outline" className="cursor-pointer hover:bg-slate-100">
+                                <Link2 className="w-3 h-3 mr-1" />
+                                {asset.asset_number}
+                              </Badge>
+                            ) : null;
+                          })}
+                        </div>
                       </div>
                     )}
-                    {viewingRisk.treatment_measures && (
-                      <div className="bg-white border border-slate-200 p-4 rounded-lg">
-                        <span className="text-xs font-semibold text-slate-500 uppercase">Меры обработки:</span>
-                        <p className="text-sm mt-2 whitespace-pre-wrap">{viewingRisk.treatment_measures}</p>
+
+                    {viewingRisk.related_threats?.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-sm mb-2">Связанные угрозы ({viewingRisk.related_threats.length})</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {viewingRisk.related_threats.map(threatId => {
+                            const threat = threats.find(t => t.id === threatId);
+                            return threat ? (
+                              <Badge key={threatId} variant="outline" className="cursor-pointer hover:bg-slate-100">
+                                <Link2 className="w-3 h-3 mr-1" />
+                                {threat.threat_number}
+                              </Badge>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {viewingRisk.related_vulnerabilities?.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-sm mb-2">Связанные уязвимости ({viewingRisk.related_vulnerabilities.length})</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {viewingRisk.related_vulnerabilities.map(vulnId => {
+                            const vuln = vulnerabilities.find(v => v.id === vulnId);
+                            return vuln ? (
+                              <Badge key={vulnId} variant="outline" className="cursor-pointer hover:bg-slate-100">
+                                <Link2 className="w-3 h-3 mr-1" />
+                                {vuln.vulnerability_number}
+                              </Badge>
+                            ) : null;
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Дополнительная информация */}
-                <div className="bg-slate-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-sm text-slate-700 mb-3">Дополнительно</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500 uppercase">Дата создания:</span>
-                      <p className="text-sm mt-1">{viewingRisk.created_at ? new Date(viewingRisk.created_at).toLocaleString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500 uppercase">Последнее обновление:</span>
-                      <p className="text-sm mt-1">{viewingRisk.updated_at ? new Date(viewingRisk.updated_at).toLocaleString('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
-                    </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Владелец</p>
+                    <p className="text-sm font-semibold">{viewingRisk.owner}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Стратегия обработки</p>
+                    <p className="text-sm font-semibold">{viewingRisk.treatment_strategy}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Срок реализации</p>
+                    <p className="text-sm">{viewingRisk.implementation_deadline || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">Дата пересмотра</p>
+                    <p className="text-sm">{viewingRisk.review_date ? new Date(viewingRisk.review_date).toLocaleDateString('ru-RU') : '-'}</p>
                   </div>
                 </div>
+
+                {viewingRisk.treatment_plan && (
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">План обработки</p>
+                    <p className="text-sm whitespace-pre-wrap">{viewingRisk.treatment_plan}</p>
+                  </div>
+                )}
+
                 <div className="flex justify-end gap-2 pt-4 border-t">
-                  <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleDeleteFromView} title="Удалить">
-                    <Trash2 className="w-4 h-4" />
+                  <Button variant="outline" onClick={() => handleDelete(viewingRisk.id)}>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Удалить
                   </Button>
-                  <Button variant="outline" onClick={handleEditFromView} title="Редактировать">
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button variant="outline" onClick={() => setViewDialogOpen(false)} title="Закрыть">
-                    <X className="w-4 h-4" />
+                  <Button variant="outline" onClick={handleEditFromView}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Редактировать
                   </Button>
                 </div>
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Filters */}
-      <Card className="border-slate-200">
+      <Card>
         <CardContent className="pt-6">
           <div className="space-y-4">
             <div className="flex gap-2">
@@ -631,413 +772,234 @@ const RiskRegister = ({ user }) => {
                 <Filter className="w-4 h-4 mr-2" />
                 Фильтры {showFilters ? '▲' : '▼'}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowColumnSelector(!showColumnSelector)}
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Столбцы
+              <Button variant="outline" size="sm" onClick={exportToCSV}>
+                <Download className="w-4 h-4 mr-2" />
+                Экспорт CSV
               </Button>
             </div>
 
             {showFilters && (
-              <Card className="p-4 bg-slate-50">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold">Категория</Label>
-                      <Select value={filterCategory} onValueChange={setFilterCategory}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Все категории" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Все категории</SelectItem>
-                          <SelectItem value="Технический">Технический</SelectItem>
-                          <SelectItem value="Организационный">Организационный</SelectItem>
-                          <SelectItem value="Физический">Физический</SelectItem>
-                          <SelectItem value="Юридический">Юридический</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold">Статус</Label>
-                      <Select value={filterStatus} onValueChange={setFilterStatus}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Все статусы" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Все статусы</SelectItem>
-                          <SelectItem value="Идентифицирован">Идентифицирован</SelectItem>
-                          <SelectItem value="Оценен">Оценен</SelectItem>
-                          <SelectItem value="В обработке">В обработке</SelectItem>
-                          <SelectItem value="Закрыт">Закрыт</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold">Уровень риска</Label>
-                      <Select value={filterRiskLevel} onValueChange={setFilterRiskLevel}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Все уровни" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Все уровни</SelectItem>
-                          <SelectItem value="Критический">Критический</SelectItem>
-                          <SelectItem value="Высокий">Высокий</SelectItem>
-                          <SelectItem value="Средний">Средний</SelectItem>
-                          <SelectItem value="Низкий">Низкий</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold">Ответственный</Label>
-                      <Input
-                        placeholder="Введите имя..."
-                        value={filterOwner}
-                        onChange={(e) => setFilterOwner(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold">Общий поиск</Label>
-                      <Input
-                        placeholder="Поиск..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="flex items-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={resetFilters}
-                        className="w-full"
-                      >
-                        Сбросить фильтры
-                      </Button>
-                    </div>
-                  </div>
+              <div className="grid grid-cols-4 gap-4 p-4 bg-slate-50 rounded-lg">
+                <div className="space-y-2">
+                  <Label>Поиск</Label>
+                  <Input
+                    placeholder="Поиск по ID, сценарию..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
-              </Card>
+                <div className="space-y-2">
+                  <Label>Статус</Label>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Все</SelectItem>
+                      <SelectItem value="Открыт">Открыт</SelectItem>
+                      <SelectItem value="В обработке">В обработке</SelectItem>
+                      <SelectItem value="Принят">Принят</SelectItem>
+                      <SelectItem value="Закрыт">Закрыт</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Критичность</Label>
+                  <Select value={filterCriticality} onValueChange={setFilterCriticality}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Все</SelectItem>
+                      <SelectItem value="Критический">Критический</SelectItem>
+                      <SelectItem value="Высокий">Высокий</SelectItem>
+                      <SelectItem value="Средний">Средний</SelectItem>
+                      <SelectItem value="Низкий">Низкий</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end">
+                  <Button variant="outline" size="sm" onClick={resetFilters}>
+                    Сбросить
+                  </Button>
+                </div>
+              </div>
             )}
 
-            {showColumnSelector && (
-              <Card className="p-4 bg-slate-50">
-                <h3 className="font-semibold mb-3 text-sm">Выберите столбцы для отображения:</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {Object.keys(visibleColumns).map(key => (
-                    <div key={key} className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={visibleColumns[key]}
-                        onCheckedChange={(checked) => 
-                          setVisibleColumns({ ...visibleColumns, [key]: checked })
-                        }
-                      />
-                      <Label className="text-sm cursor-pointer">
-                        {key === 'risk_number' ? 'Номер' :
-                         key === 'title' ? 'Название' :
-                         key === 'category' ? 'Категория' :
-                         key === 'risk_level' ? 'Уровень риска' :
-                         key === 'status' ? 'Статус' :
-                         key === 'owner' ? 'Ответственный' :
-                         key === 'likelihood' ? 'Вероятность' :
-                         key === 'impact' ? 'Воздействие' :
-                         key === 'treatment_measures' ? 'Меры' :
-                         key === 'deadline' ? 'Срок' :
-                         key === 'description' ? 'Описание' : key}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            <div className="text-sm text-slate-600">
+              Показано {filteredRisks.length} из {total} рисков
+            </div>
 
-      {/* Table */}
-      <Card className="border-slate-200">
-        <CardContent className="p-6">
-          {/* Pagination controls */}
-          <div className="flex justify-between items-center mb-4 gap-4 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Label className="text-sm">Показать:</Label>
-              <Select value={limit.toString()} onValueChange={(val) => { setLimit(Number(val)); setPage(1); }}>
-                <SelectTrigger className="w-24">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="30">30</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-              <span className="text-sm text-slate-600">Всего: {total}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => setPage(1)} 
-                disabled={page === 1}
-              >
-                <ChevronsLeft className="w-4 h-4" />
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => setPage(page - 1)} 
-                disabled={page === 1}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <span className="text-sm px-2">
-                Страница {page} из {totalPages}
-              </span>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => setPage(page + 1)} 
-                disabled={page === totalPages}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => setPage(totalPages)} 
-                disabled={page === totalPages}
-              >
-                <ChevronsRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50">
-                  <TableHead className="w-12"></TableHead>
-                  {visibleColumns.risk_number && (
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
                     <TableHead onClick={() => handleSort('risk_number')} className="cursor-pointer hover:bg-slate-100">
                       <div className="flex items-center gap-1">
-                        Номер
+                        ID риска
                         {sortBy === 'risk_number' && <ArrowUpDown className="w-3 h-3" />}
                       </div>
                     </TableHead>
-                  )}
-                  {visibleColumns.title && (
-                    <TableHead onClick={() => handleSort('title')} className="cursor-pointer hover:bg-slate-100">
+                    <TableHead onClick={() => handleSort('registration_date')} className="cursor-pointer hover:bg-slate-100">
                       <div className="flex items-center gap-1">
-                        Название
-                        {sortBy === 'title' && <ArrowUpDown className="w-3 h-3" />}
+                        Дата
+                        {sortBy === 'registration_date' && <ArrowUpDown className="w-3 h-3" />}
                       </div>
                     </TableHead>
-                  )}
-                  {visibleColumns.category && (
-                    <TableHead onClick={() => handleSort('category')} className="cursor-pointer hover:bg-slate-100">
-                      <div className="flex items-center gap-1">
-                        Категория
-                        {sortBy === 'category' && <ArrowUpDown className="w-3 h-3" />}
-                      </div>
-                    </TableHead>
-                  )}
-                  {visibleColumns.risk_level && (
-                    <TableHead onClick={() => handleSort('risk_level')} className="cursor-pointer hover:bg-slate-100">
-                      <div className="flex items-center gap-1">
-                        Уровень
-                        {sortBy === 'risk_level' && <ArrowUpDown className="w-3 h-3" />}
-                      </div>
-                    </TableHead>
-                  )}
-                  {visibleColumns.status && (
-                    <TableHead onClick={() => handleSort('status')} className="cursor-pointer hover:bg-slate-100">
-                      <div className="flex items-center gap-1">
-                        Статус
-                        {sortBy === 'status' && <ArrowUpDown className="w-3 h-3" />}
-                      </div>
-                    </TableHead>
-                  )}
-                  {visibleColumns.owner && (
-                    <TableHead onClick={() => handleSort('owner')} className="cursor-pointer hover:bg-slate-100">
-                      <div className="flex items-center gap-1">
-                        Ответственный
-                        {sortBy === 'owner' && <ArrowUpDown className="w-3 h-3" />}
-                      </div>
-                    </TableHead>
-                  )}
-                  {visibleColumns.likelihood && <TableHead>Вероятность</TableHead>}
-                  {visibleColumns.impact && <TableHead>Воздействие</TableHead>}
-                  {visibleColumns.treatment_measures && <TableHead>Меры</TableHead>}
-                  {visibleColumns.deadline && (
-                    <TableHead onClick={() => handleSort('deadline')} className="cursor-pointer hover:bg-slate-100">
-                      <div className="flex items-center gap-1">
-                        Срок
-                        {sortBy === 'deadline' && <ArrowUpDown className="w-3 h-3" />}
-                      </div>
-                    </TableHead>
-                  )}
-                  {visibleColumns.description && <TableHead>Описание</TableHead>}
-                  <TableHead className="text-right">Действия</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRisks.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={13} className="text-center py-8 text-slate-500">
-                      Риски не найдены
-                    </TableCell>
+                    <TableHead>Сценарий</TableHead>
+                    <TableHead className="text-center">Связи</TableHead>
+                    <TableHead className="text-center">P</TableHead>
+                    <TableHead className="text-center">I</TableHead>
+                    <TableHead className="text-center">Уровень</TableHead>
+                    <TableHead>Критичность</TableHead>
+                    <TableHead>Владелец</TableHead>
+                    <TableHead>Стратегия</TableHead>
+                    <TableHead>Статус</TableHead>
+                    <TableHead className="text-right">Действия</TableHead>
                   </TableRow>
-                ) : (
-                  filteredRisks.map((risk) => (
-                    <TableRow
-                      key={risk.id}
-                      data-testid={`risk-row-${risk.id}`}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, risk)}
-                      onDragOver={handleDragOver}
-                      onDrop={(e) => handleDrop(e, risk)}
-                      onClick={() => handleView(risk)}
-                      className="hover:bg-slate-50 cursor-pointer"
-                    >
-                      <TableCell>
-                        <GripVertical className="w-4 h-4 text-slate-400" />
+                </TableHeader>
+                <TableBody>
+                  {filteredRisks.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={12} className="text-center py-8 text-slate-500">
+                        Риски не найдены
                       </TableCell>
-                      {visibleColumns.risk_number && <TableCell className="font-medium">{risk.risk_number}</TableCell>}
-                      {visibleColumns.title && (
-                        <TableCell>
-                          <div className="max-w-xs">
-                            <p className="font-medium text-slate-900">{risk.title}</p>
+                    </TableRow>
+                  ) : (
+                    filteredRisks.map((risk) => (
+                      <TableRow
+                        key={risk.id}
+                        className="hover:bg-slate-50 cursor-pointer"
+                        onClick={() => handleView(risk)}
+                      >
+                        <TableCell className="font-medium">{risk.risk_number}</TableCell>
+                        <TableCell className="text-sm">
+                          {risk.registration_date ? new Date(risk.registration_date).toLocaleDateString('ru-RU') : '-'}
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <p className="truncate text-sm">{risk.scenario}</p>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex gap-1 justify-center">
+                            {risk.related_assets?.length > 0 && (
+                              <Badge variant="outline" className="text-xs">A:{risk.related_assets.length}</Badge>
+                            )}
+                            {risk.related_threats?.length > 0 && (
+                              <Badge variant="outline" className="text-xs">T:{risk.related_threats.length}</Badge>
+                            )}
+                            {risk.related_vulnerabilities?.length > 0 && (
+                              <Badge variant="outline" className="text-xs">V:{risk.related_vulnerabilities.length}</Badge>
+                            )}
                           </div>
                         </TableCell>
-                      )}
-                      {visibleColumns.category && (
+                        <TableCell className="text-center font-semibold">{risk.probability}</TableCell>
+                        <TableCell className="text-center font-semibold">{risk.impact}</TableCell>
+                        <TableCell className="text-center font-bold">{risk.risk_level}</TableCell>
                         <TableCell>
-                          <span className="text-sm text-slate-700">{risk.category}</span>
-                        </TableCell>
-                      )}
-                      {visibleColumns.risk_level && (
-                        <TableCell>
-                          <Badge className={getRiskLevelColor(risk.risk_level)} variant="outline">
-                            {risk.risk_level}
+                          <Badge className={getCriticalityColor(risk.criticality)} variant="outline">
+                            {risk.criticality}
                           </Badge>
                         </TableCell>
-                      )}
-                      {visibleColumns.status && (
+                        <TableCell className="text-sm">{risk.owner}</TableCell>
+                        <TableCell className="text-sm">{risk.treatment_strategy}</TableCell>
                         <TableCell>
                           <Badge className={getStatusColor(risk.status)} variant="outline">
                             {risk.status}
                           </Badge>
                         </TableCell>
-                      )}
-                      {visibleColumns.owner && <TableCell className="text-sm text-slate-700">{risk.owner}</TableCell>}
-                      {visibleColumns.likelihood && <TableCell className="text-sm text-slate-700">{risk.likelihood}</TableCell>}
-                      {visibleColumns.impact && <TableCell className="text-sm text-slate-700">{risk.impact}</TableCell>}
-                      {visibleColumns.treatment_measures && <TableCell className="max-w-xs truncate text-sm text-slate-700">{risk.treatment_measures || '-'}</TableCell>}
-                      {visibleColumns.deadline && <TableCell className="text-sm text-slate-700">{risk.deadline ? new Date(risk.deadline).toLocaleDateString('ru-RU') : '-'}</TableCell>}
-                      {visibleColumns.description && <TableCell className="max-w-xs truncate text-sm text-slate-700">{risk.description}</TableCell>}
-                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleView(risk)}
-                            className="h-8 w-8 p-0"
-                            title="Просмотр"
-                          >
-                            <Eye className="w-4 h-4 text-cyan-600" />
-                          </Button>
-                          <Button
-                            data-testid={`edit-risk-${risk.id}`}
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(risk)}
-                            className="h-8 w-8 p-0"
-                            title="Редактировать"
-                          >
-                            <Edit className="w-4 h-4 text-slate-600" />
-                          </Button>
-                          <Button
-                            data-testid={`delete-risk-${risk.id}`}
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(risk.id)}
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            title="Удалить"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          
-          {/* Pagination controls bottom */}
-          <div className="flex justify-between items-center mt-4 gap-4 flex-wrap border-t pt-4">
-            <div className="flex items-center gap-2">
-              <Label className="text-sm">Показать:</Label>
-              <Select value={limit.toString()} onValueChange={(val) => { setLimit(Number(val)); setPage(1); }}>
-                <SelectTrigger className="w-24">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="30">30</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-              <span className="text-sm text-slate-600">Всего: {total}</span>
+                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleView(risk)}
+                              className="h-8 w-8 p-0"
+                              title="Просмотр"
+                            >
+                              <Eye className="w-4 h-4 text-cyan-600" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(risk)}
+                              className="h-8 w-8 p-0"
+                              title="Редактировать"
+                            >
+                              <Edit className="w-4 h-4 text-slate-600" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(risk.id)}
+                              className="h-8 w-8 p-0"
+                              title="Удалить"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-600" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </div>
-            <div className="flex items-center gap-2">
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => setPage(1)} 
-                disabled={page === 1}
-              >
-                <ChevronsLeft className="w-4 h-4" />
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => setPage(page - 1)} 
-                disabled={page === 1}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <span className="text-sm px-2">
-                Страница {page} из {totalPages}
-              </span>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => setPage(page + 1)} 
-                disabled={page === totalPages}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={() => setPage(totalPages)} 
-                disabled={page === totalPages}
-              >
-                <ChevronsRight className="w-4 h-4" />
-              </Button>
+
+            {/* Pagination */}
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Label className="text-sm">Показать:</Label>
+                <Select value={limit.toString()} onValueChange={(val) => { setLimit(Number(val)); setPage(1); }}>
+                  <SelectTrigger className="w-24">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="30">30</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(1)}
+                  disabled={page === 1}
+                >
+                  <ChevronsLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="text-sm">
+                  Страница {page} из {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(page + 1)}
+                  disabled={page === totalPages}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(totalPages)}
+                  disabled={page === totalPages}
+                >
+                  <ChevronsRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
