@@ -478,24 +478,42 @@ const Assets = ({ user }) => {
               </div>
 
               <div className="space-y-2">
-                <Label>Угрозы (выберите несколько)</Label>
-                <div className="border rounded-lg p-4 space-y-2 max-h-40 overflow-y-auto">
-                  {settings?.threats?.map((threat) => (
-                    <div key={threat} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`threat-${threat}`}
-                        checked={formData.threats.includes(threat)}
-                        onCheckedChange={() => toggleThreat(threat)}
-                      />
-                      <label
-                        htmlFor={`threat-${threat}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                <Label>Угрозы</Label>
+                {threatSelects.map((select, index) => (
+                  <div key={select.id} className="flex gap-2">
+                    <Select value={select.value} onValueChange={(v) => updateThreatSelect(select.id, v)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Выберите угрозу" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {threats.map(threat => (
+                          <SelectItem key={threat.id} value={threat.id}>
+                            {threat.threat_number} - {threat.description.substring(0, 60)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {threatSelects.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeThreatSelect(select.id)}
                       >
-                        {threat}
-                      </label>
-                    </div>
-                  ))}
-                </div>
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  onClick={addThreatSelect}
+                  className="text-cyan-600"
+                >
+                  + Добавить угрозу
+                </Button>
               </div>
 
               <div className="space-y-2">
