@@ -412,13 +412,16 @@ const Vulnerabilities = ({ user }) => {
               {viewingVulnerability.related_asset_id && (
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h3 className="font-semibold text-sm text-slate-700 mb-2">Связанный актив</h3>
-                  <div className="flex items-center gap-2">
-                    <ExternalLink className="w-4 h-4 text-cyan-600" />
+                  <button
+                    onClick={() => handleViewAsset(viewingVulnerability.related_asset_id)}
+                    className="flex items-center gap-2 text-cyan-600 hover:underline"
+                  >
+                    <ExternalLink className="w-4 h-4" />
                     <span className="text-sm">
                       {getRelatedAsset(viewingVulnerability.related_asset_id)?.asset_number} - 
                       {getRelatedAsset(viewingVulnerability.related_asset_id)?.name}
                     </span>
-                  </div>
+                  </button>
                 </div>
               )}
 
