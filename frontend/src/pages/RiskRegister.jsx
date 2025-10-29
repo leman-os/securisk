@@ -822,10 +822,15 @@ const RiskRegister = ({ user }) => {
                           {viewingRisk.related_assets.map(assetId => {
                             const asset = assets.find(a => a.id === assetId);
                             return asset ? (
-                              <Badge key={assetId} variant="outline" className="cursor-pointer hover:bg-slate-100">
-                                <Link2 className="w-3 h-3 mr-1" />
-                                {asset.asset_number}
-                              </Badge>
+                              <button
+                                key={assetId}
+                                onClick={() => handleViewAsset(assetId)}
+                                className="inline-flex items-center px-3 py-1 rounded-md text-sm border border-slate-300 bg-white hover:bg-slate-100 transition-colors"
+                              >
+                                <Link2 className="w-3 h-3 mr-1 text-cyan-600" />
+                                <span className="font-medium">{asset.asset_number}</span>
+                                <span className="ml-1 text-slate-600">- {asset.name}</span>
+                              </button>
                             ) : null;
                           })}
                         </div>
@@ -839,10 +844,15 @@ const RiskRegister = ({ user }) => {
                           {viewingRisk.related_threats.map(threatId => {
                             const threat = threats.find(t => t.id === threatId);
                             return threat ? (
-                              <Badge key={threatId} variant="outline" className="cursor-pointer hover:bg-slate-100">
-                                <Link2 className="w-3 h-3 mr-1" />
-                                {threat.threat_number}
-                              </Badge>
+                              <button
+                                key={threatId}
+                                onClick={() => handleViewThreat(threatId)}
+                                className="inline-flex items-center px-3 py-1 rounded-md text-sm border border-slate-300 bg-white hover:bg-slate-100 transition-colors"
+                              >
+                                <Link2 className="w-3 h-3 mr-1 text-orange-600" />
+                                <span className="font-medium">{threat.threat_number}</span>
+                                <span className="ml-1 text-slate-600">- {threat.description.substring(0, 40)}...</span>
+                              </button>
                             ) : null;
                           })}
                         </div>
@@ -856,10 +866,15 @@ const RiskRegister = ({ user }) => {
                           {viewingRisk.related_vulnerabilities.map(vulnId => {
                             const vuln = vulnerabilities.find(v => v.id === vulnId);
                             return vuln ? (
-                              <Badge key={vulnId} variant="outline" className="cursor-pointer hover:bg-slate-100">
-                                <Link2 className="w-3 h-3 mr-1" />
-                                {vuln.vulnerability_number}
-                              </Badge>
+                              <button
+                                key={vulnId}
+                                onClick={() => handleViewVuln(vulnId)}
+                                className="inline-flex items-center px-3 py-1 rounded-md text-sm border border-slate-300 bg-white hover:bg-slate-100 transition-colors"
+                              >
+                                <Link2 className="w-3 h-3 mr-1 text-red-600" />
+                                <span className="font-medium">{vuln.vulnerability_number}</span>
+                                <span className="ml-1 text-slate-600">- {vuln.description.substring(0, 40)}...</span>
+                              </button>
                             ) : null;
                           })}
                         </div>
