@@ -171,6 +171,19 @@ const Vulnerabilities = ({ user }) => {
     }
   };
 
+  const getCriticalityColor = (criticality) => {
+    switch (criticality) {
+      case 'Высокая':
+        return 'bg-red-100 text-red-800 border-red-300';
+      case 'Средняя':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      case 'Низкая':
+        return 'bg-green-100 text-green-800 border-green-300';
+      default:
+        return 'bg-slate-100 text-slate-800 border-slate-300';
+    }
+  };
+
   const handleEditFromView = () => {
     setEditingVulnerability(viewingVulnerability);
     setFormData({
