@@ -61,46 +61,55 @@ class Token(BaseModel):
 class Risk(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    risk_number: str
-    title: str
-    description: str
-    category: str
-    likelihood: str
-    impact: str
-    risk_level: str
-    status: str
-    owner: str
-    treatment_measures: Optional[str] = None
-    deadline: Optional[str] = None
+    risk_number: str  # RISK-2024-001
+    registration_date: datetime  # Дата регистрации
+    scenario: str  # Сценарий риска
+    related_assets: List[str] = Field(default_factory=list)  # ID активов
+    related_threats: List[str] = Field(default_factory=list)  # ID угроз
+    related_vulnerabilities: List[str] = Field(default_factory=list)  # ID уязвимостей
+    probability: int  # Вероятность 1-5
+    impact: int  # Воздействие 1-5
+    risk_level: int  # Уровень риска = P * I (автоматически)
+    criticality: str  # Критичность (автоматически по матрице)
+    owner: str  # Владелец риска
+    treatment_strategy: str  # Стратегия: Снижение, Принятие, Передача, Избегание
+    treatment_plan: Optional[str] = None  # План обработки
+    implementation_deadline: Optional[str] = None  # Срок реализации (Q3 2026)
+    status: str  # Статус: Открыт, В обработке, Принят, Закрыт
+    review_date: Optional[datetime] = None  # Дата пересмотра
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     priority: int = Field(default=0)
 
 class RiskCreate(BaseModel):
-    risk_number: Optional[str] = None  # Auto-generated if not provided
-    title: str
-    description: str
-    category: str
-    likelihood: str
-    impact: str
-    risk_level: str
-    status: str
+    risk_number: Optional[str] = None  # Auto-generated
+    scenario: str
+    related_assets: List[str] = Field(default_factory=list)
+    related_threats: List[str] = Field(default_factory=list)
+    related_vulnerabilities: List[str] = Field(default_factory=list)
+    probability: int = Field(ge=1, le=5)  # 1-5
+    impact: int = Field(ge=1, le=5)  # 1-5
     owner: str
-    treatment_measures: Optional[str] = None
-    deadline: Optional[str] = None
+    treatment_strategy: str
+    treatment_plan: Optional[str] = None
+    implementation_deadline: Optional[str] = None
+    status: str = "Открыт"
+    review_date: Optional[datetime] = None
 
 class RiskUpdate(BaseModel):
     risk_number: Optional[str] = None
-    title: Optional[str] = None
-    description: Optional[str] = None
-    category: Optional[str] = None
-    likelihood: Optional[str] = None
-    impact: Optional[str] = None
-    risk_level: Optional[str] = None
-    status: Optional[str] = None
+    scenario: Optional[str] = None
+    related_assets: Optional[List[str]] = None
+    related_threats: Optional[List[str]] = None
+    related_vulnerabilities: Optional[List[str]] = None
+    probability: Optional[int] = Field(None, ge=1, le=5)
+    impact: Optional[int] = Field(None, ge=1, le=5)
     owner: Optional[str] = None
-    treatment_measures: Optional[str] = None
-    deadline: Optional[str] = None
+    treatment_strategy: Optional[str] = None
+    treatment_plan: Optional[str] = None
+    implementation_deadline: Optional[str] = None
+    status: Optional[str] = None
+    review_date: Optional[datetime] = None
     priority: Optional[int] = None
 
 class Incident(BaseModel):
