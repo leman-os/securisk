@@ -297,8 +297,9 @@ const Assets = ({ user }) => {
   };
 
   const updateThreatSelect = (id, value) => {
-    setThreatSelects(threatSelects.map(s => s.id === id ? { ...s, value } : s));
-    const selectedThreats = threatSelects.map(s => s.id === id ? value : s.value).filter(v => v);
+    const updatedSelects = threatSelects.map(s => s.id === id ? { ...s, value } : s);
+    setThreatSelects(updatedSelects);
+    const selectedThreats = updatedSelects.map(s => s.value).filter(v => v);
     setFormData(prev => ({ ...prev, threats: selectedThreats }));
   };
 
