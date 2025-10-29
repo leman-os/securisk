@@ -1036,7 +1036,11 @@ const Incidents = ({ user }) => {
               </TableHeader>
               <TableBody>
                 {getFilteredIncidents().map((incident) => (
-                  <TableRow key={incident.id}>
+                  <TableRow 
+                    key={incident.id} 
+                    className="cursor-pointer hover:bg-slate-50" 
+                    onClick={() => handleView(incident)}
+                  >
                     {visibleColumns.incident_number && <TableCell className="font-medium">{incident.incident_number}</TableCell>}
                     {visibleColumns.incident_time && <TableCell>{new Date(incident.incident_time).toLocaleString('ru-RU', { 
                       year: 'numeric', 
