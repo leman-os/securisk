@@ -238,7 +238,8 @@ const Incidents = ({ user }) => {
         });
     });
 
-    const csv = [
+    const BOM = '\uFEFF';
+    const csv = BOM + [
       headers.join(','),
       ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
     ].join('\n');
