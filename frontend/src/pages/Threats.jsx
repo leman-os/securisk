@@ -387,7 +387,7 @@ const Threats = ({ user }) => {
                   >
                     <ExternalLink className="w-4 h-4" />
                     {getRelatedVulnerability(viewingThreat.related_vulnerability_id)?.vulnerability_number} - 
-                    {getRelatedVulnerability(viewingThreat.related_vulnerability_id)?.description.substring(0, 50)}...
+                    {(getRelatedVulnerability(viewingThreat.related_vulnerability_id)?.description || '').substring(0, 50)}...
                   </button>
                 </div>
               )}
