@@ -241,6 +241,9 @@ const RiskRegister = ({ user }) => {
       status: 'Открыт',
       review_date: '',
     });
+    setAssetSelects([{ id: 0, value: '' }]);
+    setThreatSelects([{ id: 0, value: '' }]);
+    setVulnSelects([{ id: 0, value: '' }]);
   };
 
   const getCriticalityColor = (criticality) => {
