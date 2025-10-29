@@ -107,16 +107,18 @@ class RiskCreate(BaseModel):
 
 class RiskUpdate(BaseModel):
     risk_number: Optional[str] = None
-    title: Optional[str] = None
-    description: Optional[str] = None
-    category: Optional[str] = None
-    likelihood: Optional[str] = None
-    impact: Optional[str] = None
-    risk_level: Optional[str] = None
-    status: Optional[str] = None
+    scenario: Optional[str] = None
+    related_assets: Optional[List[str]] = None
+    related_threats: Optional[List[str]] = None
+    related_vulnerabilities: Optional[List[str]] = None
+    probability: Optional[int] = Field(None, ge=1, le=5)
+    impact: Optional[int] = Field(None, ge=1, le=5)
     owner: Optional[str] = None
-    treatment_measures: Optional[str] = None
-    deadline: Optional[str] = None
+    treatment_strategy: Optional[str] = None
+    treatment_plan: Optional[str] = None
+    implementation_deadline: Optional[str] = None
+    status: Optional[str] = None
+    review_date: Optional[datetime] = None
     priority: Optional[int] = None
 
 class Incident(BaseModel):
