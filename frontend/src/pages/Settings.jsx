@@ -93,6 +93,30 @@ const Settings = ({ user }) => {
     updateSettings({ asset_statuses: updated });
   };
 
+  const addThreatCategory = () => {
+    if (!newThreatCategory.trim()) return;
+    const updated = [...(settings?.threat_categories || []), newThreatCategory.trim()];
+    updateSettings({ threat_categories: updated });
+    setNewThreatCategory('');
+  };
+
+  const removeThreatCategory = (category) => {
+    const updated = settings.threat_categories.filter((c) => c !== category);
+    updateSettings({ threat_categories: updated });
+  };
+
+  const addThreatSource = () => {
+    if (!newThreatSource.trim()) return;
+    const updated = [...(settings?.threat_sources || []), newThreatSource.trim()];
+    updateSettings({ threat_sources: updated });
+    setNewThreatSource('');
+  };
+
+  const removeThreatSource = (source) => {
+    const updated = settings.threat_sources.filter((s) => s !== source);
+    updateSettings({ threat_sources: updated });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
