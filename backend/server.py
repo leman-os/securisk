@@ -261,6 +261,98 @@ class IncidentMetrics(BaseModel):
     total_incidents: int
     closed_incidents: int
 
+# ==================== THREAT MODELS ====================
+class Threat(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    threat_number: str  # THR-2024-001
+    category: str  # Внешний злоумышленник, Инсайдер, Стихийное бедствие, Сбой оборудования
+    description: str
+    source: Optional[str] = None  # Хакер-одиночка, Криминальная группа, Недовольный сотрудник
+    related_vulnerability_id: Optional[str] = None  # ID уязвимости
+    mitre_attack_id: Optional[str] = None  # MITRE ATT&CK ID
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ThreatCreate(BaseModel):
+    threat_number: Optional[str] = None
+    category: str
+    description: str
+    source: Optional[str] = None
+    related_vulnerability_id: Optional[str] = None
+    mitre_attack_id: Optional[str] = None
+
+class ThreatUpdate(BaseModel):
+    threat_number: Optional[str] = None
+    category: Optional[str] = None
+    description: Optional[str] = None
+    source: Optional[str] = None
+    related_vulnerability_id: Optional[str] = None
+    mitre_attack_id: Optional[str] = None
+
+# ==================== VULNERABILITY MODELS ====================
+class Vulnerability(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    vulnerability_number: str  # VUL-2024-001
+    related_asset_id: Optional[str] = None  # ID актива
+    description: str
+    vulnerability_type: str
+    detection_method: str
+    cvss_vector: Optional[str] = None  # CVSS v3.1 Vector
+    cvss_score: Optional[float] = None  # Auto-calculated
+    severity: Optional[str] = None  # Auto-calculated (Critical, High, Medium, Low)
+    status: str  # Обнаружена, Принята, В работе, Устранена
+    discovery_date: datetime
+    closure_date: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class VulnerabilityCreate(BaseModel):
+    vulnerability_number: Optional[str] = None
+    related_asset_id: Optional[str] = None
+    description: str
+    vulnerability_type: str
+    detection_method: str
+    cvss_vector: Optional[str] = None
+    status: str
+    discovery_date: datetime
+    closure_date: Optional[datetime] = None
+
+class VulnerabilityUpdate(BaseModel):
+    vulnerability_number: Optional[str] = None
+    related_asset_id: Optional[str] = None
+    description: Optional[str] = None
+    vulnerability_type: Optional[str] = None
+    detection_method: Optional[str] = None
+    cvss_vector: Optional[str] = None
+    status: Optional[str] = None
+    discovery_date: Optional[datetime] = None
+    closure_date: Optional[datetime] = None
+
+# ==================== MITRE ATT&CK MODELS ====================
+class MitreAttack(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    technique_id: str  # T1566.001
+    name: str
+    tactic: str
+    description: str
+
+class PaginatedThreats(BaseModel):
+    items: List[Threat]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
+class PaginatedVulnerabilities(BaseModel):
+    items: List[Vulnerability]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
 class PaginatedIncidents(BaseModel):
     items: List[Incident]
     total: int
