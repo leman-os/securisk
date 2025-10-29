@@ -730,6 +730,10 @@ const Assets = ({ user }) => {
                 <Settings className="w-4 h-4 mr-2" />
                 Столбцы
               </Button>
+              <Button variant="outline" size="sm" onClick={exportToCSV}>
+                <Download className="w-4 h-4 mr-2" />
+                Экспорт CSV
+              </Button>
             </div>
 
             {showFilters && (
