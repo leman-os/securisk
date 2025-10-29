@@ -181,6 +181,30 @@ const RiskRegister = ({ user }) => {
     setViewDialogOpen(true);
   };
 
+  const handleViewAsset = (assetId) => {
+    const asset = assets.find(a => a.id === assetId);
+    if (asset) {
+      setViewingAsset(asset);
+      setViewAssetDialogOpen(true);
+    }
+  };
+
+  const handleViewThreat = (threatId) => {
+    const threat = threats.find(t => t.id === threatId);
+    if (threat) {
+      setViewingThreat(threat);
+      setViewThreatDialogOpen(true);
+    }
+  };
+
+  const handleViewVuln = (vulnId) => {
+    const vuln = vulnerabilities.find(v => v.id === vulnId);
+    if (vuln) {
+      setViewingVuln(vuln);
+      setViewVulnDialogOpen(true);
+    }
+  };
+
   const handleEditFromView = () => {
     setEditingRisk(viewingRisk);
     setFormData({
