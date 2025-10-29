@@ -92,6 +92,10 @@ const Threats = ({ user }) => {
     return mitreAttacks.find(tech => tech.id === id);
   };
 
+  const getRelatedVulnerability = (id) => {
+    return vulnerabilities.find(vuln => vuln.id === id);
+  };
+
   const fetchThreats = async () => {
     try {
       const response = await axios.get(`${API}/threats`, {
