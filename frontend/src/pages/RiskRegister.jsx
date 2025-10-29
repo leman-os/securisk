@@ -22,8 +22,14 @@ const RiskRegister = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewAssetDialogOpen, setViewAssetDialogOpen] = useState(false);
+  const [viewThreatDialogOpen, setViewThreatDialogOpen] = useState(false);
+  const [viewVulnDialogOpen, setViewVulnDialogOpen] = useState(false);
   const [editingRisk, setEditingRisk] = useState(null);
   const [viewingRisk, setViewingRisk] = useState(null);
+  const [viewingAsset, setViewingAsset] = useState(null);
+  const [viewingThreat, setViewingThreat] = useState(null);
+  const [viewingVuln, setViewingVuln] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCriticality, setFilterCriticality] = useState('all');
