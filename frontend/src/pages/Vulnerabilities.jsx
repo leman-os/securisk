@@ -144,7 +144,13 @@ const Vulnerabilities = ({ user }) => {
       resetForm();
       fetchVulnerabilities();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Ошибка при сохранении');
+      console.error('Vulnerability save error:', error);
+      const errorMessage = error.response?.data?.detail 
+        ? (typeof error.response.data.detail === 'string' 
+          ? error.response.data.detail 
+          : JSON.stringify(error.response.data.detail))
+        : 'Ошибка при сохранении';
+      toast.error(errorMessage);
     }
   };
 
