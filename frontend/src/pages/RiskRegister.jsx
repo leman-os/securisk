@@ -851,7 +851,7 @@ const RiskRegister = ({ user }) => {
                               >
                                 <Link2 className="w-3 h-3 mr-1 text-orange-600" />
                                 <span className="font-medium">{threat.threat_number}</span>
-                                <span className="ml-1 text-slate-600">- {threat.description.substring(0, 40)}...</span>
+                                <span className="ml-1 text-slate-600">- {(threat.description || '').substring(0, 40)}...</span>
                               </button>
                             ) : null;
                           })}
