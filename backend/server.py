@@ -1085,30 +1085,24 @@ async def delete_threat(threat_id: str, current_user: User = Depends(get_current
 
 # ==================== VULNERABILITIES ====================
 
-def generate_vulnerability_number():
+async def generate_vulnerability_number():
     """Generate unique vulnerability number like VUL-2024-001"""
-    import asyncio
-    loop = asyncio.get_event_loop()
+    existing = await db.vulnerabilities.find({}, {"vulnerability_number": 1, "_id": 0}).to_list(1000)
+    if not existing:
+        return "VUL-2024-001"
     
-    async def _generate():
-        existing = await db.vulnerabilities.find({}, {"vulnerability_number": 1, "_id": 0}).to_list(1000)
-        if not existing:
-            return "VUL-2024-001"
-        
-        numbers = []
-        for vuln in existing:
-            if vuln.get('vulnerability_number') and vuln['vulnerability_number'].startswith('VUL-'):
-                try:
-                    num = int(vuln['vulnerability_number'].split('-')[-1])
-                    numbers.append(num)
-                except:
-                    pass
-        
-        next_num = max(numbers) + 1 if numbers else 1
-        year = datetime.now().year
-        return f"VUL-{year}-{next_num:03d}"
+    numbers = []
+    for vuln in existing:
+        if vuln.get('vulnerability_number') and vuln['vulnerability_number'].startswith('VUL-'):
+            try:
+                num = int(vuln['vulnerability_number'].split('-')[-1])
+                numbers.append(num)
+            except:
+                pass
     
-    return loop.run_until_complete(_generate())
+    next_num = max(numbers) + 1 if numbers else 1
+    year = datetime.now().year
+    return f"VUL-{year}-{next_num:03d}"
 
 def calculate_cvss_score(vector: str) -> tuple:
     """Calculate CVSS v3.1 Base Score from vector string"""
