@@ -1010,7 +1010,7 @@ async def create_threat(threat: ThreatCreate, current_user: User = Depends(get_c
     threat_dict = threat.model_dump()
     
     if not threat_dict.get('threat_number'):
-        threat_dict['threat_number'] = generate_threat_number()
+        threat_dict['threat_number'] = await generate_threat_number()
     
     threat_dict['id'] = str(uuid.uuid4())
     threat_dict['created_at'] = datetime.now(timezone.utc).isoformat()
