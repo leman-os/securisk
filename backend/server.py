@@ -433,6 +433,30 @@ async def generate_asset_number() -> str:
     next_num = max(numbers) + 1 if numbers else 1
     return f"ACT{next_num:06d}"
 
+def calculate_risk_criticality(probability: int, impact: int) -> tuple:
+    """
+    Calculate risk level and criticality based on 5x5 matrix
+    Returns (risk_level, criticality)
+    
+    Matrix:
+    - Критический (Красный): P * I >= 15
+    - Высокий (Оранжевый): 10 <= P * I < 15
+    - Средний (Желтый): 5 <= P * I < 10
+    - Низкий (Зеленый): P * I < 5
+    """
+    risk_level = probability * impact
+    
+    if risk_level >= 15:
+        criticality = "Критический"
+    elif risk_level >= 10:
+        criticality = "Высокий"
+    elif risk_level >= 5:
+        criticality = "Средний"
+    else:
+        criticality = "Низкий"
+    
+    return risk_level, criticality
+
 async def generate_risk_number() -> str:
     """Generate next risk number in format RSK000001"""
     risks = await db.risks.find({}, {"risk_number": 1}).to_list(None)
