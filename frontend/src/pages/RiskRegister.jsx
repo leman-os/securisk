@@ -944,7 +944,7 @@ const RiskRegister = ({ user }) => {
                       {visibleColumns.treatment_measures && <TableCell className="max-w-xs truncate text-sm text-slate-700">{risk.treatment_measures || '-'}</TableCell>}
                       {visibleColumns.deadline && <TableCell className="text-sm text-slate-700">{risk.deadline ? new Date(risk.deadline).toLocaleDateString('ru-RU') : '-'}</TableCell>}
                       {visibleColumns.description && <TableCell className="max-w-xs truncate text-sm text-slate-700">{risk.description}</TableCell>}
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-end gap-1">
                           <Button
                             variant="ghost"
