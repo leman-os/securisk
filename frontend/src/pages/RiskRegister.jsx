@@ -215,10 +215,11 @@ const RiskRegister = ({ user }) => {
     setAssetSelects([...assetSelects, { id: Date.now(), value: '' }]);
   };
 
-  const updateAssetSelect = (id, value) => {
-    setAssetSelects(assetSelects.map(s => s.id === id ? { ...s, value } : s));
-    // Update formData
-    const selectedAssets = assetSelects.map(s => s.id === id ? value : s.value).filter(v => v);
+  const updateAssetSelect = (selectId, value) => {
+    const updatedSelects = assetSelects.map(s => s.id === selectId ? { ...s, value } : s);
+    setAssetSelects(updatedSelects);
+    // Update formData with all selected values
+    const selectedAssets = updatedSelects.map(s => s.value).filter(v => v);
     setFormData({ ...formData, related_assets: selectedAssets });
   };
 
@@ -233,9 +234,10 @@ const RiskRegister = ({ user }) => {
     setThreatSelects([...threatSelects, { id: Date.now(), value: '' }]);
   };
 
-  const updateThreatSelect = (id, value) => {
-    setThreatSelects(threatSelects.map(s => s.id === id ? { ...s, value } : s));
-    const selectedThreats = threatSelects.map(s => s.id === id ? value : s.value).filter(v => v);
+  const updateThreatSelect = (selectId, value) => {
+    const updatedSelects = threatSelects.map(s => s.id === selectId ? { ...s, value } : s);
+    setThreatSelects(updatedSelects);
+    const selectedThreats = updatedSelects.map(s => s.value).filter(v => v);
     setFormData({ ...formData, related_threats: selectedThreats });
   };
 
@@ -250,9 +252,10 @@ const RiskRegister = ({ user }) => {
     setVulnSelects([...vulnSelects, { id: Date.now(), value: '' }]);
   };
 
-  const updateVulnSelect = (id, value) => {
-    setVulnSelects(vulnSelects.map(s => s.id === id ? { ...s, value } : s));
-    const selectedVulns = vulnSelects.map(s => s.id === id ? value : s.value).filter(v => v);
+  const updateVulnSelect = (selectId, value) => {
+    const updatedSelects = vulnSelects.map(s => s.id === selectId ? { ...s, value } : s);
+    setVulnSelects(updatedSelects);
+    const selectedVulns = updatedSelects.map(s => s.value).filter(v => v);
     setFormData({ ...formData, related_vulnerabilities: selectedVulns });
   };
 
