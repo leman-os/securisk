@@ -234,6 +234,8 @@ class Settings(BaseModel):
     systems: List[str] = Field(default_factory=lambda: ["Windows", "Linux", "MacOS", "Web-приложение"])
     threats: List[str] = Field(default_factory=lambda: ["Несанкционированный доступ", "Утечка данных", "DDoS", "Вредоносное ПО"])
     asset_statuses: List[str] = Field(default_factory=lambda: ["Актуален", "Не актуален", "В работе", "Архив"])
+    threat_categories: List[str] = Field(default_factory=lambda: ["Внешний злоумышленник", "Инсайдер", "Стихийное бедствие", "Сбой оборудования"])
+    threat_sources: List[str] = Field(default_factory=lambda: ["Хакер-одиночка", "Криминальная группа", "Недовольный сотрудник", "Конкурент"])
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class SettingsUpdate(BaseModel):
@@ -241,7 +243,8 @@ class SettingsUpdate(BaseModel):
     systems: Optional[List[str]] = None
     threats: Optional[List[str]] = None
     asset_statuses: Optional[List[str]] = None
-    threats: Optional[List[str]] = None
+    threat_categories: Optional[List[str]] = None
+    threat_sources: Optional[List[str]] = None
 
 class DashboardStats(BaseModel):
     total_risks: int
