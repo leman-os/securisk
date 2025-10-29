@@ -161,10 +161,20 @@ const RiskRegister = ({ user }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Clean up data before sending
+      // Clean up data - remove empty strings, convert to null
       const dataToSend = {
-        ...formData,
-        review_date: formData.review_date || null, // Convert empty string to null
+        scenario: formData.scenario,
+        related_assets: formData.related_assets || [],
+        related_threats: formData.related_threats || [],
+        related_vulnerabilities: formData.related_vulnerabilities || [],
+        probability: Number(formData.probability),
+        impact: Number(formData.impact),
+        owner: formData.owner,
+        treatment_strategy: formData.treatment_strategy,
+        treatment_plan: formData.treatment_plan || null,
+        implementation_deadline: formData.implementation_deadline || null,
+        status: formData.status,
+        review_date: formData.review_date || null,
       };
       
       if (editingRisk) {
