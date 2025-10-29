@@ -191,6 +191,8 @@ const RiskRegister = ({ user }) => {
         registration_date: new Date().toISOString(),
       };
       
+      console.log('Sending risk data:', dataToSend);
+      
       if (editingRisk) {
         await axios.put(`${API}/risks/${editingRisk.id}`, dataToSend);
         toast.success('Риск обновлен');
