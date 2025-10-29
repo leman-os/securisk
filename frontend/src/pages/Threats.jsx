@@ -306,7 +306,7 @@ const Threats = ({ user }) => {
                     <SelectItem value="none">Не выбрано</SelectItem>
                     {vulnerabilities.map(vuln => (
                       <SelectItem key={vuln.id} value={vuln.id}>
-                        {vuln.vulnerability_number} - {vuln.description.substring(0, 50)}
+                        {vuln.vulnerability_number} - {(vuln.description || '').substring(0, 50)}
                       </SelectItem>
                     ))}
                   </SelectContent>
