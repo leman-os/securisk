@@ -83,12 +83,15 @@ class Risk(BaseModel):
 
 class RiskCreate(BaseModel):
     risk_number: Optional[str] = None  # Auto-generated
+    registration_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     scenario: str
     related_assets: List[str] = Field(default_factory=list)
     related_threats: List[str] = Field(default_factory=list)
     related_vulnerabilities: List[str] = Field(default_factory=list)
     probability: int = Field(ge=1, le=5)  # 1-5
     impact: int = Field(ge=1, le=5)  # 1-5
+    risk_level: int  # P * I
+    criticality: str  # Критический/Высокий/Средний/Низкий
     owner: str
     treatment_strategy: str
     treatment_plan: Optional[str] = None
