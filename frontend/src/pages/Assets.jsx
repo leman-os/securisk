@@ -18,6 +18,8 @@ const Assets = ({ user }) => {
   const [assets, setAssets] = useState([]);
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [settings, setSettings] = useState(null);
+  const [threats, setThreats] = useState([]);
+  const [vulnerabilities, setVulnerabilities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -70,8 +72,13 @@ const Assets = ({ user }) => {
     note: '',
   });
 
+  // Dynamic threat selects
+  const [threatSelects, setThreatSelects] = useState([{ id: 0, value: '' }]);
+
   useEffect(() => {
     fetchSettings();
+    fetchThreats();
+    fetchVulnerabilities();
     // Load visible columns from localStorage
     const savedColumns = localStorage.getItem('assets_visible_columns');
     if (savedColumns) {
@@ -98,6 +105,24 @@ const Assets = ({ user }) => {
       setSettings(response.data);
     } catch (error) {
       console.error('Error fetching settings:', error);
+    }
+  };
+
+  const fetchThreats = async () => {
+    try {
+      const response = await axios.get(`${API}/threats`, { params: { limit: 1000 } });
+      setThreats(response.data.items);
+    } catch (error) {
+      console.error('Error fetching threats:', error);
+    }
+  };
+
+  const fetchVulnerabilities = async () => {
+    try {
+      const response = await axios.get(`${API}/vulnerabilities`, { params: { limit: 1000 } });
+      setVulnerabilities(response.data.items);
+    } catch (error) {
+      console.error('Error fetching vulnerabilities:', error);
     }
   };
 
@@ -167,18 +192,31 @@ const Assets = ({ user }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Ensure threats is an array of strings (IDs), not objects
+      const dataToSend = {
+        ...formData,
+        threats: Array.isArray(formData.threats) ? formData.threats : []
+      };
+      
       if (editingAsset) {
-        await axios.put(`${API}/assets/${editingAsset.id}`, formData);
+        await axios.put(`${API}/assets/${editingAsset.id}`, dataToSend);
         toast.success('Актив обновлен');
       } else {
-        await axios.post(`${API}/assets`, formData);
+        await axios.post(`${API}/assets`, dataToSend);
         toast.success('Актив создан');
       }
       setDialogOpen(false);
       resetForm();
       fetchAssets();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Ошибка при сохранении');
+      console.error('Asset save error:', error);
+      // Handle error safely - don't render objects
+      const errorMessage = error.response?.data?.detail 
+        ? (typeof error.response.data.detail === 'string' 
+          ? error.response.data.detail 
+          : JSON.stringify(error.response.data.detail))
+        : 'Ошибка при сохранении актива';
+      toast.error(errorMessage);
     }
   };
 
@@ -246,6 +284,13 @@ const Assets = ({ user }) => {
       description: asset.description || '',
       note: asset.note || '',
     });
+    
+    // Set dynamic threat selects
+    setThreatSelects(asset.threats?.length > 0 
+      ? asset.threats.map((id, idx) => ({ id: idx, value: id }))
+      : [{ id: 0, value: '' }]
+    );
+    
     setDialogOpen(true);
   };
 
@@ -267,13 +312,26 @@ const Assets = ({ user }) => {
       description: '',
       note: '',
     });
+    setThreatSelects([{ id: 0, value: '' }]);
   };
 
-  const toggleThreat = (threat) => {
-    const newThreats = formData.threats.includes(threat)
-      ? formData.threats.filter((t) => t !== threat)
-      : [...formData.threats, threat];
-    setFormData({ ...formData, threats: newThreats });
+  // Dynamic threat select handlers
+  const addThreatSelect = () => {
+    setThreatSelects([...threatSelects, { id: Date.now(), value: '' }]);
+  };
+
+  const updateThreatSelect = (id, value) => {
+    const updatedSelects = threatSelects.map(s => s.id === id ? { ...s, value } : s);
+    setThreatSelects(updatedSelects);
+    const selectedThreats = updatedSelects.map(s => s.value).filter(v => v);
+    setFormData(prev => ({ ...prev, threats: selectedThreats }));
+  };
+
+  const removeThreatSelect = (id) => {
+    const updated = threatSelects.filter(s => s.id !== id);
+    setThreatSelects(updated.length > 0 ? updated : [{ id: 0, value: '' }]);
+    const selectedThreats = updated.map(s => s.value).filter(v => v);
+    setFormData({ ...formData, threats: selectedThreats });
   };
 
   const getCriticalityColor = (criticality) => {
@@ -298,6 +356,40 @@ const Assets = ({ user }) => {
       default:
         return 'bg-slate-100 text-slate-800 border-slate-300';
     }
+  };
+
+  const exportToCSV = () => {
+    if (filteredAssets.length === 0) {
+      toast.error('Нет данных для экспорта');
+      return;
+    }
+
+    const headers = ['ID актива', 'Название', 'Категория', 'Владелец', 'Критичность', 'Статус', 'Формат', 'Местоположение', 'Классификация'];
+    
+    const rows = filteredAssets.map(asset => [
+      asset.asset_number,
+      asset.name,
+      asset.category,
+      asset.owner,
+      asset.criticality,
+      asset.status,
+      asset.format,
+      asset.location,
+      asset.classification
+    ]);
+
+    const BOM = '\uFEFF';
+    const csv = BOM + [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell || ''}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `assets_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    toast.success('Данные экспортированы');
   };
 
   if (loading) {
@@ -445,24 +537,42 @@ const Assets = ({ user }) => {
               </div>
 
               <div className="space-y-2">
-                <Label>Угрозы (выберите несколько)</Label>
-                <div className="border rounded-lg p-4 space-y-2 max-h-40 overflow-y-auto">
-                  {settings?.threats?.map((threat) => (
-                    <div key={threat} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`threat-${threat}`}
-                        checked={formData.threats.includes(threat)}
-                        onCheckedChange={() => toggleThreat(threat)}
-                      />
-                      <label
-                        htmlFor={`threat-${threat}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                <Label>Угрозы</Label>
+                {threatSelects.map((select, index) => (
+                  <div key={select.id} className="flex gap-2">
+                    <Select value={select.value} onValueChange={(v) => updateThreatSelect(select.id, v)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Выберите угрозу" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {threats.map(threat => (
+                          <SelectItem key={threat.id} value={threat.id}>
+                            {threat.threat_number} - {(threat.description || '').substring(0, 60)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {threatSelects.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeThreatSelect(select.id)}
                       >
-                        {threat}
-                      </label>
-                    </div>
-                  ))}
-                </div>
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  onClick={addThreatSelect}
+                  className="text-cyan-600"
+                >
+                  + Добавить угрозу
+                </Button>
               </div>
 
               <div className="space-y-2">
@@ -593,6 +703,35 @@ const Assets = ({ user }) => {
                   </div>
                 )}
 
+                {/* Связанные уязвимости */}
+                {viewingAsset && vulnerabilities.filter(v => v.related_asset_id === viewingAsset.id).length > 0 && (
+                  <div className="bg-orange-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-sm text-slate-700 mb-3">Связанные уязвимости</h3>
+                    <div className="space-y-2">
+                      {vulnerabilities
+                        .filter(v => v.related_asset_id === viewingAsset.id)
+                        .map(vuln => (
+                          <div key={vuln.id} className="flex items-center justify-between p-2 bg-white rounded border border-orange-200">
+                            <div>
+                              <span className="font-medium text-sm">{vuln.vulnerability_number}</span>
+                              <p className="text-xs text-slate-600">{vuln.description.substring(0, 60)}...</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {vuln.severity && (
+                                <Badge variant="outline" className="text-xs">
+                                  {vuln.severity}
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className="text-xs">
+                                {vuln.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Дополнительная информация */}
                 <div className="bg-slate-50 p-4 rounded-lg">
                   <h3 className="font-semibold text-sm text-slate-700 mb-3">Дополнительно</h3>
@@ -644,6 +783,10 @@ const Assets = ({ user }) => {
               >
                 <Settings className="w-4 h-4 mr-2" />
                 Столбцы
+              </Button>
+              <Button variant="outline" size="sm" onClick={exportToCSV}>
+                <Download className="w-4 h-4 mr-2" />
+                Экспорт CSV
               </Button>
             </div>
 
@@ -893,7 +1036,12 @@ const Assets = ({ user }) => {
                   </TableRow>
                 ) : (
                   filteredAssets.map((asset) => (
-                    <TableRow key={asset.id} data-testid={`asset-row-${asset.id}`} className="hover:bg-slate-50">
+                    <TableRow 
+                      key={asset.id} 
+                      data-testid={`asset-row-${asset.id}`} 
+                      className="hover:bg-slate-50 cursor-pointer"
+                      onClick={() => handleView(asset)}
+                    >
                       {visibleColumns.asset_number && <TableCell className="font-medium">{asset.asset_number}</TableCell>}
                       {visibleColumns.name && (
                         <TableCell>
@@ -927,7 +1075,7 @@ const Assets = ({ user }) => {
                         </TableCell>
                       )}
                       {visibleColumns.description && <TableCell className="max-w-xs truncate text-sm text-slate-700">{asset.description || '-'}</TableCell>}
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-end gap-1">
                           <Button
                             variant="ghost"

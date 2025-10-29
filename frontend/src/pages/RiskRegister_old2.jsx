@@ -22,14 +22,8 @@ const RiskRegister = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [viewAssetDialogOpen, setViewAssetDialogOpen] = useState(false);
-  const [viewThreatDialogOpen, setViewThreatDialogOpen] = useState(false);
-  const [viewVulnDialogOpen, setViewVulnDialogOpen] = useState(false);
   const [editingRisk, setEditingRisk] = useState(null);
   const [viewingRisk, setViewingRisk] = useState(null);
-  const [viewingAsset, setViewingAsset] = useState(null);
-  const [viewingThreat, setViewingThreat] = useState(null);
-  const [viewingVuln, setViewingVuln] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCriticality, setFilterCriticality] = useState('all');
@@ -161,86 +155,24 @@ const RiskRegister = ({ user }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const probability = Number(formData.probability);
-      const impact = Number(formData.impact);
-      const riskLevel = probability * impact;
-      
-      // Calculate criticality
-      let criticality;
-      if (riskLevel >= 15) criticality = 'Критический';
-      else if (riskLevel >= 10) criticality = 'Высокий';
-      else if (riskLevel >= 5) criticality = 'Средний';
-      else criticality = 'Низкий';
-      
-      // Clean up data - add required fields
-      const dataToSend = {
-        scenario: formData.scenario,
-        related_assets: formData.related_assets || [],
-        related_threats: formData.related_threats || [],
-        related_vulnerabilities: formData.related_vulnerabilities || [],
-        probability: probability,
-        impact: impact,
-        risk_level: riskLevel,
-        criticality: criticality,
-        owner: formData.owner,
-        treatment_strategy: formData.treatment_strategy,
-        treatment_plan: formData.treatment_plan || null,
-        implementation_deadline: formData.implementation_deadline || null,
-        status: formData.status,
-        review_date: formData.review_date || null,
-        registration_date: new Date().toISOString(),
-      };
-      
-      console.log('Sending risk data:', dataToSend);
-      
       if (editingRisk) {
-        await axios.put(`${API}/risks/${editingRisk.id}`, dataToSend);
+        await axios.put(`${API}/risks/${editingRisk.id}`, formData);
         toast.success('Риск обновлен');
       } else {
-        await axios.post(`${API}/risks`, dataToSend);
+        await axios.post(`${API}/risks`, formData);
         toast.success('Риск создан');
       }
       setDialogOpen(false);
       resetForm();
       fetchRisks();
     } catch (error) {
-      console.error('Risk save error:', error);
-      const errorMessage = error.response?.data?.detail 
-        ? (typeof error.response.data.detail === 'string' 
-          ? error.response.data.detail 
-          : JSON.stringify(error.response.data.detail))
-        : 'Ошибка при сохранении';
-      toast.error(errorMessage);
+      toast.error(error.response?.data?.detail || 'Ошибка при сохранении');
     }
   };
 
   const handleView = (risk) => {
     setViewingRisk(risk);
     setViewDialogOpen(true);
-  };
-
-  const handleViewAsset = (assetId) => {
-    const asset = assets.find(a => a.id === assetId);
-    if (asset) {
-      setViewingAsset(asset);
-      setViewAssetDialogOpen(true);
-    }
-  };
-
-  const handleViewThreat = (threatId) => {
-    const threat = threats.find(t => t.id === threatId);
-    if (threat) {
-      setViewingThreat(threat);
-      setViewThreatDialogOpen(true);
-    }
-  };
-
-  const handleViewVuln = (vulnId) => {
-    const vuln = vulnerabilities.find(v => v.id === vulnId);
-    if (vuln) {
-      setViewingVuln(vuln);
-      setViewVulnDialogOpen(true);
-    }
   };
 
   const handleEditFromView = () => {
@@ -259,79 +191,8 @@ const RiskRegister = ({ user }) => {
       status: viewingRisk.status || 'Открыт',
       review_date: viewingRisk.review_date ? new Date(viewingRisk.review_date).toISOString().split('T')[0] : '',
     });
-    
-    // Set dynamic selects
-    setAssetSelects(viewingRisk.related_assets?.length > 0 
-      ? viewingRisk.related_assets.map((id, idx) => ({ id: idx, value: id }))
-      : [{ id: 0, value: '' }]
-    );
-    setThreatSelects(viewingRisk.related_threats?.length > 0
-      ? viewingRisk.related_threats.map((id, idx) => ({ id: idx, value: id }))
-      : [{ id: 0, value: '' }]
-    );
-    setVulnSelects(viewingRisk.related_vulnerabilities?.length > 0
-      ? viewingRisk.related_vulnerabilities.map((id, idx) => ({ id: idx, value: id }))
-      : [{ id: 0, value: '' }]
-    );
-    
     setViewDialogOpen(false);
     setDialogOpen(true);
-  };
-
-  // Dynamic select handlers
-  const addAssetSelect = () => {
-    setAssetSelects([...assetSelects, { id: Date.now(), value: '' }]);
-  };
-
-  const updateAssetSelect = (selectId, value) => {
-    const updatedSelects = assetSelects.map(s => s.id === selectId ? { ...s, value } : s);
-    setAssetSelects(updatedSelects);
-    // Update formData with all selected values
-    const selectedAssets = updatedSelects.map(s => s.value).filter(v => v);
-    setFormData({ ...formData, related_assets: selectedAssets });
-  };
-
-  const removeAssetSelect = (id) => {
-    const updated = assetSelects.filter(s => s.id !== id);
-    setAssetSelects(updated.length > 0 ? updated : [{ id: 0, value: '' }]);
-    const selectedAssets = updated.map(s => s.value).filter(v => v);
-    setFormData({ ...formData, related_assets: selectedAssets });
-  };
-
-  const addThreatSelect = () => {
-    setThreatSelects([...threatSelects, { id: Date.now(), value: '' }]);
-  };
-
-  const updateThreatSelect = (selectId, value) => {
-    const updatedSelects = threatSelects.map(s => s.id === selectId ? { ...s, value } : s);
-    setThreatSelects(updatedSelects);
-    const selectedThreats = updatedSelects.map(s => s.value).filter(v => v);
-    setFormData({ ...formData, related_threats: selectedThreats });
-  };
-
-  const removeThreatSelect = (id) => {
-    const updated = threatSelects.filter(s => s.id !== id);
-    setThreatSelects(updated.length > 0 ? updated : [{ id: 0, value: '' }]);
-    const selectedThreats = updated.map(s => s.value).filter(v => v);
-    setFormData({ ...formData, related_threats: selectedThreats });
-  };
-
-  const addVulnSelect = () => {
-    setVulnSelects([...vulnSelects, { id: Date.now(), value: '' }]);
-  };
-
-  const updateVulnSelect = (selectId, value) => {
-    const updatedSelects = vulnSelects.map(s => s.id === selectId ? { ...s, value } : s);
-    setVulnSelects(updatedSelects);
-    const selectedVulns = updatedSelects.map(s => s.value).filter(v => v);
-    setFormData({ ...formData, related_vulnerabilities: selectedVulns });
-  };
-
-  const removeVulnSelect = (id) => {
-    const updated = vulnSelects.filter(s => s.id !== id);
-    setVulnSelects(updated.length > 0 ? updated : [{ id: 0, value: '' }]);
-    const selectedVulns = updated.map(s => s.value).filter(v => v);
-    setFormData({ ...formData, related_vulnerabilities: selectedVulns });
   };
 
   const handleDelete = async (id) => {
@@ -436,6 +297,33 @@ const RiskRegister = ({ user }) => {
     if (level >= 10) return 'bg-orange-500';
     if (level >= 5) return 'bg-yellow-500';
     return 'bg-green-500';
+  };
+
+  const toggleAsset = (assetId) => {
+    setFormData(prev => ({
+      ...prev,
+      related_assets: prev.related_assets.includes(assetId)
+        ? prev.related_assets.filter(id => id !== assetId)
+        : [...prev.related_assets, assetId]
+    }));
+  };
+
+  const toggleThreat = (threatId) => {
+    setFormData(prev => ({
+      ...prev,
+      related_threats: prev.related_threats.includes(threatId)
+        ? prev.related_threats.filter(id => id !== threatId)
+        : [...prev.related_threats, threatId]
+    }));
+  };
+
+  const toggleVulnerability = (vulnId) => {
+    setFormData(prev => ({
+      ...prev,
+      related_vulnerabilities: prev.related_vulnerabilities.includes(vulnId)
+        ? prev.related_vulnerabilities.filter(id => id !== vulnId)
+        : [...prev.related_vulnerabilities, vulnId]
+    }));
   };
 
   const exportToCSV = () => {
@@ -559,131 +447,77 @@ const RiskRegister = ({ user }) => {
               </div>
 
               <div className="p-4 bg-slate-100 rounded">
-                <p className="text-sm font-semibold">Уровень риска: {Number(formData.probability) * Number(formData.impact)}</p>
+                <p className="text-sm font-semibold">Уровень риска: {formData.probability * formData.impact}</p>
                 <p className="text-sm text-slate-600">
                   Критичность: {
-                    (Number(formData.probability) * Number(formData.impact)) >= 15 ? '🔴 Критический' :
-                    (Number(formData.probability) * Number(formData.impact)) >= 10 ? '🟠 Высокий' :
-                    (Number(formData.probability) * Number(formData.impact)) >= 5 ? '🟡 Средний' : '🟢 Низкий'
+                    formData.probability * formData.impact >= 15 ? '🔴 Критический' :
+                    formData.probability * formData.impact >= 10 ? '🟠 Высокий' :
+                    formData.probability * formData.impact >= 5 ? '🟡 Средний' : '🟢 Низкий'
                   }
                 </p>
               </div>
 
               <div className="space-y-2">
                 <Label>Связанные активы</Label>
-                {assetSelects.map((select, index) => (
-                  <div key={select.id} className="flex gap-2">
-                    <Select value={select.value} onValueChange={(v) => updateAssetSelect(select.id, v)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Выберите актив" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {assets.map(asset => (
-                          <SelectItem key={asset.id} value={asset.id}>
-                            {asset.asset_number} - {asset.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {assetSelects.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeAssetSelect(select.id)}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="link"
-                  size="sm"
-                  onClick={addAssetSelect}
-                  className="text-cyan-600"
-                >
-                  + Добавить актив
-                </Button>
+                <div className="border rounded p-3 max-h-40 overflow-y-auto">
+                  {assets.length === 0 ? (
+                    <p className="text-sm text-slate-500">Нет доступных активов</p>
+                  ) : (
+                    assets.map(asset => (
+                      <label key={asset.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.related_assets.includes(asset.id)}
+                          onChange={() => toggleAsset(asset.id)}
+                          className="rounded"
+                        />
+                        <span className="text-sm">{asset.asset_number} - {asset.name}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label>Связанные угрозы</Label>
-                {threatSelects.map((select, index) => (
-                  <div key={select.id} className="flex gap-2">
-                    <Select value={select.value} onValueChange={(v) => updateThreatSelect(select.id, v)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Выберите угрозу" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {threats.map(threat => (
-                          <SelectItem key={threat.id} value={threat.id}>
-                            {threat.threat_number} - {(threat.description || '').substring(0, 60)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {threatSelects.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeThreatSelect(select.id)}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="link"
-                  size="sm"
-                  onClick={addThreatSelect}
-                  className="text-cyan-600"
-                >
-                  + Добавить угрозу
-                </Button>
+                <div className="border rounded p-3 max-h-40 overflow-y-auto">
+                  {threats.length === 0 ? (
+                    <p className="text-sm text-slate-500">Нет доступных угроз</p>
+                  ) : (
+                    threats.map(threat => (
+                      <label key={threat.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.related_threats.includes(threat.id)}
+                          onChange={() => toggleThreat(threat.id)}
+                          className="rounded"
+                        />
+                        <span className="text-sm">{threat.threat_number} - {threat.description.substring(0, 50)}...</span>
+                      </label>
+                    ))
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label>Связанные уязвимости</Label>
-                {vulnSelects.map((select, index) => (
-                  <div key={select.id} className="flex gap-2">
-                    <Select value={select.value} onValueChange={(v) => updateVulnSelect(select.id, v)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Выберите уязвимость" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vulnerabilities.map(vuln => (
-                          <SelectItem key={vuln.id} value={vuln.id}>
-                            {vuln.vulnerability_number} - {(vuln.description || '').substring(0, 60)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {vulnSelects.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeVulnSelect(select.id)}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="link"
-                  size="sm"
-                  onClick={addVulnSelect}
-                  className="text-cyan-600"
-                >
-                  + Добавить уязвимость
-                </Button>
+                <div className="border rounded p-3 max-h-40 overflow-y-auto">
+                  {vulnerabilities.length === 0 ? (
+                    <p className="text-sm text-slate-500">Нет доступных уязвимостей</p>
+                  ) : (
+                    vulnerabilities.map(vuln => (
+                      <label key={vuln.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.related_vulnerabilities.includes(vuln.id)}
+                          onChange={() => toggleVulnerability(vuln.id)}
+                          className="rounded"
+                        />
+                        <span className="text-sm">{vuln.vulnerability_number} - {vuln.description.substring(0, 50)}...</span>
+                      </label>
+                    ))
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -860,15 +694,10 @@ const RiskRegister = ({ user }) => {
                           {viewingRisk.related_assets.map(assetId => {
                             const asset = assets.find(a => a.id === assetId);
                             return asset ? (
-                              <button
-                                key={assetId}
-                                onClick={() => handleViewAsset(assetId)}
-                                className="inline-flex items-center px-3 py-1 rounded-md text-sm border border-slate-300 bg-white hover:bg-slate-100 transition-colors"
-                              >
-                                <Link2 className="w-3 h-3 mr-1 text-cyan-600" />
-                                <span className="font-medium">{asset.asset_number}</span>
-                                <span className="ml-1 text-slate-600">- {asset.name}</span>
-                              </button>
+                              <Badge key={assetId} variant="outline" className="cursor-pointer hover:bg-slate-100">
+                                <Link2 className="w-3 h-3 mr-1" />
+                                {asset.asset_number}
+                              </Badge>
                             ) : null;
                           })}
                         </div>
@@ -882,15 +711,10 @@ const RiskRegister = ({ user }) => {
                           {viewingRisk.related_threats.map(threatId => {
                             const threat = threats.find(t => t.id === threatId);
                             return threat ? (
-                              <button
-                                key={threatId}
-                                onClick={() => handleViewThreat(threatId)}
-                                className="inline-flex items-center px-3 py-1 rounded-md text-sm border border-slate-300 bg-white hover:bg-slate-100 transition-colors"
-                              >
-                                <Link2 className="w-3 h-3 mr-1 text-orange-600" />
-                                <span className="font-medium">{threat.threat_number}</span>
-                                <span className="ml-1 text-slate-600">- {(threat.description || '').substring(0, 40)}...</span>
-                              </button>
+                              <Badge key={threatId} variant="outline" className="cursor-pointer hover:bg-slate-100">
+                                <Link2 className="w-3 h-3 mr-1" />
+                                {threat.threat_number}
+                              </Badge>
                             ) : null;
                           })}
                         </div>
@@ -904,15 +728,10 @@ const RiskRegister = ({ user }) => {
                           {viewingRisk.related_vulnerabilities.map(vulnId => {
                             const vuln = vulnerabilities.find(v => v.id === vulnId);
                             return vuln ? (
-                              <button
-                                key={vulnId}
-                                onClick={() => handleViewVuln(vulnId)}
-                                className="inline-flex items-center px-3 py-1 rounded-md text-sm border border-slate-300 bg-white hover:bg-slate-100 transition-colors"
-                              >
-                                <Link2 className="w-3 h-3 mr-1 text-red-600" />
-                                <span className="font-medium">{vuln.vulnerability_number}</span>
-                                <span className="ml-1 text-slate-600">- {(vuln.description || '').substring(0, 40)}...</span>
-                              </button>
+                              <Badge key={vulnId} variant="outline" className="cursor-pointer hover:bg-slate-100">
+                                <Link2 className="w-3 h-3 mr-1" />
+                                {vuln.vulnerability_number}
+                              </Badge>
                             ) : null;
                           })}
                         </div>
@@ -957,63 +776,6 @@ const RiskRegister = ({ user }) => {
                     Редактировать
                   </Button>
                 </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Asset View Dialog */}
-      <Dialog open={viewAssetDialogOpen} onOpenChange={setViewAssetDialogOpen}>
-        <DialogContent>
-          {viewingAsset && (
-            <div className="space-y-4">
-              <DialogHeader>
-                <DialogTitle>Актив {viewingAsset.asset_number}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3">
-                <div><span className="font-semibold">Название:</span> {viewingAsset.name}</div>
-                <div><span className="font-semibold">Категория:</span> {viewingAsset.category}</div>
-                <div><span className="font-semibold">Владелец:</span> {viewingAsset.owner}</div>
-                <div><span className="font-semibold">Критичность:</span> <Badge className={getCriticalityColor(viewingAsset.criticality)}>{viewingAsset.criticality}</Badge></div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Threat View Dialog */}
-      <Dialog open={viewThreatDialogOpen} onOpenChange={setViewThreatDialogOpen}>
-        <DialogContent>
-          {viewingThreat && (
-            <div className="space-y-4">
-              <DialogHeader>
-                <DialogTitle>Угроза {viewingThreat.threat_number}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3">
-                <div><span className="font-semibold">Категория:</span> {viewingThreat.category}</div>
-                <div><span className="font-semibold">Описание:</span> {viewingThreat.description}</div>
-                {viewingThreat.source && <div><span className="font-semibold">Источник:</span> {viewingThreat.source}</div>}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Vulnerability View Dialog */}
-      <Dialog open={viewVulnDialogOpen} onOpenChange={setViewVulnDialogOpen}>
-        <DialogContent>
-          {viewingVuln && (
-            <div className="space-y-4">
-              <DialogHeader>
-                <DialogTitle>Уязвимость {viewingVuln.vulnerability_number}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3">
-                <div><span className="font-semibold">Описание:</span> {viewingVuln.description}</div>
-                <div><span className="font-semibold">Тип:</span> {viewingVuln.vulnerability_type}</div>
-                {viewingVuln.cvss_score && <div><span className="font-semibold">CVSS Score:</span> {viewingVuln.cvss_score}</div>}
-                {viewingVuln.severity && <div><span className="font-semibold">Критичность:</span> {viewingVuln.severity}</div>}
-                <div><span className="font-semibold">Статус:</span> {viewingVuln.status}</div>
               </div>
             </div>
           )}

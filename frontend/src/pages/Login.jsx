@@ -108,12 +108,6 @@ const Login = ({ setUser }) => {
                 )}
               </Button>
             </form>
-
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <p className="text-sm text-slate-600 text-center">
-                Для демонстрации: <span className="font-semibold text-slate-900">admin / admin123</span>
-              </p>
-            </div>
           </CardContent>
         </Card>
 

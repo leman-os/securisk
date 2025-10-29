@@ -238,7 +238,8 @@ const Incidents = ({ user }) => {
         });
     });
 
-    const csv = [
+    const BOM = '\uFEFF';
+    const csv = BOM + [
       headers.join(','),
       ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
     ].join('\n');
@@ -1036,7 +1037,11 @@ const Incidents = ({ user }) => {
               </TableHeader>
               <TableBody>
                 {getFilteredIncidents().map((incident) => (
-                  <TableRow key={incident.id}>
+                  <TableRow 
+                    key={incident.id} 
+                    className="cursor-pointer hover:bg-slate-50" 
+                    onClick={() => handleView(incident)}
+                  >
                     {visibleColumns.incident_number && <TableCell className="font-medium">{incident.incident_number}</TableCell>}
                     {visibleColumns.incident_time && <TableCell>{new Date(incident.incident_time).toLocaleString('ru-RU', { 
                       year: 'numeric', 
@@ -1065,15 +1070,15 @@ const Incidents = ({ user }) => {
                     {visibleColumns.description && <TableCell className="max-w-xs truncate">{incident.description}</TableCell>}
                     {visibleColumns.measures && <TableCell className="max-w-xs truncate">{incident.measures}</TableCell>}
                     {visibleColumns.comment && <TableCell className="max-w-xs truncate">{incident.comment}</TableCell>}
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => handleView(incident)} className="h-8 w-8 p-0">
+                        <Button size="sm" variant="ghost" onClick={() => handleView(incident)} className="h-8 w-8 p-0" title="Просмотр">
                           <Eye className="w-4 h-4 text-cyan-600" />
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => handleEdit(incident)} className="h-8 w-8 p-0">
+                        <Button size="sm" variant="ghost" onClick={() => handleEdit(incident)} className="h-8 w-8 p-0" title="Редактировать">
                           <Edit className="w-4 h-4 text-slate-600" />
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => handleDelete(incident.id)} className="h-8 w-8 p-0">
+                        <Button size="sm" variant="ghost" onClick={() => handleDelete(incident.id)} className="h-8 w-8 p-0" title="Удалить">
                           <Trash2 className="w-4 h-4 text-red-600" />
                         </Button>
                       </div>

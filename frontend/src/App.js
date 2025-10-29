@@ -5,6 +5,8 @@ import axios from 'axios';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import RiskRegister from './pages/RiskRegister';
+import Threats from './pages/Threats';
+import Vulnerabilities from './pages/Vulnerabilities';
 import Incidents from './pages/Incidents';
 import Assets from './pages/Assets';
 import Users from './pages/Users';
@@ -81,6 +83,26 @@ function App() {
               <ProtectedRoute>
                 <Layout user={user} setUser={setUser}>
                   <RiskRegister user={user} />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/threats"
+            element={
+              <ProtectedRoute>
+                <Layout user={user} setUser={setUser}>
+                  <Threats user={user} />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/vulnerabilities"
+            element={
+              <ProtectedRoute>
+                <Layout user={user} setUser={setUser}>
+                  <Vulnerabilities user={user} />
                 </Layout>
               </ProtectedRoute>
             }

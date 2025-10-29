@@ -61,46 +61,58 @@ class Token(BaseModel):
 class Risk(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    risk_number: str
-    title: str
-    description: str
-    category: str
-    likelihood: str
-    impact: str
-    risk_level: str
-    status: str
-    owner: str
-    treatment_measures: Optional[str] = None
-    deadline: Optional[str] = None
+    risk_number: str  # RISK-2024-001
+    registration_date: datetime  # Дата регистрации
+    scenario: str  # Сценарий риска
+    related_assets: List[str] = Field(default_factory=list)  # ID активов
+    related_threats: List[str] = Field(default_factory=list)  # ID угроз
+    related_vulnerabilities: List[str] = Field(default_factory=list)  # ID уязвимостей
+    probability: int  # Вероятность 1-5
+    impact: int  # Воздействие 1-5
+    risk_level: int  # Уровень риска = P * I (автоматически)
+    criticality: str  # Критичность (автоматически по матрице)
+    owner: str  # Владелец риска
+    treatment_strategy: str  # Стратегия: Снижение, Принятие, Передача, Избегание
+    treatment_plan: Optional[str] = None  # План обработки
+    implementation_deadline: Optional[str] = None  # Срок реализации (Q3 2026)
+    status: str  # Статус: Открыт, В обработке, Принят, Закрыт
+    review_date: Optional[datetime] = None  # Дата пересмотра
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     priority: int = Field(default=0)
 
 class RiskCreate(BaseModel):
-    risk_number: Optional[str] = None  # Auto-generated if not provided
-    title: str
-    description: str
-    category: str
-    likelihood: str
-    impact: str
-    risk_level: str
-    status: str
+    risk_number: Optional[str] = None  # Auto-generated
+    registration_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    scenario: str
+    related_assets: List[str] = Field(default_factory=list)
+    related_threats: List[str] = Field(default_factory=list)
+    related_vulnerabilities: List[str] = Field(default_factory=list)
+    probability: int = Field(ge=1, le=5)  # 1-5
+    impact: int = Field(ge=1, le=5)  # 1-5
+    risk_level: int  # P * I
+    criticality: str  # Критический/Высокий/Средний/Низкий
     owner: str
-    treatment_measures: Optional[str] = None
-    deadline: Optional[str] = None
+    treatment_strategy: str
+    treatment_plan: Optional[str] = None
+    implementation_deadline: Optional[str] = None
+    status: str = "Открыт"
+    review_date: Optional[datetime] = None
 
 class RiskUpdate(BaseModel):
     risk_number: Optional[str] = None
-    title: Optional[str] = None
-    description: Optional[str] = None
-    category: Optional[str] = None
-    likelihood: Optional[str] = None
-    impact: Optional[str] = None
-    risk_level: Optional[str] = None
-    status: Optional[str] = None
+    scenario: Optional[str] = None
+    related_assets: Optional[List[str]] = None
+    related_threats: Optional[List[str]] = None
+    related_vulnerabilities: Optional[List[str]] = None
+    probability: Optional[int] = Field(None, ge=1, le=5)
+    impact: Optional[int] = Field(None, ge=1, le=5)
     owner: Optional[str] = None
-    treatment_measures: Optional[str] = None
-    deadline: Optional[str] = None
+    treatment_strategy: Optional[str] = None
+    treatment_plan: Optional[str] = None
+    implementation_deadline: Optional[str] = None
+    status: Optional[str] = None
+    review_date: Optional[datetime] = None
     priority: Optional[int] = None
 
 class Incident(BaseModel):
@@ -234,6 +246,8 @@ class Settings(BaseModel):
     systems: List[str] = Field(default_factory=lambda: ["Windows", "Linux", "MacOS", "Web-приложение"])
     threats: List[str] = Field(default_factory=lambda: ["Несанкционированный доступ", "Утечка данных", "DDoS", "Вредоносное ПО"])
     asset_statuses: List[str] = Field(default_factory=lambda: ["Актуален", "Не актуален", "В работе", "Архив"])
+    threat_categories: List[str] = Field(default_factory=lambda: ["Внешний злоумышленник", "Инсайдер", "Стихийное бедствие", "Сбой оборудования"])
+    threat_sources: List[str] = Field(default_factory=lambda: ["Хакер-одиночка", "Криминальная группа", "Недовольный сотрудник", "Конкурент"])
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class SettingsUpdate(BaseModel):
@@ -241,7 +255,8 @@ class SettingsUpdate(BaseModel):
     systems: Optional[List[str]] = None
     threats: Optional[List[str]] = None
     asset_statuses: Optional[List[str]] = None
-    threats: Optional[List[str]] = None
+    threat_categories: Optional[List[str]] = None
+    threat_sources: Optional[List[str]] = None
 
 class DashboardStats(BaseModel):
     total_risks: int
@@ -260,6 +275,98 @@ class IncidentMetrics(BaseModel):
     avg_mttc: Optional[float] = None
     total_incidents: int
     closed_incidents: int
+
+# ==================== THREAT MODELS ====================
+class Threat(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    threat_number: str  # THR-2024-001
+    category: str  # Внешний злоумышленник, Инсайдер, Стихийное бедствие, Сбой оборудования
+    description: str
+    source: Optional[str] = None  # Хакер-одиночка, Криминальная группа, Недовольный сотрудник
+    related_vulnerability_id: Optional[str] = None  # ID уязвимости
+    mitre_attack_id: Optional[str] = None  # MITRE ATT&CK ID
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ThreatCreate(BaseModel):
+    threat_number: Optional[str] = None
+    category: str
+    description: str
+    source: Optional[str] = None
+    related_vulnerability_id: Optional[str] = None
+    mitre_attack_id: Optional[str] = None
+
+class ThreatUpdate(BaseModel):
+    threat_number: Optional[str] = None
+    category: Optional[str] = None
+    description: Optional[str] = None
+    source: Optional[str] = None
+    related_vulnerability_id: Optional[str] = None
+    mitre_attack_id: Optional[str] = None
+
+# ==================== VULNERABILITY MODELS ====================
+class Vulnerability(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    vulnerability_number: str  # VUL-2024-001
+    related_asset_id: Optional[str] = None  # ID актива
+    description: str
+    vulnerability_type: str
+    detection_method: str
+    cvss_vector: Optional[str] = None  # CVSS v3.1 Vector
+    cvss_score: Optional[float] = None  # Auto-calculated
+    severity: Optional[str] = None  # Auto-calculated (Critical, High, Medium, Low)
+    status: str  # Обнаружена, Принята, В работе, Устранена
+    discovery_date: datetime
+    closure_date: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class VulnerabilityCreate(BaseModel):
+    vulnerability_number: Optional[str] = None
+    related_asset_id: Optional[str] = None
+    description: str
+    vulnerability_type: str
+    detection_method: str
+    cvss_vector: Optional[str] = None
+    status: str
+    discovery_date: datetime
+    closure_date: Optional[datetime] = None
+
+class VulnerabilityUpdate(BaseModel):
+    vulnerability_number: Optional[str] = None
+    related_asset_id: Optional[str] = None
+    description: Optional[str] = None
+    vulnerability_type: Optional[str] = None
+    detection_method: Optional[str] = None
+    cvss_vector: Optional[str] = None
+    status: Optional[str] = None
+    discovery_date: Optional[datetime] = None
+    closure_date: Optional[datetime] = None
+
+# ==================== MITRE ATT&CK MODELS ====================
+class MitreAttack(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    technique_id: str  # T1566.001
+    name: str
+    tactic: str
+    description: str
+
+class PaginatedThreats(BaseModel):
+    items: List[Threat]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
+class PaginatedVulnerabilities(BaseModel):
+    items: List[Vulnerability]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
 
 class PaginatedIncidents(BaseModel):
     items: List[Incident]
@@ -319,6 +426,30 @@ async def generate_asset_number() -> str:
     
     next_num = max(numbers) + 1 if numbers else 1
     return f"ACT{next_num:06d}"
+
+def calculate_risk_criticality(probability: int, impact: int) -> tuple:
+    """
+    Calculate risk level and criticality based on 5x5 matrix
+    Returns (risk_level, criticality)
+    
+    Matrix:
+    - Критический (Красный): P * I >= 15
+    - Высокий (Оранжевый): 10 <= P * I < 15
+    - Средний (Желтый): 5 <= P * I < 10
+    - Низкий (Зеленый): P * I < 5
+    """
+    risk_level = probability * impact
+    
+    if risk_level >= 15:
+        criticality = "Критический"
+    elif risk_level >= 10:
+        criticality = "Высокий"
+    elif risk_level >= 5:
+        criticality = "Средний"
+    else:
+        criticality = "Низкий"
+    
+    return risk_level, criticality
 
 async def generate_risk_number() -> str:
     """Generate next risk number in format RSK000001"""
@@ -590,6 +721,30 @@ async def update_risk(risk_id: str, risk_data: RiskUpdate, current_user: User = 
     update_dict = {k: v for k, v in risk_data.model_dump().items() if v is not None}
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
+    
+    # If probability or impact changed, recalculate risk_level and criticality
+    if 'probability' in update_dict or 'impact' in update_dict:
+        # Get current risk to get missing values
+        current_risk = await db.risks.find_one({"id": risk_id}, {"_id": 0})
+        if not current_risk:
+            raise HTTPException(status_code=404, detail="Risk not found")
+        
+        probability = update_dict.get('probability', current_risk.get('probability'))
+        impact = update_dict.get('impact', current_risk.get('impact'))
+        
+        # Calculate risk_level
+        risk_level = probability * impact
+        update_dict['risk_level'] = risk_level
+        
+        # Calculate criticality
+        if risk_level >= 15:
+            update_dict['criticality'] = 'Критический'
+        elif risk_level >= 10:
+            update_dict['criticality'] = 'Высокий'
+        elif risk_level >= 5:
+            update_dict['criticality'] = 'Средний'
+        else:
+            update_dict['criticality'] = 'Низкий'
     
     update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
     
@@ -889,6 +1044,306 @@ async def review_asset(asset_id: str, current_user: User = Depends(get_current_u
     
     return {"message": "Asset reviewed", "review_date": update_dict['review_date']}
 
+# ==================== THREATS ====================
+
+async def generate_threat_number():
+    """Generate unique threat number like THR-2024-001"""
+    existing = await db.threats.find({}, {"threat_number": 1, "_id": 0}).to_list(1000)
+    if not existing:
+        return "THR-2024-001"
+    
+    numbers = []
+    for threat in existing:
+        if threat.get('threat_number') and threat['threat_number'].startswith('THR-'):
+            try:
+                num = int(threat['threat_number'].split('-')[-1])
+                numbers.append(num)
+            except:
+                pass
+    
+    next_num = max(numbers) + 1 if numbers else 1
+    year = datetime.now().year
+    return f"THR-{year}-{next_num:03d}"
+
+@api_router.post("/threats", response_model=Threat)
+async def create_threat(threat: ThreatCreate, current_user: User = Depends(get_current_user)):
+    threat_dict = threat.model_dump()
+    
+    if not threat_dict.get('threat_number'):
+        threat_dict['threat_number'] = await generate_threat_number()
+    
+    threat_dict['id'] = str(uuid.uuid4())
+    threat_dict['created_at'] = datetime.now(timezone.utc).isoformat()
+    threat_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.threats.insert_one(threat_dict)
+    return threat_dict
+
+@api_router.get("/threats", response_model=PaginatedThreats)
+async def get_threats(
+    page: int = 1,
+    limit: int = 20,
+    sort_by: Optional[str] = "created_at",
+    sort_order: Optional[str] = "desc",
+    current_user: User = Depends(get_current_user)
+):
+    skip = (page - 1) * limit
+    sort_direction = -1 if sort_order == "desc" else 1
+    total = await db.threats.count_documents({})
+    
+    threats = await db.threats.find({}, {"_id": 0}).sort(sort_by, sort_direction).skip(skip).limit(limit).to_list(limit)
+    
+    for threat in threats:
+        for field in ['created_at', 'updated_at']:
+            if threat.get(field) and isinstance(threat[field], str):
+                threat[field] = datetime.fromisoformat(threat[field])
+    
+    total_pages = (total + limit - 1) // limit
+    
+    return PaginatedThreats(
+        items=threats,
+        total=total,
+        page=page,
+        limit=limit,
+        total_pages=total_pages
+    )
+
+@api_router.get("/threats/{threat_id}", response_model=Threat)
+async def get_threat(threat_id: str, current_user: User = Depends(get_current_user)):
+    threat = await db.threats.find_one({"id": threat_id}, {"_id": 0})
+    if not threat:
+        raise HTTPException(status_code=404, detail="Threat not found")
+    
+    for field in ['created_at', 'updated_at']:
+        if threat.get(field) and isinstance(threat[field], str):
+            threat[field] = datetime.fromisoformat(threat[field])
+    
+    return threat
+
+@api_router.put("/threats/{threat_id}", response_model=Threat)
+async def update_threat(threat_id: str, threat: ThreatUpdate, current_user: User = Depends(get_current_user)):
+    update_dict = {k: v for k, v in threat.model_dump().items() if v is not None}
+    update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.threats.update_one({"id": threat_id}, {"$set": update_dict})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Threat not found")
+    
+    updated = await db.threats.find_one({"id": threat_id}, {"_id": 0})
+    for field in ['created_at', 'updated_at']:
+        if updated.get(field) and isinstance(updated[field], str):
+            updated[field] = datetime.fromisoformat(updated[field])
+    
+    return updated
+
+@api_router.delete("/threats/{threat_id}")
+async def delete_threat(threat_id: str, current_user: User = Depends(get_current_user)):
+    result = await db.threats.delete_one({"id": threat_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Threat not found")
+    return {"message": "Threat deleted"}
+
+# ==================== VULNERABILITIES ====================
+
+async def generate_vulnerability_number():
+    """Generate unique vulnerability number like VUL-2024-001"""
+    existing = await db.vulnerabilities.find({}, {"vulnerability_number": 1, "_id": 0}).to_list(1000)
+    if not existing:
+        return "VUL-2024-001"
+    
+    numbers = []
+    for vuln in existing:
+        if vuln.get('vulnerability_number') and vuln['vulnerability_number'].startswith('VUL-'):
+            try:
+                num = int(vuln['vulnerability_number'].split('-')[-1])
+                numbers.append(num)
+            except:
+                pass
+    
+    next_num = max(numbers) + 1 if numbers else 1
+    year = datetime.now().year
+    return f"VUL-{year}-{next_num:03d}"
+
+def calculate_cvss_score(vector: str) -> tuple:
+    """Calculate CVSS v3.1 Base Score from vector string"""
+    if not vector or not vector.startswith('CVSS:3.1/'):
+        return None, None
+    
+    # Parse CVSS v3.1 vector string
+    # Example: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+    metrics = {}
+    parts = vector.split('/')
+    
+    for part in parts[1:]:  # Skip CVSS:3.1
+        if ':' in part:
+            key, value = part.split(':')
+            metrics[key] = value
+    
+    # CVSS v3.1 Scoring values
+    av_scores = {'N': 0.85, 'A': 0.62, 'L': 0.55, 'P': 0.2}
+    ac_scores = {'L': 0.77, 'H': 0.44}
+    pr_scores_unchanged = {'N': 0.85, 'L': 0.62, 'H': 0.27}
+    pr_scores_changed = {'N': 0.85, 'L': 0.68, 'H': 0.50}
+    ui_scores = {'N': 0.85, 'R': 0.62}
+    cia_scores = {'H': 0.56, 'L': 0.22, 'N': 0.0}
+    
+    try:
+        av = av_scores.get(metrics.get('AV'), 0)
+        ac = ac_scores.get(metrics.get('AC'), 0)
+        ui = ui_scores.get(metrics.get('UI'), 0)
+        scope_changed = metrics.get('S') == 'C'
+        pr = (pr_scores_changed if scope_changed else pr_scores_unchanged).get(metrics.get('PR'), 0)
+        c = cia_scores.get(metrics.get('C'), 0)
+        i = cia_scores.get(metrics.get('I'), 0)
+        a = cia_scores.get(metrics.get('A'), 0)
+        
+        # Calculate Impact Sub Score (ISS)
+        iss = 1 - ((1 - c) * (1 - i) * (1 - a))
+        
+        # Calculate Impact
+        if scope_changed:
+            impact = 7.52 * (iss - 0.029) - 3.25 * pow((iss - 0.02), 15)
+        else:
+            impact = 6.42 * iss
+        
+        # Calculate Exploitability
+        exploitability = 8.22 * av * ac * pr * ui
+        
+        # Calculate Base Score
+        if impact <= 0:
+            score = 0.0
+        elif scope_changed:
+            score = min(1.08 * (impact + exploitability), 10.0)
+        else:
+            score = min(impact + exploitability, 10.0)
+        
+        score = round(score * 10) / 10  # Round to 1 decimal place
+        
+    except Exception:
+        # Fallback to placeholder if parsing fails
+        score = 7.5
+    
+    # Determine severity
+    if score >= 9.0:
+        severity = "Critical"
+    elif score >= 7.0:
+        severity = "High"
+    elif score >= 4.0:
+        severity = "Medium"
+    else:
+        severity = "Low"
+    
+    return score, severity
+
+@api_router.post("/vulnerabilities", response_model=Vulnerability)
+async def create_vulnerability(vulnerability: VulnerabilityCreate, current_user: User = Depends(get_current_user)):
+    vuln_dict = vulnerability.model_dump()
+    
+    if not vuln_dict.get('vulnerability_number'):
+        vuln_dict['vulnerability_number'] = await generate_vulnerability_number()
+    
+    # Calculate CVSS score if vector is provided
+    if vuln_dict.get('cvss_vector'):
+        score, severity = calculate_cvss_score(vuln_dict['cvss_vector'])
+        vuln_dict['cvss_score'] = score
+        vuln_dict['severity'] = severity
+    
+    vuln_dict['id'] = str(uuid.uuid4())
+    vuln_dict['created_at'] = datetime.now(timezone.utc).isoformat()
+    vuln_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    # Convert datetime fields to ISO string
+    if vuln_dict.get('discovery_date'):
+        vuln_dict['discovery_date'] = vuln_dict['discovery_date'].isoformat()
+    if vuln_dict.get('closure_date'):
+        vuln_dict['closure_date'] = vuln_dict['closure_date'].isoformat()
+    
+    await db.vulnerabilities.insert_one(vuln_dict)
+    return vuln_dict
+
+@api_router.get("/vulnerabilities", response_model=PaginatedVulnerabilities)
+async def get_vulnerabilities(
+    page: int = 1,
+    limit: int = 20,
+    sort_by: Optional[str] = "created_at",
+    sort_order: Optional[str] = "desc",
+    current_user: User = Depends(get_current_user)
+):
+    skip = (page - 1) * limit
+    sort_direction = -1 if sort_order == "desc" else 1
+    total = await db.vulnerabilities.count_documents({})
+    
+    vulnerabilities = await db.vulnerabilities.find({}, {"_id": 0}).sort(sort_by, sort_direction).skip(skip).limit(limit).to_list(limit)
+    
+    for vuln in vulnerabilities:
+        for field in ['created_at', 'updated_at', 'discovery_date', 'closure_date']:
+            if vuln.get(field) and isinstance(vuln[field], str):
+                vuln[field] = datetime.fromisoformat(vuln[field])
+    
+    total_pages = (total + limit - 1) // limit
+    
+    return PaginatedVulnerabilities(
+        items=vulnerabilities,
+        total=total,
+        page=page,
+        limit=limit,
+        total_pages=total_pages
+    )
+
+@api_router.get("/vulnerabilities/{vulnerability_id}", response_model=Vulnerability)
+async def get_vulnerability(vulnerability_id: str, current_user: User = Depends(get_current_user)):
+    vuln = await db.vulnerabilities.find_one({"id": vulnerability_id}, {"_id": 0})
+    if not vuln:
+        raise HTTPException(status_code=404, detail="Vulnerability not found")
+    
+    for field in ['created_at', 'updated_at', 'discovery_date', 'closure_date']:
+        if vuln.get(field) and isinstance(vuln[field], str):
+            vuln[field] = datetime.fromisoformat(vuln[field])
+    
+    return vuln
+
+@api_router.put("/vulnerabilities/{vulnerability_id}", response_model=Vulnerability)
+async def update_vulnerability(vulnerability_id: str, vulnerability: VulnerabilityUpdate, current_user: User = Depends(get_current_user)):
+    update_dict = {k: v for k, v in vulnerability.model_dump().items() if v is not None}
+    update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    # Recalculate CVSS score if vector changed
+    if 'cvss_vector' in update_dict and update_dict['cvss_vector']:
+        score, severity = calculate_cvss_score(update_dict['cvss_vector'])
+        update_dict['cvss_score'] = score
+        update_dict['severity'] = severity
+    
+    # Convert datetime fields
+    for field in ['discovery_date', 'closure_date']:
+        if field in update_dict and update_dict[field]:
+            update_dict[field] = update_dict[field].isoformat()
+    
+    result = await db.vulnerabilities.update_one({"id": vulnerability_id}, {"$set": update_dict})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Vulnerability not found")
+    
+    updated = await db.vulnerabilities.find_one({"id": vulnerability_id}, {"_id": 0})
+    for field in ['created_at', 'updated_at', 'discovery_date', 'closure_date']:
+        if updated.get(field) and isinstance(updated[field], str):
+            updated[field] = datetime.fromisoformat(updated[field])
+    
+    return updated
+
+@api_router.delete("/vulnerabilities/{vulnerability_id}")
+async def delete_vulnerability(vulnerability_id: str, current_user: User = Depends(get_current_user)):
+    result = await db.vulnerabilities.delete_one({"id": vulnerability_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Vulnerability not found")
+    return {"message": "Vulnerability deleted"}
+
+# ==================== MITRE ATT&CK ====================
+
+@api_router.get("/mitre-attack")
+async def get_mitre_attack_techniques(current_user: User = Depends(get_current_user)):
+    """Get MITRE ATT&CK techniques from database"""
+    techniques = await db.mitre_attack.find({}, {"_id": 0}).to_list(1000)
+    return techniques
+
 # ==================== DASHBOARD ====================
 
 @api_router.get("/dashboard/stats", response_model=DashboardStats)
@@ -897,7 +1352,7 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
     total_incidents = await db.incidents.count_documents({})
     total_assets = await db.assets.count_documents({})
     
-    critical_risks = await db.risks.count_documents({"risk_level": "Критический"})
+    critical_risks = await db.risks.count_documents({"criticality": "Критический"})
     open_incidents = await db.incidents.count_documents({"status": "Открыт"})
     critical_assets = await db.assets.count_documents({"criticality": "Высокая"})
     
@@ -925,7 +1380,45 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
         avg_mttc=avg_mttc
     )
 
-# ==================== INIT ADMIN ====================
+@api_router.get("/dashboard/risk-analytics")
+async def get_risk_analytics(current_user: User = Depends(get_current_user)):
+    """Get detailed risk analytics for dashboard charts"""
+    
+    # Risk distribution by criticality
+    risks_by_criticality = {}
+    for criticality in ["Низкий", "Средний", "Высокий", "Критический"]:
+        count = await db.risks.count_documents({"criticality": criticality})
+        risks_by_criticality[criticality] = count
+    
+    # Risk distribution by status
+    risks_by_status = {}
+    for status in ["Открыт", "В обработке", "Принят", "Закрыт"]:
+        count = await db.risks.count_documents({"status": status})
+        risks_by_status[status] = count
+    
+    # Top 10 most critical risks
+    top_risks = await db.risks.find(
+        {},
+        {"_id": 0, "risk_number": 1, "scenario": 1, "risk_level": 1, "criticality": 1, "owner": 1}
+    ).sort("risk_level", -1).limit(10).to_list(10)
+    
+    # Risk distribution by owner
+    pipeline = [
+        {"$group": {"_id": "$owner", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ]
+    risks_by_owner = await db.risks.aggregate(pipeline).to_list(10)
+    owner_distribution = {item["_id"]: item["count"] for item in risks_by_owner if item["_id"]}
+    
+    return {
+        "risks_by_criticality": risks_by_criticality,
+        "risks_by_status": risks_by_status,
+        "top_risks": top_risks,
+        "risks_by_owner": owner_distribution
+    }
+
+# ==================== INIT ADMIN AND MITRE ====================
 
 @app.on_event("startup")
 async def create_admin():
@@ -942,6 +1435,49 @@ async def create_admin():
         doc['created_at'] = doc['created_at'].isoformat()
         await db.users.insert_one(doc)
         logger.info("Admin user created: username=admin, password=admin123")
+    
+    # Initialize MITRE ATT&CK techniques
+    mitre_count = await db.mitre_attack.count_documents({})
+    if mitre_count == 0:
+        mitre_techniques = [
+            {"id": str(uuid.uuid4()), "technique_id": "T1566.001", "name": "Фишинг: Вложение в письме", "tactic": "Первичный доступ", "description": "Злоумышленник отправляет фишинговое письмо с вредоносным вложением"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1566.002", "name": "Фишинг: Ссылка в письме", "tactic": "Первичный доступ", "description": "Злоумышленник отправляет фишинговое письмо со ссылкой на вредоносный сайт"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1078", "name": "Валидные учетные записи", "tactic": "Первичный доступ", "description": "Использование скомпрометированных учетных данных для доступа к системам"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1190", "name": "Эксплуатация публичного приложения", "tactic": "Первичный доступ", "description": "Использование уязвимостей в публично доступных приложениях"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1133", "name": "Внешние удаленные сервисы", "tactic": "Первичный доступ", "description": "Использование VPN, Citrix и других удаленных сервисов"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1059.001", "name": "Командная строка: PowerShell", "tactic": "Выполнение", "description": "Выполнение команд через PowerShell"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1059.003", "name": "Командная строка: Windows Command Shell", "tactic": "Выполнение", "description": "Выполнение команд через cmd.exe"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1059.006", "name": "Командная строка: Python", "tactic": "Выполнение", "description": "Выполнение Python скриптов"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1053.005", "name": "Планирование задач", "tactic": "Выполнение", "description": "Использование планировщика задач для выполнения вредоносного кода"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1204.002", "name": "Выполнение пользователем: Вредоносный файл", "tactic": "Выполнение", "description": "Обман пользователя для запуска вредоносного файла"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1547.001", "name": "Автозапуск: Registry Run Keys", "tactic": "Закрепление", "description": "Добавление записи в реестр для автозапуска"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1136.001", "name": "Создание учетной записи: Локальная", "tactic": "Закрепление", "description": "Создание локальной учетной записи для закрепления"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1098", "name": "Манипуляция учетной записью", "tactic": "Закрепление", "description": "Изменение учетных данных или прав доступа"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1003.001", "name": "Дамп учетных данных: LSASS Memory", "tactic": "Доступ к учетным данным", "description": "Извлечение учетных данных из памяти LSASS"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1003.002", "name": "Дамп учетных данных: Security Account Manager", "tactic": "Доступ к учетным данным", "description": "Извлечение хешей паролей из SAM"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1110.001", "name": "Брутфорс: Password Guessing", "tactic": "Доступ к учетным данным", "description": "Подбор пароля методом перебора"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1110.003", "name": "Брутфорс: Password Spraying", "tactic": "Доступ к учетным данным", "description": "Попытка входа с одним паролем для множества учетных записей"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1087.001", "name": "Обнаружение учетных записей: Локальные", "tactic": "Обнаружение", "description": "Перечисление локальных учетных записей системы"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1083", "name": "Обнаружение файлов и директорий", "tactic": "Обнаружение", "description": "Поиск файлов и директорий в системе"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1046", "name": "Сканирование сети", "tactic": "Обнаружение", "description": "Сканирование сети для обнаружения хостов и сервисов"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1018", "name": "Обнаружение удаленных систем", "tactic": "Обнаружение", "description": "Идентификация других систем в сети"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1082", "name": "Информация о системе", "tactic": "Обнаружение", "description": "Сбор информации о конфигурации системы"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1021.001", "name": "Удаленные сервисы: Remote Desktop Protocol", "tactic": "Латеральное перемещение", "description": "Использование RDP для доступа к другим системам"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1021.002", "name": "Удаленные сервисы: SMB/Windows Admin Shares", "tactic": "Латеральное перемещение", "description": "Использование SMB для доступа к другим системам"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1560.001", "name": "Архивирование собранных данных: Archive via Utility", "tactic": "Сбор данных", "description": "Архивирование данных перед эксфильтрацией"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1005", "name": "Данные из локальной системы", "tactic": "Сбор данных", "description": "Сбор данных из локальной файловой системы"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1114.001", "name": "Сбор электронной почты: Local Email Collection", "tactic": "Сбор данных", "description": "Доступ к локальным файлам электронной почты"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1071.001", "name": "Application Layer Protocol: Web Protocols", "tactic": "Command and Control", "description": "Использование HTTP/HTTPS для связи с C2"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1105", "name": "Передача инструментов", "tactic": "Command and Control", "description": "Загрузка дополнительных инструментов на скомпрометированный хост"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1041", "name": "Эксфильтрация через C2 канал", "tactic": "Эксфильтрация", "description": "Передача данных через канал управления"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1567.002", "name": "Эксфильтрация через веб-сервис: Облачное хранилище", "tactic": "Эксфильтрация", "description": "Загрузка данных в облачные хранилища"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1486", "name": "Шифрование данных для воздействия", "tactic": "Воздействие", "description": "Шифрование данных программами-вымогателями"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1490", "name": "Подавление восстановления", "tactic": "Воздействие", "description": "Удаление резервных копий и точек восстановления"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1489", "name": "Остановка сервиса", "tactic": "Воздействие", "description": "Остановка критических сервисов"},
+            {"id": str(uuid.uuid4()), "technique_id": "T1491.001", "name": "Дефейс: Внутренний дефейс", "tactic": "Воздействие", "description": "Изменение внутренних данных или систем"},
+        ]
+        await db.mitre_attack.insert_many(mitre_techniques)
+        logger.info(f"Initialized {len(mitre_techniques)} MITRE ATT&CK techniques")
 
 # Include router
 app.include_router(api_router)
