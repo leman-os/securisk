@@ -1325,7 +1325,7 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
     total_incidents = await db.incidents.count_documents({})
     total_assets = await db.assets.count_documents({})
     
-    critical_risks = await db.risks.count_documents({"risk_level": "Критический"})
+    critical_risks = await db.risks.count_documents({"criticality": "Критический"})
     open_incidents = await db.incidents.count_documents({"status": "Открыт"})
     critical_assets = await db.assets.count_documents({"criticality": "Высокая"})
     
@@ -1352,6 +1352,44 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
         avg_mttr=avg_mttr,
         avg_mttc=avg_mttc
     )
+
+@api_router.get("/dashboard/risk-analytics")
+async def get_risk_analytics(current_user: User = Depends(get_current_user)):
+    """Get detailed risk analytics for dashboard charts"""
+    
+    # Risk distribution by criticality
+    risks_by_criticality = {}
+    for criticality in ["Низкий", "Средний", "Высокий", "Критический"]:
+        count = await db.risks.count_documents({"criticality": criticality})
+        risks_by_criticality[criticality] = count
+    
+    # Risk distribution by status
+    risks_by_status = {}
+    for status in ["Открыт", "В обработке", "Принят", "Закрыт"]:
+        count = await db.risks.count_documents({"status": status})
+        risks_by_status[status] = count
+    
+    # Top 10 most critical risks
+    top_risks = await db.risks.find(
+        {},
+        {"_id": 0, "risk_number": 1, "scenario": 1, "risk_level": 1, "criticality": 1, "owner": 1}
+    ).sort("risk_level", -1).limit(10).to_list(10)
+    
+    # Risk distribution by owner
+    pipeline = [
+        {"$group": {"_id": "$owner", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ]
+    risks_by_owner = await db.risks.aggregate(pipeline).to_list(10)
+    owner_distribution = {item["_id"]: item["count"] for item in risks_by_owner if item["_id"]}
+    
+    return {
+        "risks_by_criticality": risks_by_criticality,
+        "risks_by_status": risks_by_status,
+        "top_risks": top_risks,
+        "risks_by_owner": owner_distribution
+    }
 
 # ==================== INIT ADMIN AND MITRE ====================
 
