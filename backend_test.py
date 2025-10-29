@@ -374,6 +374,10 @@ def main():
     edge_cases_result = test_pagination_edge_cases()
     test_results.append(("Pagination edge cases", edge_cases_result))
     
+    # Test 6: Asset creation with empty threats
+    asset_creation_result, asset_id = test_asset_creation_empty_threats()
+    test_results.append(("Asset creation with empty threats", asset_creation_result))
+    
     # Summary
     print("\n" + "=" * 50)
     print("📊 TEST SUMMARY")
