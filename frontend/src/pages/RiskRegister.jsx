@@ -161,11 +161,17 @@ const RiskRegister = ({ user }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Clean up data before sending
+      const dataToSend = {
+        ...formData,
+        review_date: formData.review_date || null, // Convert empty string to null
+      };
+      
       if (editingRisk) {
-        await axios.put(`${API}/risks/${editingRisk.id}`, formData);
+        await axios.put(`${API}/risks/${editingRisk.id}`, dataToSend);
         toast.success('Риск обновлен');
       } else {
-        await axios.post(`${API}/risks`, formData);
+        await axios.post(`${API}/risks`, dataToSend);
         toast.success('Риск создан');
       }
       setDialogOpen(false);
