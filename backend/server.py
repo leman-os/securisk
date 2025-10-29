@@ -708,34 +708,17 @@ async def update_risk(risk_id: str, risk_data: RiskUpdate, current_user: User = 
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
     
-    # Recalculate risk level and criticality if probability or impact changed
-    if 'probability' in update_dict or 'impact' in update_dict:
-        # Get current risk to get missing values
-        current_risk = await db.risks.find_one({"id": risk_id}, {"_id": 0})
-        if not current_risk:
-            raise HTTPException(status_code=404, detail="Risk not found")
-        
-        probability = update_dict.get('probability', current_risk.get('probability', 1))
-        impact = update_dict.get('impact', current_risk.get('impact', 1))
-        
-        risk_level, criticality = calculate_risk_criticality(probability, impact)
-        update_dict['risk_level'] = risk_level
-        update_dict['criticality'] = criticality
-    
     update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
-    
-    # Convert datetime fields
-    if update_dict.get('review_date'):
-        update_dict['review_date'] = update_dict['review_date'].isoformat()
     
     result = await db.risks.update_one({"id": risk_id}, {"$set": update_dict})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Risk not found")
     
     risk = await db.risks.find_one({"id": risk_id}, {"_id": 0})
-    for field in ['created_at', 'updated_at', 'registration_date', 'review_date']:
-        if risk.get(field) and isinstance(risk[field], str):
-            risk[field] = datetime.fromisoformat(risk[field])
+    if isinstance(risk.get('created_at'), str):
+        risk['created_at'] = datetime.fromisoformat(risk['created_at'])
+    if isinstance(risk.get('updated_at'), str):
+        risk['updated_at'] = datetime.fromisoformat(risk['updated_at'])
     return Risk(**risk)
 
 @api_router.delete("/risks/{risk_id}")
