@@ -209,7 +209,14 @@ const Assets = ({ user }) => {
       resetForm();
       fetchAssets();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Ошибка при сохранении');
+      console.error('Asset save error:', error);
+      // Handle error safely - don't render objects
+      const errorMessage = error.response?.data?.detail 
+        ? (typeof error.response.data.detail === 'string' 
+          ? error.response.data.detail 
+          : JSON.stringify(error.response.data.detail))
+        : 'Ошибка при сохранении актива';
+      toast.error(errorMessage);
     }
   };
 
