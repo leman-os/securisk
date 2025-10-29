@@ -260,6 +260,13 @@ const Assets = ({ user }) => {
       description: asset.description || '',
       note: asset.note || '',
     });
+    
+    // Set dynamic threat selects
+    setThreatSelects(asset.threats?.length > 0 
+      ? asset.threats.map((id, idx) => ({ id: idx, value: id }))
+      : [{ id: 0, value: '' }]
+    );
+    
     setDialogOpen(true);
   };
 
@@ -281,6 +288,7 @@ const Assets = ({ user }) => {
       description: '',
       note: '',
     });
+    setThreatSelects([{ id: 0, value: '' }]);
   };
 
   const toggleThreat = (threat) => {
