@@ -667,10 +667,22 @@ async def create_risk(risk_data: RiskCreate, current_user: User = Depends(get_cu
     if not data_dict.get('risk_number'):
         data_dict['risk_number'] = await generate_risk_number()
     
+    # Calculate risk level and criticality
+    risk_level, criticality = calculate_risk_criticality(data_dict['probability'], data_dict['impact'])
+    data_dict['risk_level'] = risk_level
+    data_dict['criticality'] = criticality
+    
+    # Set registration date
+    data_dict['registration_date'] = datetime.now(timezone.utc)
+    
     risk = Risk(**data_dict)
     doc = risk.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     doc['updated_at'] = doc['updated_at'].isoformat()
+    doc['registration_date'] = doc['registration_date'].isoformat()
+    if doc.get('review_date'):
+        doc['review_date'] = doc['review_date'].isoformat()
+    
     await db.risks.insert_one(doc)
     return risk
 
