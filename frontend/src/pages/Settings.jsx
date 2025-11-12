@@ -17,6 +17,7 @@ const Settings = ({ user }) => {
   const [newSystem, setNewSystem] = useState('');
   const [newThreat, setNewThreat] = useState('');
   const [newAssetStatus, setNewAssetStatus] = useState('');
+  const [newAssetCategory, setNewAssetCategory] = useState('');
   const [newThreatCategory, setNewThreatCategory] = useState('');
   const [newThreatSource, setNewThreatSource] = useState('');
 
@@ -97,6 +98,18 @@ const Settings = ({ user }) => {
   const removeAssetStatus = (status) => {
     const updated = settings.asset_statuses.filter((s) => s !== status);
     updateSettings({ asset_statuses: updated });
+  };
+
+  const addAssetCategory = () => {
+    if (!newAssetCategory.trim()) return;
+    const updated = [...(settings?.asset_categories || []), newAssetCategory.trim()];
+    updateSettings({ asset_categories: updated });
+    setNewAssetCategory('');
+  };
+
+  const removeAssetCategory = (category) => {
+    const updated = (settings?.asset_categories || []).filter((c) => c !== category);
+    updateSettings({ asset_categories: updated });
   };
 
   const addThreatCategory = () => {
@@ -289,6 +302,52 @@ const Settings = ({ user }) => {
             />
             <Button
               onClick={addAssetStatus}
+              className="bg-gradient-to-r from-cyan-500 to-cyan-600"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Asset Categories */}
+      <Card className="border-slate-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <SettingsIcon className="w-5 h-5 text-cyan-600" />
+            Категории активов
+          </CardTitle>
+          <CardDescription>
+            Справочник категорий для классификации активов при заведении
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {settings?.asset_categories?.map((category) => (
+              <Badge
+                key={category}
+                className="bg-purple-100 text-purple-800 border-purple-300 px-3 py-1.5 text-sm"
+                variant="outline"
+              >
+                {category}
+                <button
+                  onClick={() => removeAssetCategory(category)}
+                  className="ml-2 hover:text-purple-900"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Добавить новую категорию актива"
+              value={newAssetCategory}
+              onChange={(e) => setNewAssetCategory(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addAssetCategory()}
+            />
+            <Button
+              onClick={addAssetCategory}
               className="bg-gradient-to-r from-cyan-500 to-cyan-600"
             >
               <Plus className="w-4 h-4" />

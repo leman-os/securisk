@@ -28,7 +28,7 @@ const Assets = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCriticality, setFilterCriticality] = useState('all');
-  const [filterCategory, setFilterCategory] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
   const [filterOwner, setFilterOwner] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [showColumnSelector, setShowColumnSelector] = useState(false);
@@ -71,6 +71,14 @@ const Assets = ({ user }) => {
     description: '',
     note: '',
   });
+
+  const assetCategories = settings?.asset_categories || [];
+  const normalizedAssetCategories = formData.category && !assetCategories.includes(formData.category)
+    ? [formData.category, ...assetCategories]
+    : assetCategories;
+  const filterCategoryOptions = filterCategory !== 'all' && filterCategory && !assetCategories.includes(filterCategory)
+    ? [filterCategory, ...assetCategories]
+    : assetCategories;
 
   // Dynamic threat selects
   const [threatSelects, setThreatSelects] = useState([{ id: 0, value: '' }]);
@@ -160,8 +168,8 @@ const Assets = ({ user }) => {
       filtered = filtered.filter((asset) => asset.criticality === filterCriticality);
     }
 
-    if (filterCategory) {
-      filtered = filtered.filter((asset) => asset.category?.toLowerCase().includes(filterCategory.toLowerCase()));
+    if (filterCategory !== 'all') {
+      filtered = filtered.filter((asset) => (asset.category || '') === filterCategory);
     }
 
     if (filterOwner) {
@@ -175,7 +183,7 @@ const Assets = ({ user }) => {
     setSearchTerm('');
     setFilterStatus('all');
     setFilterCriticality('all');
-    setFilterCategory('');
+    setFilterCategory('all');
     setFilterOwner('');
   };
 
@@ -466,10 +474,22 @@ const Assets = ({ user }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Категория</Label>
-                  <Input
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  />
+                  <Select
+                    value={formData.category || ''}
+                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={assetCategories.length ? 'Выберите категорию' : 'Категории отсутствуют'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Не выбрано</SelectItem>
+                      {normalizedAssetCategories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Владелец</Label>
@@ -836,11 +856,19 @@ const Assets = ({ user }) => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label className="text-xs font-semibold">Категория</Label>
-                      <Input
-                        placeholder="Введите категорию..."
-                        value={filterCategory}
-                        onChange={(e) => setFilterCategory(e.target.value)}
-                      />
+                      <Select value={filterCategory} onValueChange={setFilterCategory}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Все категории" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Все категории</SelectItem>
+                          {filterCategoryOptions.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="space-y-2">
