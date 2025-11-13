@@ -328,7 +328,6 @@ frontend:
         agent: "main"
         comment: "Добавлены маршруты /wiki, /registries, /registries/:registryId в App.js. Установлен пакет react-quill."
 
-  - task:
   - task: "Test Incidents page filters functionality"
     implemented: true
     working: true
