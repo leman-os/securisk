@@ -137,15 +137,18 @@ backend:
   
   - task: "User management endpoints"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Добавлены endpoints: PUT /api/users/{user_id} для редактирования, POST /api/users/{user_id}/change-password для смены пароля. Поддержка прав доступа администратора."
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: User management endpoints работают корректно. GET /api/users возвращает список пользователей. PUT /api/users/{user_id} успешно обновляет full_name и role пользователя. POST /api/users/{user_id}/change-password позволяет администратору менять пароли пользователей. Все операции управления пользователями функционируют правильно."
   
   - task: "Wiki pages endpoints"
     implemented: true
