@@ -734,7 +734,7 @@ async def delete_user(user_id: str, current_user: User = Depends(get_current_use
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted"}
 
-@api_router.put("/users/{user_id}", response_model=UserWithPermissions)
+@api_router.put("/users/{user_id}", response_model=User)
 async def update_user(user_id: str, user_data: UserUpdate, current_user: User = Depends(get_current_user)):
     if current_user.role != "Администратор":
         raise HTTPException(status_code=403, detail="Only admins can update users")
@@ -743,9 +743,14 @@ async def update_user(user_id: str, user_data: UserUpdate, current_user: User = 
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
     
-    # Convert permissions to dict if present
-    if 'permissions' in update_dict:
-        update_dict['permissions'] = update_dict['permissions'].model_dump()
+    # If role is being updated, get role name
+    if 'role' in update_dict:
+        role = await db.roles.find_one({"id": update_dict['role']})
+        if role:
+            update_dict['role_name'] = role['name']
+        else:
+            # Might be legacy role name
+            update_dict['role_name'] = update_dict['role']
     
     result = await db.users.update_one({"id": user_id}, {"$set": update_dict})
     if result.matched_count == 0:
@@ -755,11 +760,7 @@ async def update_user(user_id: str, user_data: UserUpdate, current_user: User = 
     if isinstance(user.get('created_at'), str):
         user['created_at'] = datetime.fromisoformat(user['created_at'])
     
-    # Convert permissions dict back to model if present
-    if user.get('permissions') and isinstance(user['permissions'], dict):
-        user['permissions'] = UserPermissions(**user['permissions'])
-    
-    return UserWithPermissions(**user)
+    return User(**user)
 
 @api_router.post("/users/{user_id}/change-password")
 async def change_user_password(user_id: str, password_data: PasswordChange, current_user: User = Depends(get_current_user)):
