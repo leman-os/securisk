@@ -1572,6 +1572,266 @@ async def get_risk_analytics(current_user: User = Depends(get_current_user)):
         "risks_by_owner": owner_distribution
     }
 
+# ==================== WIKI ENDPOINTS ====================
+
+@api_router.post("/wiki", response_model=WikiPage)
+async def create_wiki_page(page_data: WikiPageCreate, current_user: User = Depends(get_current_user)):
+    page = WikiPage(**page_data.model_dump(), created_by=current_user.id)
+    doc = page.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    doc['updated_at'] = doc['updated_at'].isoformat()
+    await db.wiki_pages.insert_one(doc)
+    return page
+
+@api_router.get("/wiki", response_model=List[WikiPage])
+async def get_wiki_pages(current_user: User = Depends(get_current_user)):
+    pages = await db.wiki_pages.find({}, {"_id": 0}).sort("order", 1).to_list(1000)
+    for page in pages:
+        if isinstance(page.get('created_at'), str):
+            page['created_at'] = datetime.fromisoformat(page['created_at'])
+        if isinstance(page.get('updated_at'), str):
+            page['updated_at'] = datetime.fromisoformat(page['updated_at'])
+    return pages
+
+@api_router.get("/wiki/{page_id}", response_model=WikiPage)
+async def get_wiki_page(page_id: str, current_user: User = Depends(get_current_user)):
+    page = await db.wiki_pages.find_one({"id": page_id}, {"_id": 0})
+    if not page:
+        raise HTTPException(status_code=404, detail="Wiki page not found")
+    if isinstance(page.get('created_at'), str):
+        page['created_at'] = datetime.fromisoformat(page['created_at'])
+    if isinstance(page.get('updated_at'), str):
+        page['updated_at'] = datetime.fromisoformat(page['updated_at'])
+    return WikiPage(**page)
+
+@api_router.put("/wiki/{page_id}", response_model=WikiPage)
+async def update_wiki_page(page_id: str, page_data: WikiPageUpdate, current_user: User = Depends(get_current_user)):
+    update_dict = {k: v for k, v in page_data.model_dump().items() if v is not None}
+    if not update_dict:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.wiki_pages.update_one({"id": page_id}, {"$set": update_dict})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Wiki page not found")
+    
+    page = await db.wiki_pages.find_one({"id": page_id}, {"_id": 0})
+    if isinstance(page.get('created_at'), str):
+        page['created_at'] = datetime.fromisoformat(page['created_at'])
+    if isinstance(page.get('updated_at'), str):
+        page['updated_at'] = datetime.fromisoformat(page['updated_at'])
+    return WikiPage(**page)
+
+@api_router.post("/wiki/{page_id}/move")
+async def move_wiki_page(page_id: str, move_data: WikiPageMove, current_user: User = Depends(get_current_user)):
+    result = await db.wiki_pages.update_one(
+        {"id": page_id},
+        {"$set": {
+            "parent_id": move_data.parent_id,
+            "order": move_data.order,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Wiki page not found")
+    return {"message": "Page moved successfully"}
+
+@api_router.delete("/wiki/{page_id}")
+async def delete_wiki_page(page_id: str, current_user: User = Depends(get_current_user)):
+    # Check if page has children
+    children = await db.wiki_pages.count_documents({"parent_id": page_id})
+    if children > 0:
+        raise HTTPException(status_code=400, detail="Cannot delete page with children. Delete children first.")
+    
+    result = await db.wiki_pages.delete_one({"id": page_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Wiki page not found")
+    return {"message": "Wiki page deleted"}
+
+# ==================== REGISTRY ENDPOINTS ====================
+
+@api_router.post("/registries", response_model=Registry)
+async def create_registry(registry_data: RegistryCreate, current_user: User = Depends(get_current_user)):
+    registry = Registry(**registry_data.model_dump(), created_by=current_user.id)
+    doc = registry.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    doc['updated_at'] = doc['updated_at'].isoformat()
+    # Convert columns to dicts
+    doc['columns'] = [col.model_dump() if hasattr(col, 'model_dump') else col for col in doc['columns']]
+    await db.registries.insert_one(doc)
+    return registry
+
+@api_router.get("/registries", response_model=List[Registry])
+async def get_registries(current_user: User = Depends(get_current_user)):
+    registries = await db.registries.find({}, {"_id": 0}).to_list(1000)
+    for reg in registries:
+        if isinstance(reg.get('created_at'), str):
+            reg['created_at'] = datetime.fromisoformat(reg['created_at'])
+        if isinstance(reg.get('updated_at'), str):
+            reg['updated_at'] = datetime.fromisoformat(reg['updated_at'])
+        # Convert columns dicts back to RegistryColumn models
+        if reg.get('columns'):
+            reg['columns'] = [RegistryColumn(**col) if isinstance(col, dict) else col for col in reg['columns']]
+    return registries
+
+@api_router.get("/registries/{registry_id}", response_model=Registry)
+async def get_registry(registry_id: str, current_user: User = Depends(get_current_user)):
+    registry = await db.registries.find_one({"id": registry_id}, {"_id": 0})
+    if not registry:
+        raise HTTPException(status_code=404, detail="Registry not found")
+    if isinstance(registry.get('created_at'), str):
+        registry['created_at'] = datetime.fromisoformat(registry['created_at'])
+    if isinstance(registry.get('updated_at'), str):
+        registry['updated_at'] = datetime.fromisoformat(registry['updated_at'])
+    # Convert columns dicts back to RegistryColumn models
+    if registry.get('columns'):
+        registry['columns'] = [RegistryColumn(**col) if isinstance(col, dict) else col for col in registry['columns']]
+    return Registry(**registry)
+
+@api_router.put("/registries/{registry_id}", response_model=Registry)
+async def update_registry(registry_id: str, registry_data: RegistryUpdate, current_user: User = Depends(get_current_user)):
+    update_dict = {k: v for k, v in registry_data.model_dump().items() if v is not None}
+    if not update_dict:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    # Convert columns to dicts if present
+    if 'columns' in update_dict:
+        update_dict['columns'] = [col.model_dump() if hasattr(col, 'model_dump') else col for col in update_dict['columns']]
+    
+    update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.registries.update_one({"id": registry_id}, {"$set": update_dict})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Registry not found")
+    
+    registry = await db.registries.find_one({"id": registry_id}, {"_id": 0})
+    if isinstance(registry.get('created_at'), str):
+        registry['created_at'] = datetime.fromisoformat(registry['created_at'])
+    if isinstance(registry.get('updated_at'), str):
+        registry['updated_at'] = datetime.fromisoformat(registry['updated_at'])
+    # Convert columns dicts back to RegistryColumn models
+    if registry.get('columns'):
+        registry['columns'] = [RegistryColumn(**col) if isinstance(col, dict) else col for col in registry['columns']]
+    return Registry(**registry)
+
+@api_router.delete("/registries/{registry_id}")
+async def delete_registry(registry_id: str, current_user: User = Depends(get_current_user)):
+    # Delete all records in this registry
+    await db.registry_records.delete_many({"registry_id": registry_id})
+    
+    result = await db.registries.delete_one({"id": registry_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Registry not found")
+    return {"message": "Registry deleted"}
+
+# Registry Records
+@api_router.post("/registries/{registry_id}/records", response_model=RegistryRecord)
+async def create_registry_record(registry_id: str, record_data: RegistryRecordCreate, current_user: User = Depends(get_current_user)):
+    # Verify registry exists
+    registry = await db.registries.find_one({"id": registry_id})
+    if not registry:
+        raise HTTPException(status_code=404, detail="Registry not found")
+    
+    # Auto-generate ID columns
+    if registry.get('columns'):
+        for col in registry['columns']:
+            if isinstance(col, dict) and col.get('column_type') == 'id':
+                col_id = col.get('id')
+                # Generate next number for this ID column
+                existing_records = await db.registry_records.find({"registry_id": registry_id}).to_list(None)
+                max_num = 0
+                for rec in existing_records:
+                    if rec.get('data', {}).get(col_id):
+                        try:
+                            num = int(rec['data'][col_id])
+                            max_num = max(max_num, num)
+                        except (ValueError, TypeError):
+                            pass
+                record_data.data[col_id] = str(max_num + 1)
+    
+    record = RegistryRecord(**record_data.model_dump(), registry_id=registry_id, created_by=current_user.id)
+    doc = record.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    doc['updated_at'] = doc['updated_at'].isoformat()
+    await db.registry_records.insert_one(doc)
+    return record
+
+@api_router.get("/registries/{registry_id}/records", response_model=List[RegistryRecord])
+async def get_registry_records(registry_id: str, current_user: User = Depends(get_current_user)):
+    records = await db.registry_records.find({"registry_id": registry_id}, {"_id": 0}).to_list(10000)
+    for rec in records:
+        if isinstance(rec.get('created_at'), str):
+            rec['created_at'] = datetime.fromisoformat(rec['created_at'])
+        if isinstance(rec.get('updated_at'), str):
+            rec['updated_at'] = datetime.fromisoformat(rec['updated_at'])
+    return records
+
+@api_router.put("/registries/{registry_id}/records/{record_id}", response_model=RegistryRecord)
+async def update_registry_record(registry_id: str, record_id: str, record_data: RegistryRecordUpdate, current_user: User = Depends(get_current_user)):
+    update_dict = record_data.model_dump()
+    update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.registry_records.update_one(
+        {"id": record_id, "registry_id": registry_id},
+        {"$set": update_dict}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    record = await db.registry_records.find_one({"id": record_id}, {"_id": 0})
+    if isinstance(record.get('created_at'), str):
+        record['created_at'] = datetime.fromisoformat(record['created_at'])
+    if isinstance(record.get('updated_at'), str):
+        record['updated_at'] = datetime.fromisoformat(record['updated_at'])
+    return RegistryRecord(**record)
+
+@api_router.delete("/registries/{registry_id}/records/{record_id}")
+async def delete_registry_record(registry_id: str, record_id: str, current_user: User = Depends(get_current_user)):
+    result = await db.registry_records.delete_one({"id": record_id, "registry_id": registry_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Record not found")
+    return {"message": "Record deleted"}
+
+@api_router.get("/registries/{registry_id}/export")
+async def export_registry(registry_id: str, current_user: User = Depends(get_current_user)):
+    from fastapi.responses import StreamingResponse
+    import io
+    import csv
+    
+    # Get registry and records
+    registry = await db.registries.find_one({"id": registry_id})
+    if not registry:
+        raise HTTPException(status_code=404, detail="Registry not found")
+    
+    records = await db.registry_records.find({"registry_id": registry_id}, {"_id": 0}).to_list(10000)
+    
+    # Prepare CSV
+    output = io.StringIO()
+    
+    if registry.get('columns'):
+        # Write headers
+        columns = registry['columns']
+        headers = [col['name'] if isinstance(col, dict) else col.name for col in columns]
+        writer = csv.DictWriter(output, fieldnames=headers)
+        writer.writeheader()
+        
+        # Write data
+        for rec in records:
+            row = {}
+            for col in columns:
+                col_id = col['id'] if isinstance(col, dict) else col.id
+                col_name = col['name'] if isinstance(col, dict) else col.name
+                row[col_name] = rec.get('data', {}).get(col_id, '')
+            writer.writerow(row)
+    
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={registry['name']}.csv"}
+    )
+
 # ==================== INIT ADMIN AND MITRE ====================
 
 @app.on_event("startup")
