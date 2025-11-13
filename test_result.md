@@ -456,7 +456,16 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Test asset creation with empty threats array"
+    - "Add asset_categories to Settings model"
+    - "User management endpoints"
+    - "Wiki pages endpoints"
+    - "Registry endpoints with export"
+    - "Add asset categories to Settings"
+    - "Update Assets with category select"
+    - "Collapsible sidebar menu"
+    - "User management UI"
+    - "Wiki with tree structure and editor"
+    - "Registries with dynamic fields"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
