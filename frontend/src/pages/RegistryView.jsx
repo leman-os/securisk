@@ -518,6 +518,123 @@ const RegistryView = ({ user }) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Structure Dialog */}
+      <Dialog open={isEditStructureOpen} onOpenChange={setIsEditStructureOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Редактирование структуры реестра</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Current columns */}
+            {structureData.columns.length > 0 && (
+              <div className="border-b pb-4">
+                <Label className="text-base font-semibold mb-3 block">Текущие столбцы</Label>
+                <div className="space-y-2">
+                  {structureData.columns.map((col) => (
+                    <div key={col.id} className="flex items-center gap-2 p-2 bg-slate-50 rounded">
+                      <span className="flex-1 font-medium">{col.name}</span>
+                      <span className="text-sm text-slate-600">
+                        {col.column_type === 'text' && 'Текст'}
+                        {col.column_type === 'number' && 'Число'}
+                        {col.column_type === 'id' && 'ID (автономер)'}
+                        {col.column_type === 'date' && 'Дата'}
+                        {col.column_type === 'checkbox' && 'Чекбокс'}
+                        {col.column_type === 'select' && 'Выбор из списка'}
+                        {col.column_type === 'multiselect' && 'Выбор нескольких'}
+                      </span>
+                      <button
+                        onClick={() => removeColumnFromStructure(col.id)}
+                        className="p-1 hover:bg-red-100 rounded text-red-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Add new column */}
+            <div className="space-y-3 p-4 bg-slate-50 rounded-lg">
+              <Label className="text-base font-semibold">Добавить новый столбец</Label>
+              <div>
+                <Label className="text-sm">Название столбца</Label>
+                <Input
+                  value={newColumn.name}
+                  onChange={(e) => setNewColumn({ ...newColumn, name: e.target.value })}
+                  placeholder="Например: ФИО, Дата создания"
+                  size="sm"
+                />
+              </div>
+              <div>
+                <Label className="text-sm">Тип данных</Label>
+                <select
+                  value={newColumn.column_type}
+                  onChange={(e) => setNewColumn({ ...newColumn, column_type: e.target.value, options: [] })}
+                  className="w-full p-2 border border-slate-300 rounded-md text-sm"
+                >
+                  <option value="text">Текст</option>
+                  <option value="number">Число</option>
+                  <option value="id">ID (автономер)</option>
+                  <option value="date">Дата</option>
+                  <option value="checkbox">Чекбокс</option>
+                  <option value="select">Выбор из списка</option>
+                  <option value="multiselect">Выбор нескольких из списка</option>
+                </select>
+              </div>
+
+              {(newColumn.column_type === 'select' || newColumn.column_type === 'multiselect') && (
+                <div>
+                  <Label className="text-sm">Варианты выбора</Label>
+                  <div className="flex gap-2 mb-2">
+                    <Input
+                      value={selectOption}
+                      onChange={(e) => setSelectOption(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && addSelectOption()}
+                      placeholder="Введите вариант"
+                      size="sm"
+                    />
+                    <Button onClick={addSelectOption} size="sm">
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {newColumn.options.map((opt, idx) => (
+                      <div key={idx} className="flex items-center gap-1 px-2 py-1 bg-white border rounded">
+                        <span className="text-sm">{opt}</span>
+                        <button
+                          onClick={() => removeSelectOption(opt)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <Button onClick={addColumnToStructure} size="sm" variant="outline" className="w-full">
+                Добавить столбец
+              </Button>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button onClick={saveStructure} className="flex-1">
+                Сохранить изменения
+              </Button>
+              <Button
+                onClick={() => setIsEditStructureOpen(false)}
+                variant="outline"
+                className="flex-1"
+              >
+                Отмена
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
