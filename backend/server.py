@@ -1943,13 +1943,72 @@ async def export_registry(registry_id: str, current_user: User = Depends(get_cur
 
 @app.on_event("startup")
 async def create_admin():
+    # Create default roles if they don't exist
+    admin_role = await db.roles.find_one({"name": "Администратор"})
+    if not admin_role:
+        admin_role_obj = Role(
+            name="Администратор",
+            permissions=RolePermissions(
+                dashboard=True, incidents=True, assets=True, risks=True,
+                threats=True, vulnerabilities=True, users=True, wiki=True,
+                registries=True, settings=True
+            )
+        )
+        doc = admin_role_obj.model_dump()
+        doc['created_at'] = doc['created_at'].isoformat()
+        doc['updated_at'] = doc['updated_at'].isoformat()
+        doc['permissions'] = doc['permissions'].model_dump()
+        await db.roles.insert_one(doc)
+        admin_role_id = doc['id']
+        logger.info("Admin role created")
+    else:
+        admin_role_id = admin_role['id']
+    
+    # Create default engineer role
+    engineer_role = await db.roles.find_one({"name": "Инженер ИБ"})
+    if not engineer_role:
+        engineer_role_obj = Role(
+            name="Инженер ИБ",
+            permissions=RolePermissions(
+                dashboard=True, incidents=True, assets=True, risks=True,
+                threats=True, vulnerabilities=True, users=False, wiki=True,
+                registries=True, settings=False
+            )
+        )
+        doc = engineer_role_obj.model_dump()
+        doc['created_at'] = doc['created_at'].isoformat()
+        doc['updated_at'] = doc['updated_at'].isoformat()
+        doc['permissions'] = doc['permissions'].model_dump()
+        await db.roles.insert_one(doc)
+        logger.info("Engineer role created")
+    
+    # Create default specialist role
+    specialist_role = await db.roles.find_one({"name": "Специалист ИБ"})
+    if not specialist_role:
+        specialist_role_obj = Role(
+            name="Специалист ИБ",
+            permissions=RolePermissions(
+                dashboard=True, incidents=True, assets=True, risks=True,
+                threats=True, vulnerabilities=True, users=False, wiki=True,
+                registries=False, settings=False
+            )
+        )
+        doc = specialist_role_obj.model_dump()
+        doc['created_at'] = doc['created_at'].isoformat()
+        doc['updated_at'] = doc['updated_at'].isoformat()
+        doc['permissions'] = doc['permissions'].model_dump()
+        await db.roles.insert_one(doc)
+        logger.info("Specialist role created")
+    
+    # Create admin user
     admin = await db.users.find_one({"username": "admin"})
     if not admin:
         admin_user = User(
             username="admin",
             full_name="Администратор системы",
             email="admin@securisk.com",
-            role="Администратор"
+            role="Администратор",  # Legacy for backward compatibility
+            role_name="Администратор"
         )
         doc = admin_user.model_dump()
         doc['password'] = hash_password("admin123")
