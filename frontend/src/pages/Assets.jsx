@@ -161,7 +161,7 @@ const Assets = ({ user }) => {
     }
 
     if (filterCategory) {
-      filtered = filtered.filter((asset) => asset.category?.toLowerCase().includes(filterCategory.toLowerCase()));
+      filtered = filtered.filter((asset) => asset.category === filterCategory);
     }
 
     if (filterOwner) {
