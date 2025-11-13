@@ -14,6 +14,7 @@ const Registries = ({ user }) => {
   const [registries, setRegistries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
