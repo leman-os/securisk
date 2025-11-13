@@ -32,6 +32,19 @@ const Wiki = ({ user }) => {
     fetchPages();
   }, []);
 
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredPages(pages);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = pages.filter(page => 
+        page.title.toLowerCase().includes(query) ||
+        page.content?.toLowerCase().includes(query)
+      );
+      setFilteredPages(filtered);
+    }
+  }, [searchQuery, pages]);
+
   const fetchPages = async () => {
     try {
       const token = localStorage.getItem('token');
