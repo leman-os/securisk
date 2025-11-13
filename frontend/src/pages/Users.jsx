@@ -407,9 +407,9 @@ const Users = ({ user }) => {
                   <SelectValue placeholder="Выберите роль" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Администратор">Администратор</SelectItem>
-                  <SelectItem value="Инженер ИБ">Инженер ИБ</SelectItem>
-                  <SelectItem value="Специалист ИБ">Специалист ИБ</SelectItem>
+                  {roles.map((role) => (
+                    <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
