@@ -179,7 +179,24 @@ const Registries = ({ user }) => {
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Реестры</h1>
           <p className="text-slate-600">Пользовательские таблицы данных</p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <div className="flex gap-2">
+          <div className="flex border border-slate-300 rounded-lg overflow-hidden">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 ${viewMode === 'grid' ? 'bg-cyan-50 text-cyan-600' : 'hover:bg-slate-50'}`}
+              title="Блоки"
+            >
+              <Grid3x3 className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 ${viewMode === 'list' ? 'bg-cyan-50 text-cyan-600' : 'hover:bg-slate-50'}`}
+              title="Список"
+            >
+              <List className="w-5 h-5" />
+            </button>
+          </div>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600">
               <Plus className="w-4 h-4 mr-2" />
