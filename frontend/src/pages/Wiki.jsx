@@ -69,7 +69,7 @@ const Wiki = ({ user }) => {
       toast.success(pageData.is_folder ? 'Раздел создан' : 'Страница создана');
       if (!data) {
         setIsCreateDialogOpen(false);
-        setFormData({ title: '', content: '', parent_id: null });
+        setFormData({ title: '', content: '', parent_id: null, is_folder: false });
       }
       fetchPages();
     } catch (error) {
