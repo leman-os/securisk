@@ -161,8 +161,12 @@ const Wiki = ({ user }) => {
             </button>
           )}
           {node.children.length === 0 && <div className="w-5" />}
-          <FileText className="w-4 h-4" />
-          <span className="flex-1 text-sm">{node.title}</span>
+          {node.is_folder ? (
+            <Folder className="w-4 h-4 text-amber-600" />
+          ) : (
+            <FileText className="w-4 h-4" />
+          )}
+          <span className={`flex-1 text-sm ${node.is_folder ? 'font-semibold' : ''}`}>{node.title}</span>
           <button
             onClick={(e) => {
               e.stopPropagation();
