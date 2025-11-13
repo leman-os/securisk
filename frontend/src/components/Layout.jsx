@@ -109,7 +109,7 @@ const Layout = ({ user, setUser, children }) => {
 
       {/* Main content */}
       <main className="flex-1 overflow-auto">
-        <div className="max-w-7xl mx-auto p-4">
+        <div className="h-full p-2">
           {children}
         </div>
       </main>
