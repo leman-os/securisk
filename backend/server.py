@@ -356,6 +356,108 @@ class MitreAttack(BaseModel):
     tactic: str
     description: str
 
+# ==================== USER MANAGEMENT MODELS ====================
+class UserPermissions(BaseModel):
+    incidents: bool = True
+    assets: bool = True
+    risks: bool = True
+    threats: bool = True
+    vulnerabilities: bool = True
+    wiki: bool = True
+    registries: bool = True
+    settings: bool = False
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role: Optional[str] = None
+    permissions: Optional[UserPermissions] = None
+
+class PasswordChange(BaseModel):
+    old_password: Optional[str] = None  # Required for self-change
+    new_password: str
+
+class UserWithPermissions(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    username: str
+    full_name: str
+    email: Optional[EmailStr] = None
+    role: str
+    permissions: Optional[UserPermissions] = None
+    created_at: datetime
+
+# ==================== WIKI MODELS ====================
+class WikiPage(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    content: str  # HTML content from editor
+    parent_id: Optional[str] = None  # For tree structure
+    order: int = 0  # Order within siblings
+    created_by: str  # User ID
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class WikiPageCreate(BaseModel):
+    title: str
+    content: str = ""
+    parent_id: Optional[str] = None
+    order: int = 0
+
+class WikiPageUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    parent_id: Optional[str] = None
+    order: Optional[int] = None
+
+class WikiPageMove(BaseModel):
+    parent_id: Optional[str] = None
+    order: int
+
+# ==================== REGISTRY MODELS ====================
+class RegistryColumn(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    column_type: str  # text, number, id, date, checkbox, select
+    options: Optional[List[str]] = None  # For select type
+    order: int = 0
+
+class Registry(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: Optional[str] = None
+    columns: List[RegistryColumn] = Field(default_factory=list)
+    created_by: str  # User ID
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class RegistryCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    columns: List[RegistryColumn] = Field(default_factory=list)
+
+class RegistryUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    columns: Optional[List[RegistryColumn]] = None
+
+class RegistryRecord(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    registry_id: str
+    data: dict  # Column_id: value mapping
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class RegistryRecordCreate(BaseModel):
+    data: dict
+
+class RegistryRecordUpdate(BaseModel):
+    data: dict
+
 class PaginatedThreats(BaseModel):
     items: List[Threat]
     total: int
