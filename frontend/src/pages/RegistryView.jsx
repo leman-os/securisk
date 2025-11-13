@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, Plus, Edit, Trash2, Download, Search } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Download, Search, Settings, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
 
 const RegistryView = ({ user }) => {
   const { registryId } = useParams();
