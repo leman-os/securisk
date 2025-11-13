@@ -90,6 +90,50 @@ const Users = ({ user }) => {
     }
   };
 
+  const openEditDialog = (userToEdit) => {
+    setEditingUser(userToEdit);
+    setEditFormData({
+      full_name: userToEdit.full_name,
+      email: userToEdit.email || '',
+      role: userToEdit.role,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEdit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`${API}/users/${editingUser.id}`, editFormData);
+      toast.success('Пользователь обновлен');
+      setEditDialogOpen(false);
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Ошибка при обновлении');
+    }
+  };
+
+  const openPasswordDialog = (userToEdit) => {
+    setEditingUser(userToEdit);
+    setPasswordData({ old_password: '', new_password: '' });
+    setPasswordDialogOpen(true);
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    try {
+      const data = user.role === 'Администратор' && editingUser.id !== user.id
+        ? { new_password: passwordData.new_password }
+        : passwordData;
+      
+      await axios.post(`${API}/users/${editingUser.id}/change-password`, data);
+      toast.success('Пароль изменен');
+      setPasswordDialogOpen(false);
+      setPasswordData({ old_password: '', new_password: '' });
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Ошибка при смене пароля');
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       username: '',
