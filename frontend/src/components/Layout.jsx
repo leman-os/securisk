@@ -24,6 +24,7 @@ const Layout = ({ user, setUser, children }) => {
     { path: '/wiki', icon: BookOpen, label: 'База знаний' },
     { path: '/registries', icon: Table, label: 'Реестры' },
     { path: '/users', icon: Users, label: 'Пользователи' },
+    { path: '/roles', icon: Shield, label: 'Роли' },
     { path: '/settings', icon: Settings, label: 'Настройки' },
   ];
 
