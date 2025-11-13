@@ -15,8 +15,11 @@ const Wiki = ({ user }) => {
   const [selectedPage, setSelectedPage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [expandedPages, setExpandedPages] = useState({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredPages, setFilteredPages] = useState([]);
   
   const [formData, setFormData] = useState({
     title: '',
