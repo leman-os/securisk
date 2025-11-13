@@ -317,17 +317,35 @@ const Users = ({ user }) => {
                       </TableCell>
                       {isAdmin && (
                         <TableCell className="text-right">
-                          {u.username !== 'admin' && (
+                          <div className="flex justify-end gap-2">
                             <Button
-                              data-testid={`delete-user-${u.id}`}
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDelete(u.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => openEditDialog(u)}
+                              className="text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Edit className="w-4 h-4" />
                             </Button>
-                          )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openPasswordDialog(u)}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            >
+                              <Key className="w-4 h-4" />
+                            </Button>
+                            {u.username !== 'admin' && (
+                              <Button
+                                data-testid={`delete-user-${u.id}`}
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDelete(u.id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       )}
                     </TableRow>
