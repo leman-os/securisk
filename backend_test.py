@@ -341,6 +341,334 @@ def test_asset_creation_empty_threats():
         print(f"❌ Error creating asset: {e}")
         return False, None
 
+# ==================== NEW ENDPOINT TESTS ====================
+
+def test_settings_asset_categories():
+    """Test 7: Settings - asset_categories endpoints"""
+    print("\n=== Test 7: Settings Asset Categories ===")
+    
+    try:
+        # Test GET /api/settings - check asset_categories field
+        print("Testing GET /api/settings...")
+        response = requests.get(f"{API_URL}/settings", headers=get_headers())
+        print(f"GET settings response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to get settings: {response.text}")
+            return False
+        
+        settings = response.json()
+        if 'asset_categories' not in settings:
+            print("❌ asset_categories field not found in settings")
+            return False
+        
+        print(f"✅ asset_categories found: {settings['asset_categories']}")
+        
+        # Test PUT /api/settings - update asset_categories
+        print("Testing PUT /api/settings...")
+        new_categories = ["Новая категория", "Тестовая категория", "Сервер"]
+        update_data = {"asset_categories": new_categories}
+        
+        response = requests.put(f"{API_URL}/settings", json=update_data, headers=get_headers())
+        print(f"PUT settings response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to update settings: {response.text}")
+            return False
+        
+        updated_settings = response.json()
+        if updated_settings.get('asset_categories') == new_categories:
+            print(f"✅ asset_categories updated successfully: {updated_settings['asset_categories']}")
+            return True
+        else:
+            print(f"❌ asset_categories not updated correctly: {updated_settings.get('asset_categories')}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Error testing settings asset categories: {e}")
+        return False
+
+def test_user_management():
+    """Test 8: User Management endpoints"""
+    print("\n=== Test 8: User Management ===")
+    
+    try:
+        # Test GET /api/users
+        print("Testing GET /api/users...")
+        response = requests.get(f"{API_URL}/users", headers=get_headers())
+        print(f"GET users response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to get users: {response.text}")
+            return False
+        
+        users = response.json()
+        if not users:
+            print("❌ No users found")
+            return False
+        
+        # Find first non-admin user
+        target_user = None
+        for user in users:
+            if user.get('role') != 'Администратор':
+                target_user = user
+                break
+        
+        if not target_user:
+            print("❌ No non-admin user found for testing")
+            return False
+        
+        user_id = target_user['id']
+        print(f"✅ Found test user: {target_user['username']} (ID: {user_id})")
+        
+        # Test PUT /api/users/{user_id} - update user
+        print("Testing PUT /api/users/{user_id}...")
+        update_data = {
+            "full_name": "Updated Test Name",
+            "role": "Инженер ИБ"
+        }
+        
+        response = requests.put(f"{API_URL}/users/{user_id}", json=update_data, headers=get_headers())
+        print(f"PUT user response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to update user: {response.text}")
+            return False
+        
+        updated_user = response.json()
+        if (updated_user.get('full_name') == "Updated Test Name" and 
+            updated_user.get('role') == "Инженер ИБ"):
+            print(f"✅ User updated successfully: {updated_user['full_name']}, {updated_user['role']}")
+        else:
+            print(f"❌ User not updated correctly")
+            return False
+        
+        # Test POST /api/users/{user_id}/change-password - admin changing user password
+        print("Testing POST /api/users/{user_id}/change-password...")
+        password_data = {"new_password": "newpass123"}
+        
+        response = requests.post(f"{API_URL}/users/{user_id}/change-password", 
+                               json=password_data, headers=get_headers())
+        print(f"Change password response status: {response.status_code}")
+        
+        if response.status_code == 200:
+            result = response.json()
+            print(f"✅ Password changed successfully: {result.get('message')}")
+            return True
+        else:
+            print(f"❌ Failed to change password: {response.text}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Error testing user management: {e}")
+        return False
+
+def test_wiki_pages():
+    """Test 9: Wiki Pages endpoints"""
+    print("\n=== Test 9: Wiki Pages ===")
+    
+    created_page_id = None
+    
+    try:
+        # Test POST /api/wiki - create page
+        print("Testing POST /api/wiki...")
+        page_data = {
+            "title": "Test Wiki Page",
+            "content": "<p>Test content for wiki page</p>",
+            "parent_id": None,
+            "order": 0
+        }
+        
+        response = requests.post(f"{API_URL}/wiki", json=page_data, headers=get_headers())
+        print(f"Create wiki page response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to create wiki page: {response.text}")
+            return False
+        
+        created_page = response.json()
+        created_page_id = created_page.get('id')
+        print(f"✅ Wiki page created with ID: {created_page_id}")
+        
+        # Test GET /api/wiki - get all pages
+        print("Testing GET /api/wiki...")
+        response = requests.get(f"{API_URL}/wiki", headers=get_headers())
+        print(f"GET wiki pages response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to get wiki pages: {response.text}")
+            return False
+        
+        pages = response.json()
+        print(f"✅ Retrieved {len(pages)} wiki pages")
+        
+        # Test GET /api/wiki/{page_id} - get specific page
+        print("Testing GET /api/wiki/{page_id}...")
+        response = requests.get(f"{API_URL}/wiki/{created_page_id}", headers=get_headers())
+        print(f"GET specific wiki page response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to get specific wiki page: {response.text}")
+            return False
+        
+        page = response.json()
+        print(f"✅ Retrieved specific wiki page: {page.get('title')}")
+        
+        # Test PUT /api/wiki/{page_id} - update page
+        print("Testing PUT /api/wiki/{page_id}...")
+        update_data = {
+            "title": "Updated Wiki Title",
+            "content": "<p>Updated wiki content</p>"
+        }
+        
+        response = requests.put(f"{API_URL}/wiki/{created_page_id}", 
+                              json=update_data, headers=get_headers())
+        print(f"Update wiki page response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to update wiki page: {response.text}")
+            return False
+        
+        updated_page = response.json()
+        if (updated_page.get('title') == "Updated Wiki Title" and 
+            "<p>Updated wiki content</p>" in updated_page.get('content', '')):
+            print(f"✅ Wiki page updated successfully")
+        else:
+            print(f"❌ Wiki page not updated correctly")
+            return False
+        
+        # Test DELETE /api/wiki/{page_id} - delete page
+        print("Testing DELETE /api/wiki/{page_id}...")
+        response = requests.delete(f"{API_URL}/wiki/{created_page_id}", headers=get_headers())
+        print(f"Delete wiki page response status: {response.status_code}")
+        
+        if response.status_code == 200:
+            print(f"✅ Wiki page deleted successfully")
+            return True
+        else:
+            print(f"❌ Failed to delete wiki page: {response.text}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Error testing wiki pages: {e}")
+        return False
+
+def test_registries():
+    """Test 10: Registries endpoints"""
+    print("\n=== Test 10: Registries ===")
+    
+    created_registry_id = None
+    created_record_id = None
+    
+    try:
+        # Test POST /api/registries - create registry
+        print("Testing POST /api/registries...")
+        registry_data = {
+            "name": "Test Registry",
+            "description": "Test description for registry",
+            "columns": [
+                {"id": "col1", "name": "Name", "column_type": "text", "order": 0},
+                {"id": "col2", "name": "Count", "column_type": "number", "order": 1},
+                {"id": "col3", "name": "ID", "column_type": "id", "order": 2}
+            ]
+        }
+        
+        response = requests.post(f"{API_URL}/registries", json=registry_data, headers=get_headers())
+        print(f"Create registry response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to create registry: {response.text}")
+            return False
+        
+        created_registry = response.json()
+        created_registry_id = created_registry.get('id')
+        print(f"✅ Registry created with ID: {created_registry_id}")
+        
+        # Test GET /api/registries - get all registries
+        print("Testing GET /api/registries...")
+        response = requests.get(f"{API_URL}/registries", headers=get_headers())
+        print(f"GET registries response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to get registries: {response.text}")
+            return False
+        
+        registries = response.json()
+        print(f"✅ Retrieved {len(registries)} registries")
+        
+        # Test POST /api/registries/{registry_id}/records - create record
+        print("Testing POST /api/registries/{registry_id}/records...")
+        record_data = {
+            "data": {
+                "col1": "Test Record Name",
+                "col2": "42"
+                # col3 should be auto-generated as ID type
+            }
+        }
+        
+        response = requests.post(f"{API_URL}/registries/{created_registry_id}/records", 
+                               json=record_data, headers=get_headers())
+        print(f"Create registry record response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to create registry record: {response.text}")
+            return False
+        
+        created_record = response.json()
+        created_record_id = created_record.get('id')
+        print(f"✅ Registry record created with ID: {created_record_id}")
+        
+        # Check if col3 was auto-generated
+        record_data_response = created_record.get('data', {})
+        if 'col3' in record_data_response and record_data_response['col3']:
+            print(f"✅ Auto-generated ID field (col3): {record_data_response['col3']}")
+        else:
+            print(f"❌ Auto-generated ID field (col3) not created")
+            return False
+        
+        # Test GET /api/registries/{registry_id}/records - get records
+        print("Testing GET /api/registries/{registry_id}/records...")
+        response = requests.get(f"{API_URL}/registries/{created_registry_id}/records", 
+                              headers=get_headers())
+        print(f"GET registry records response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            print(f"❌ Failed to get registry records: {response.text}")
+            return False
+        
+        records = response.json()
+        print(f"✅ Retrieved {len(records)} registry records")
+        
+        # Test GET /api/registries/{registry_id}/export - export CSV
+        print("Testing GET /api/registries/{registry_id}/export...")
+        response = requests.get(f"{API_URL}/registries/{created_registry_id}/export", 
+                              headers=get_headers())
+        print(f"Export registry response status: {response.status_code}")
+        
+        if response.status_code == 200:
+            # Check if response is CSV format
+            content_type = response.headers.get('content-type', '')
+            if 'csv' in content_type.lower() or 'text' in content_type.lower():
+                print(f"✅ Registry exported successfully as CSV")
+                print(f"   Content-Type: {content_type}")
+                # Show first few lines of CSV
+                csv_content = response.text
+                lines = csv_content.split('\n')[:3]  # First 3 lines
+                for i, line in enumerate(lines):
+                    if line.strip():
+                        print(f"   Line {i+1}: {line}")
+                return True
+            else:
+                print(f"❌ Export not in CSV format. Content-Type: {content_type}")
+                return False
+        else:
+            print(f"❌ Failed to export registry: {response.text}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ Error testing registries: {e}")
+        return False
+
 def main():
     """Main test runner"""
     print("🚀 Starting SecuRisk Backend API Tests")
