@@ -717,6 +717,56 @@ async def delete_user(user_id: str, current_user: User = Depends(get_current_use
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted"}
 
+@api_router.put("/users/{user_id}", response_model=UserWithPermissions)
+async def update_user(user_id: str, user_data: UserUpdate, current_user: User = Depends(get_current_user)):
+    if current_user.role != "Администратор":
+        raise HTTPException(status_code=403, detail="Only admins can update users")
+    
+    update_dict = {k: v for k, v in user_data.model_dump().items() if v is not None}
+    if not update_dict:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    # Convert permissions to dict if present
+    if 'permissions' in update_dict:
+        update_dict['permissions'] = update_dict['permissions'].model_dump()
+    
+    result = await db.users.update_one({"id": user_id}, {"$set": update_dict})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+    if isinstance(user.get('created_at'), str):
+        user['created_at'] = datetime.fromisoformat(user['created_at'])
+    
+    # Convert permissions dict back to model if present
+    if user.get('permissions') and isinstance(user['permissions'], dict):
+        user['permissions'] = UserPermissions(**user['permissions'])
+    
+    return UserWithPermissions(**user)
+
+@api_router.post("/users/{user_id}/change-password")
+async def change_user_password(user_id: str, password_data: PasswordChange, current_user: User = Depends(get_current_user)):
+    # Admin can change any user's password, users can change their own
+    if current_user.role != "Администратор" and current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # If user changing their own password, verify old password
+    if current_user.id == user_id and current_user.role != "Администратор":
+        if not password_data.old_password:
+            raise HTTPException(status_code=400, detail="Old password required")
+        if not verify_password(password_data.old_password, user['password']):
+            raise HTTPException(status_code=400, detail="Invalid old password")
+    
+    # Update password
+    new_hash = hash_password(password_data.new_password)
+    await db.users.update_one({"id": user_id}, {"$set": {"password": new_hash}})
+    
+    return {"message": "Password changed successfully"}
+
 # ==================== SETTINGS ENDPOINTS ====================
 
 @api_router.get("/settings", response_model=Settings)
