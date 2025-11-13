@@ -801,7 +801,12 @@ async def create_role(role_data: RoleCreate, current_user: User = Depends(get_cu
     doc = role.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     doc['updated_at'] = doc['updated_at'].isoformat()
-    doc['permissions'] = doc['permissions'].model_dump() if hasattr(doc['permissions'], 'model_dump') else doc['permissions']
+    
+    # Convert permissions to dict
+    if hasattr(doc['permissions'], 'model_dump'):
+        doc['permissions'] = doc['permissions'].model_dump()
+    elif not isinstance(doc['permissions'], dict):
+        doc['permissions'] = dict(doc['permissions'])
     
     await db.roles.insert_one(doc)
     return role
