@@ -290,6 +290,45 @@ const RegistryView = ({ user }) => {
           </select>
         );
       
+      case 'multiselect':
+        const selectedValues = Array.isArray(value) ? value : (value ? [value] : []);
+        return (
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-2 mb-2">
+              {selectedValues.map((val) => (
+                <Badge key={val} className="bg-cyan-100 text-cyan-800 border-cyan-300">
+                  {val}
+                  <button
+                    onClick={() => {
+                      const newValues = selectedValues.filter(v => v !== val);
+                      setFormData({ ...formData, [column.id]: newValues });
+                    }}
+                    className="ml-1 hover:text-cyan-900"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value && !selectedValues.includes(e.target.value)) {
+                  setFormData({ ...formData, [column.id]: [...selectedValues, e.target.value] });
+                }
+              }}
+              className="w-full p-2 border border-slate-300 rounded-md"
+            >
+              <option value="">Добавить значение...</option>
+              {column.options?.map((opt) => (
+                <option key={opt} value={opt} disabled={selectedValues.includes(opt)}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
+        );
+      
       default:
         return <Input value={value} onChange={(e) => setFormData({ ...formData, [column.id]: e.target.value })} />;
     }
