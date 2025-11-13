@@ -317,6 +317,7 @@ const Registries = ({ user }) => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {registries.length === 0 ? (
