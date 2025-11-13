@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 
 const Users = ({ user }) => {
   const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -25,7 +26,7 @@ const Users = ({ user }) => {
     password: '',
     full_name: '',
     email: '',
-    role: 'Инженер ИБ',
+    role: '',
   });
 
   const [editFormData, setEditFormData] = useState({
@@ -41,7 +42,20 @@ const Users = ({ user }) => {
 
   useEffect(() => {
     fetchUsers();
+    fetchRoles();
   }, []);
+
+  const fetchRoles = async () => {
+    try {
+      const response = await axios.get(`${API}/roles`);
+      setRoles(response.data);
+      if (response.data.length > 0 && !formData.role) {
+        setFormData(prev => ({ ...prev, role: response.data[0].id }));
+      }
+    } catch (error) {
+      console.error('Error loading roles:', error);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
