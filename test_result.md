@@ -513,16 +513,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Add asset_categories to Settings model"
-    - "User management endpoints"
-    - "Wiki pages endpoints"
-    - "Registry endpoints with export"
-    - "Add asset categories to Settings"
-    - "Update Assets with category select"
-    - "Collapsible sidebar menu"
-    - "User management UI"
-    - "Wiki with tree structure and editor"
-    - "Registries with dynamic fields"
+    - "Test incident creation without closed_at field"
+    - "Test role permissions update"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
