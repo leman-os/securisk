@@ -356,6 +356,113 @@ const Users = ({ user }) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit User Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Редактировать пользователя</DialogTitle>
+            <DialogDescription>
+              Изменение информации о пользователе {editingUser?.username}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEdit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Полное имя</Label>
+              <Input
+                value={editFormData.full_name}
+                onChange={(e) => setEditFormData({ ...editFormData, full_name: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={editFormData.email}
+                onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Роль</Label>
+              <Select
+                value={editFormData.role}
+                onValueChange={(value) => setEditFormData({ ...editFormData, role: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите роль" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Администратор">Администратор</SelectItem>
+                  <SelectItem value="Инженер ИБ">Инженер ИБ</SelectItem>
+                  <SelectItem value="Специалист ИБ">Специалист ИБ</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1">
+                Сохранить
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditDialogOpen(false)}
+                className="flex-1"
+              >
+                Отмена
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Изменить пароль</DialogTitle>
+            <DialogDescription>
+              Смена пароля для пользователя {editingUser?.username}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handlePasswordChange} className="space-y-4">
+            {editingUser?.id === user.id && user.role !== 'Администратор' && (
+              <div className="space-y-2">
+                <Label>Старый пароль</Label>
+                <Input
+                  type="password"
+                  value={passwordData.old_password}
+                  onChange={(e) => setPasswordData({ ...passwordData, old_password: e.target.value })}
+                  required
+                />
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>Новый пароль</Label>
+              <Input
+                type="password"
+                value={passwordData.new_password}
+                onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
+                required
+                minLength={6}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1">
+                Изменить пароль
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setPasswordDialogOpen(false)}
+                className="flex-1"
+              >
+                Отмена
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
