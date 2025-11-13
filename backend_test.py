@@ -682,6 +682,7 @@ def main():
     # Run all tests
     test_results = []
     
+    # EXISTING TESTS
     # Test 1: Incident closed_at field
     closed_at_result, incident_id = test_incident_closed_at_field()
     test_results.append(("Incident closed_at field", closed_at_result))
@@ -705,6 +706,27 @@ def main():
     # Test 6: Asset creation with empty threats
     asset_creation_result, asset_id = test_asset_creation_empty_threats()
     test_results.append(("Asset creation with empty threats", asset_creation_result))
+    
+    # NEW ENDPOINT TESTS
+    print("\n" + "=" * 50)
+    print("🆕 TESTING NEW ENDPOINTS")
+    print("=" * 50)
+    
+    # Test 7: Settings asset categories
+    settings_result = test_settings_asset_categories()
+    test_results.append(("Settings asset categories", settings_result))
+    
+    # Test 8: User management
+    user_mgmt_result = test_user_management()
+    test_results.append(("User management", user_mgmt_result))
+    
+    # Test 9: Wiki pages
+    wiki_result = test_wiki_pages()
+    test_results.append(("Wiki pages", wiki_result))
+    
+    # Test 10: Registries
+    registries_result = test_registries()
+    test_results.append(("Registries", registries_result))
     
     # Summary
     print("\n" + "=" * 50)
