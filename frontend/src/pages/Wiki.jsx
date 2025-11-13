@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { BookOpen, Plus, Edit, Trash2, ChevronRight, ChevronDown, FileText } from 'lucide-react';
+import { BookOpen, Plus, Edit, Trash2, ChevronRight, ChevronDown, FileText, FolderPlus, Search, Folder } from 'lucide-react';
 import { toast } from 'sonner';
-import { Textarea } from '@/components/ui/textarea';
+import RichTextEditor from '@/components/RichTextEditor';
 
 const Wiki = ({ user }) => {
   const [pages, setPages] = useState([]);
