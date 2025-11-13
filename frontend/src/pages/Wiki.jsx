@@ -24,7 +24,8 @@ const Wiki = ({ user }) => {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    parent_id: null
+    parent_id: null,
+    is_folder: false
   });
 
   useEffect(() => {
