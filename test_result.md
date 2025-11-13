@@ -525,9 +525,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Test incident creation without closed_at field"
-    - "Test role permissions update"
-  stuck_tasks: []
+    - "Test role-based access control system"
+  stuck_tasks:
+    - "Test role-based access control system"
   test_all: false
   test_priority: "high_first"
 
