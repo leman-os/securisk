@@ -317,6 +317,19 @@ const Wiki = ({ user }) => {
                       />
                     </div>
                     <div>
+                      <Label>Родительский раздел</Label>
+                      <select
+                        value={formData.parent_id || ''}
+                        onChange={(e) => setFormData({ ...formData, parent_id: e.target.value || null })}
+                        className="w-full p-2 border border-slate-300 rounded-md"
+                      >
+                        <option value="">Корневой уровень</option>
+                        {pages.filter(p => p.is_folder && p.id !== selectedPage?.id).map((folder) => (
+                          <option key={folder.id} value={folder.id}>{folder.title}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
                       <Label>Содержание</Label>
                       <RichTextEditor
                         content={formData.content}
