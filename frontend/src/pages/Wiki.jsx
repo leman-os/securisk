@@ -337,16 +337,10 @@ const Wiki = ({ user }) => {
                     </div>
                     <div>
                       <Label>Содержание</Label>
-                      <Textarea
-                        value={formData.content}
-                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                        placeholder="Введите содержание страницы..."
-                        rows={15}
-                        className="font-mono text-sm"
+                      <RichTextEditor
+                        content={formData.content}
+                        onChange={(content) => setFormData({ ...formData, content })}
                       />
-                      <p className="text-xs text-slate-500 mt-1">
-                        Вы можете использовать HTML теги для форматирования
-                      </p>
                     </div>
                   </div>
                 ) : (
