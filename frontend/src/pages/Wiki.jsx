@@ -237,6 +237,46 @@ const Wiki = ({ user }) => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Create Folder Dialog */}
+        <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Новый раздел</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Название раздела</Label>
+                <Input
+                  placeholder="Введите название раздела"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      const title = e.target.value;
+                      if (title.trim()) {
+                        createPage({ title, content: '', is_folder: true });
+                        e.target.value = '';
+                        setIsCreateFolderOpen(false);
+                      }
+                    }
+                  }}
+                />
+              </div>
+              <Button
+                onClick={(e) => {
+                  const input = e.target.closest('.space-y-4').querySelector('input');
+                  const title = input.value;
+                  if (title.trim()) {
+                    createPage({ title, content: '', is_folder: true });
+                    setIsCreateFolderOpen(false);
+                  }
+                }}
+                className="w-full"
+              >
+                Создать раздел
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid grid-cols-12 gap-6">
