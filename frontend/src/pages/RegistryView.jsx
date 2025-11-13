@@ -385,6 +385,10 @@ const RegistryView = ({ user }) => {
           </div>
         </div>
         <div className="flex gap-2">
+          <Button onClick={openEditStructure} variant="outline">
+            <Settings className="w-4 h-4 mr-2" />
+            Структура
+          </Button>
           <Button onClick={exportRegistry} variant="outline">
             <Download className="w-4 h-4 mr-2" />
             Экспорт
