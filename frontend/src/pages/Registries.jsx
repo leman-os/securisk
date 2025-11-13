@@ -274,7 +274,7 @@ const Registries = ({ user }) => {
                     </select>
                   </div>
                   
-                  {newColumn.column_type === 'select' && (
+                  {(newColumn.column_type === 'select' || newColumn.column_type === 'multiselect') && (
                     <div>
                       <Label className="text-sm">Варианты выбора</Label>
                       <div className="flex gap-2 mb-2">
