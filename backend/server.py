@@ -713,6 +713,15 @@ async def get_users(current_user: User = Depends(get_current_user)):
     for user in users:
         if isinstance(user.get('created_at'), str):
             user['created_at'] = datetime.fromisoformat(user['created_at'])
+        
+        # Get role name if role is an ID
+        if user.get('role') and not user.get('role_name'):
+            role = await db.roles.find_one({"id": user['role']})
+            if role:
+                user['role_name'] = role['name']
+            else:
+                # Legacy role names
+                user['role_name'] = user['role']
     return users
 
 @api_router.delete("/users/{user_id}")
