@@ -505,6 +505,18 @@ frontend:
         agent: "testing"
         comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Обновление роли работает корректно. Найдена роль 'Инженер ИБ', открыт диалог редактирования, изменено право доступа 'Реестры' (с True на False), сохранены изменения. Получено сообщение 'Роль обновлена' без ошибки 'Ошибка при обновлении роли'. Функционал редактирования ролей работает правильно."
 
+  - task: "Test role-based access control system"
+    implemented: true
+    working: false
+    file: "frontend/src/components/Layout.jsx, frontend/src/pages/Users.jsx, frontend/src/pages/Roles.jsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ КРИТИЧЕСКАЯ ПРОБЛЕМА: Система прав доступа работает частично. ✅ Администратор видит все 11 разделов меню. ✅ Роль 'Ограниченный доступ' создается успешно с ограниченными правами (только Dashboard, Incidents, Risks). ❌ ОСНОВНАЯ ПРОБЛЕМА: Не удается создать функционального пользователя с ограниченной ролью. Пользователь 'limiteduser' создается в интерфейсе, но авторизация не проходит (Invalid credentials). Возможные причины: 1) Пользователь не сохраняется в БД 2) Проблема с хешированием паролей 3) Ошибка связи роли с пользователем. ТРЕБУЕТСЯ: Исследование backend логики создания пользователей, проверка API endpoints /auth/register и /auth/login, проверка сохранения в MongoDB."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
