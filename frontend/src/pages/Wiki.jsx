@@ -281,13 +281,16 @@ const Wiki = ({ user }) => {
                     </div>
                     <div>
                       <Label>Содержание</Label>
-                      <ReactQuill
-                        theme="snow"
+                      <Textarea
                         value={formData.content}
-                        onChange={(content) => setFormData({ ...formData, content })}
-                        modules={modules}
-                        className="bg-white"
+                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                        placeholder="Введите содержание страницы..."
+                        rows={15}
+                        className="font-mono text-sm"
                       />
+                      <p className="text-xs text-slate-500 mt-1">
+                        Вы можете использовать HTML теги для форматирования
+                      </p>
                     </div>
                   </div>
                 ) : (
