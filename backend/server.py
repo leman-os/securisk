@@ -2008,7 +2008,8 @@ async def create_admin():
         doc = specialist_role_obj.model_dump()
         doc['created_at'] = doc['created_at'].isoformat()
         doc['updated_at'] = doc['updated_at'].isoformat()
-        doc['permissions'] = doc['permissions'].model_dump()
+        if hasattr(doc['permissions'], 'model_dump'):
+            doc['permissions'] = doc['permissions'].model_dump()
         await db.roles.insert_one(doc)
         logger.info("Specialist role created")
     
