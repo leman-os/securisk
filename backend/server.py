@@ -775,6 +775,105 @@ async def change_user_password(user_id: str, password_data: PasswordChange, curr
     
     return {"message": "Password changed successfully"}
 
+# ==================== ROLE MANAGEMENT ENDPOINTS ====================
+
+@api_router.post("/roles", response_model=Role)
+async def create_role(role_data: RoleCreate, current_user: User = Depends(get_current_user)):
+    if current_user.role != "Администратор":
+        raise HTTPException(status_code=403, detail="Only admins can create roles")
+    
+    # Check if role name already exists
+    existing = await db.roles.find_one({"name": role_data.name})
+    if existing:
+        raise HTTPException(status_code=400, detail="Role with this name already exists")
+    
+    role = Role(**role_data.model_dump())
+    doc = role.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    doc['updated_at'] = doc['updated_at'].isoformat()
+    doc['permissions'] = doc['permissions'].model_dump() if hasattr(doc['permissions'], 'model_dump') else doc['permissions']
+    
+    await db.roles.insert_one(doc)
+    return role
+
+@api_router.get("/roles", response_model=List[Role])
+async def get_roles(current_user: User = Depends(get_current_user)):
+    if current_user.role != "Администратор":
+        raise HTTPException(status_code=403, detail="Only admins can view roles")
+    
+    roles = await db.roles.find({}, {"_id": 0}).to_list(1000)
+    for role in roles:
+        if isinstance(role.get('created_at'), str):
+            role['created_at'] = datetime.fromisoformat(role['created_at'])
+        if isinstance(role.get('updated_at'), str):
+            role['updated_at'] = datetime.fromisoformat(role['updated_at'])
+        if role.get('permissions') and isinstance(role['permissions'], dict):
+            role['permissions'] = RolePermissions(**role['permissions'])
+    return roles
+
+@api_router.get("/roles/{role_id}", response_model=Role)
+async def get_role(role_id: str, current_user: User = Depends(get_current_user)):
+    if current_user.role != "Администратор":
+        raise HTTPException(status_code=403, detail="Only admins can view roles")
+    
+    role = await db.roles.find_one({"id": role_id}, {"_id": 0})
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+    
+    if isinstance(role.get('created_at'), str):
+        role['created_at'] = datetime.fromisoformat(role['created_at'])
+    if isinstance(role.get('updated_at'), str):
+        role['updated_at'] = datetime.fromisoformat(role['updated_at'])
+    if role.get('permissions') and isinstance(role['permissions'], dict):
+        role['permissions'] = RolePermissions(**role['permissions'])
+    
+    return Role(**role)
+
+@api_router.put("/roles/{role_id}", response_model=Role)
+async def update_role(role_id: str, role_data: RoleUpdate, current_user: User = Depends(get_current_user)):
+    if current_user.role != "Администратор":
+        raise HTTPException(status_code=403, detail="Only admins can update roles")
+    
+    update_dict = {k: v for k, v in role_data.model_dump().items() if v is not None}
+    if not update_dict:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    # Convert permissions to dict if present
+    if 'permissions' in update_dict:
+        update_dict['permissions'] = update_dict['permissions'].model_dump()
+    
+    update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.roles.update_one({"id": role_id}, {"$set": update_dict})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Role not found")
+    
+    role = await db.roles.find_one({"id": role_id}, {"_id": 0})
+    if isinstance(role.get('created_at'), str):
+        role['created_at'] = datetime.fromisoformat(role['created_at'])
+    if isinstance(role.get('updated_at'), str):
+        role['updated_at'] = datetime.fromisoformat(role['updated_at'])
+    if role.get('permissions') and isinstance(role['permissions'], dict):
+        role['permissions'] = RolePermissions(**role['permissions'])
+    
+    return Role(**role)
+
+@api_router.delete("/roles/{role_id}")
+async def delete_role(role_id: str, current_user: User = Depends(get_current_user)):
+    if current_user.role != "Администратор":
+        raise HTTPException(status_code=403, detail="Only admins can delete roles")
+    
+    # Check if any users have this role
+    users_with_role = await db.users.count_documents({"role": role_id})
+    if users_with_role > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete role: {users_with_role} users have this role")
+    
+    result = await db.roles.delete_one({"id": role_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Role not found")
+    
+    return {"message": "Role deleted"}
+
 # ==================== SETTINGS ENDPOINTS ====================
 
 @api_router.get("/settings", response_model=Settings)
