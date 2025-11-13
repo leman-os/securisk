@@ -14,19 +14,25 @@ const Layout = ({ user, setUser, children }) => {
     navigate('/login');
   };
 
-  const menuItems = [
-    { path: '/', icon: LayoutDashboard, label: 'Дашборд' },
-    { path: '/risks', icon: AlertTriangle, label: 'Реестр рисков' },
-    { path: '/threats', icon: Crosshair, label: 'Угрозы' },
-    { path: '/vulnerabilities', icon: Bug, label: 'Уязвимости' },
-    { path: '/incidents', icon: AlertCircle, label: 'Инциденты' },
-    { path: '/assets', icon: Server, label: 'Активы' },
-    { path: '/wiki', icon: BookOpen, label: 'База знаний' },
-    { path: '/registries', icon: Table, label: 'Реестры' },
-    { path: '/users', icon: Users, label: 'Пользователи' },
-    { path: '/roles', icon: Shield, label: 'Роли' },
-    { path: '/settings', icon: Settings, label: 'Настройки' },
+  const allMenuItems = [
+    { path: '/', icon: LayoutDashboard, label: 'Дашборд', permission: 'dashboard' },
+    { path: '/risks', icon: AlertTriangle, label: 'Реестр рисков', permission: 'risks' },
+    { path: '/threats', icon: Crosshair, label: 'Угрозы', permission: 'threats' },
+    { path: '/vulnerabilities', icon: Bug, label: 'Уязвимости', permission: 'vulnerabilities' },
+    { path: '/incidents', icon: AlertCircle, label: 'Инциденты', permission: 'incidents' },
+    { path: '/assets', icon: Server, label: 'Активы', permission: 'assets' },
+    { path: '/wiki', icon: BookOpen, label: 'База знаний', permission: 'wiki' },
+    { path: '/registries', icon: Table, label: 'Реестры', permission: 'registries' },
+    { path: '/users', icon: Users, label: 'Пользователи', permission: 'users' },
+    { path: '/roles', icon: Shield, label: 'Роли', permission: 'users' },
+    { path: '/settings', icon: Settings, label: 'Настройки', permission: 'settings' },
   ];
+
+  // Filter menu items based on user permissions
+  const menuItems = allMenuItems.filter(item => {
+    if (!user?.permissions) return true; // Show all if no permissions (legacy admin)
+    return user.permissions[item.permission] === true;
+  });
 
   return (
     <div className="flex h-screen bg-slate-50">
