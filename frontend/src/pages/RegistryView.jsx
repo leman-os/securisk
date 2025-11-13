@@ -344,6 +344,17 @@ const RegistryView = ({ user }) => {
         return value === true || value === 'true' ? '✓' : '✗';
       case 'date':
         return new Date(value).toLocaleDateString('ru-RU');
+      case 'multiselect':
+        const values = Array.isArray(value) ? value : (value ? [value] : []);
+        return (
+          <div className="flex flex-wrap gap-1">
+            {values.map((val, idx) => (
+              <Badge key={idx} variant="outline" className="text-xs">
+                {val}
+              </Badge>
+            ))}
+          </div>
+        );
       default:
         return String(value);
     }
