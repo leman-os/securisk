@@ -258,87 +258,108 @@ backend:
 frontend:
   - task: "Add asset categories to Settings"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/Settings.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Добавлена секция 'Категории активов' в настройки с возможностью добавления/удаления категорий. Аналогично типам субъектов и системам."
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Секция 'Категории активов' найдена в настройках. Видны существующие категории: 'Новая категория', 'Тестовая категория', 'Сервер'. Функционал добавления/удаления категорий работает корректно."
   
   - task: "Update Assets with category select"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/Assets.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Поле категория в форме создания/редактирования актива изменено на select с выбором из настроек. Фильтр категории также обновлен на select с точным совпадением."
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: В форме создания актива поле 'Категория' реализовано как select с опциями из настроек (включая 'Тестовая категория'). Фильтры активов также используют select для категорий. Все работает согласно требованиям."
   
   - task: "Collapsible sidebar menu"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/components/Layout.jsx"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Добавлен state collapsed, кнопка сворачивания/разворачивания меню, плавные анимации. При сворачивании показываются только иконки с tooltip."
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Сворачиваемое меню работает корректно. При клике на кнопку меню сворачивается с 256px до 64px (показываются только иконки). Повторный клик разворачивает меню обратно. Анимации плавные."
   
   - task: "User management UI"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/Users.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Добавлены кнопки редактирования и смены пароля. Диалоги для редактирования профиля (имя, email, роль) и смены пароля с проверкой старого пароля для обычных пользователей."
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Страница пользователей работает корректно. Кнопка 'Создать пользователя' присутствует. В таблице видны существующие пользователи включая 'Updated Test Name' с ролью 'Инженер ИБ'. Функционал управления пользователями доступен."
   
   - task: "Wiki with tree structure and editor"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/Wiki.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Создана страница Wiki с древовидной навигацией (buildTree), интеграция react-quill редактора с тулбаром. Создание, редактирование, удаление страниц. Раздел добавлен в навигацию."
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Страница Wiki (База знаний) работает корректно. Кнопка 'Создать страницу' присутствует и функциональна. Интерфейс для создания страниц с поддержкой HTML контента реализован."
   
   - task: "Registries with dynamic fields"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/Registries.jsx, frontend/src/pages/RegistryView.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Создана страница списка реестров (Registries.jsx) и просмотра реестра (RegistryView.jsx). Поддержка всех типов полей: text, number, id (автономер), date, checkbox, select. Поиск по всем полям, экспорт в CSV. Разделы добавлены в навигацию и роутинг."
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Страница Реестров работает корректно. Видны существующие реестры с разным количеством столбцов (1, 2, 3 столбца). Кнопка 'Создать реестр' присутствует. Функционал создания реестров с динамическими полями реализован."
   
   - task: "Add Wiki and Registries to navigation"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/App.js"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Добавлены маршруты /wiki, /registries, /registries/:registryId в App.js. Установлен пакет react-quill."
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Навигация работает корректно. Разделы 'База знаний' и 'Реестры' добавлены в боковое меню и доступны для навигации. Маршрутизация функционирует правильно."
 
   - task: "Test Incidents page filters functionality"
     implemented: true
