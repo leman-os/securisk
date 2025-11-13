@@ -41,6 +41,7 @@ class User(BaseModel):
     email: Optional[EmailStr] = None
     role: str  # Role ID or legacy role name
     role_name: Optional[str] = None  # For display purposes
+    permissions: Optional[dict] = None  # Role permissions
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class UserCreate(BaseModel):
