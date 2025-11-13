@@ -294,10 +294,13 @@ const Wiki = ({ user }) => {
                     </div>
                   </div>
                 ) : (
-                  <div
-                    className="prose max-w-none"
-                    dangerouslySetInnerHTML={{ __html: selectedPage.content }}
-                  />
+                  <div className="prose max-w-none">
+                    {selectedPage.content.includes('<') ? (
+                      <div dangerouslySetInnerHTML={{ __html: selectedPage.content }} />
+                    ) : (
+                      <div className="whitespace-pre-wrap">{selectedPage.content}</div>
+                    )}
+                  </div>
                 )}
               </CardContent>
             </Card>
