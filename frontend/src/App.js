@@ -181,6 +181,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/roles"
+            element={
+              <ProtectedRoute>
+                <Layout user={user} setUser={setUser}>
+                  <Roles user={user} />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </div>
