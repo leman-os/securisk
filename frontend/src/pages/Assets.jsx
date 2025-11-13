@@ -842,11 +842,16 @@ const Assets = ({ user }) => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label className="text-xs font-semibold">Категория</Label>
-                      <Input
-                        placeholder="Введите категорию..."
+                      <select
                         value={filterCategory}
                         onChange={(e) => setFilterCategory(e.target.value)}
-                      />
+                        className="w-full p-2 border border-slate-300 rounded-md text-sm"
+                      >
+                        <option value="">Все категории</option>
+                        {settings?.asset_categories?.map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="space-y-2">
