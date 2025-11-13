@@ -850,7 +850,10 @@ async def update_role(role_id: str, role_data: RoleUpdate, current_user: User = 
     
     # Convert permissions to dict if present
     if 'permissions' in update_dict:
-        update_dict['permissions'] = update_dict['permissions'].model_dump()
+        if hasattr(update_dict['permissions'], 'model_dump'):
+            update_dict['permissions'] = update_dict['permissions'].model_dump()
+        elif not isinstance(update_dict['permissions'], dict):
+            update_dict['permissions'] = dict(update_dict['permissions'])
     
     update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
     
