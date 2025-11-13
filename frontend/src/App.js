@@ -14,6 +14,7 @@ import Settings from './pages/Settings';
 import Wiki from './pages/Wiki';
 import Registries from './pages/Registries';
 import RegistryView from './pages/RegistryView';
+import Roles from './pages/Roles';
 import Layout from './components/Layout';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
