@@ -322,8 +322,8 @@ const Users = ({ user }) => {
                       <TableCell className="text-sm text-slate-700">{u.username}</TableCell>
                       <TableCell className="text-sm text-slate-600">{u.email || '-'}</TableCell>
                       <TableCell>
-                        <Badge className={getRoleColor(u.role)} variant="outline">
-                          {u.role}
+                        <Badge className={getRoleColor(u.role_name || u.role)} variant="outline">
+                          {u.role_name || u.role}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-slate-600">
