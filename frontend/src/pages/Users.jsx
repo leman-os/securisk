@@ -253,12 +253,12 @@ const Users = ({ user }) => {
                   <Label>Роль</Label>
                   <Select value={formData.role} onValueChange={(v) => setFormData({ ...formData, role: v })}>
                     <SelectTrigger data-testid="user-role-select">
-                      <SelectValue />
+                      <SelectValue placeholder="Выберите роль" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Администратор">Администратор</SelectItem>
-                      <SelectItem value="Инженер ИБ">Инженер ИБ</SelectItem>
-                      <SelectItem value="Специалист ИБ">Специалист ИБ</SelectItem>
+                      {roles.map((role) => (
+                        <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
