@@ -195,13 +195,18 @@ const Wiki = ({ user }) => {
           <h1 className="text-3xl font-bold text-slate-900 mb-2">База знаний</h1>
           <p className="text-slate-600">Документация и инструкции</p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600">
-              <Plus className="w-4 h-4 mr-2" />
-              Создать страницу
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button onClick={() => setIsCreateFolderOpen(true)} variant="outline">
+            <FolderPlus className="w-4 h-4 mr-2" />
+            Раздел
+          </Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600">
+                <Plus className="w-4 h-4 mr-2" />
+                Создать страницу
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Новая страница</DialogTitle>
