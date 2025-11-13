@@ -357,35 +357,42 @@ class MitreAttack(BaseModel):
     description: str
 
 # ==================== USER MANAGEMENT MODELS ====================
-class UserPermissions(BaseModel):
+class RolePermissions(BaseModel):
+    dashboard: bool = True
     incidents: bool = True
     assets: bool = True
     risks: bool = True
     threats: bool = True
     vulnerabilities: bool = True
+    users: bool = False
     wiki: bool = True
     registries: bool = True
     settings: bool = False
+
+class Role(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str  # Custom role name
+    permissions: RolePermissions
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class RoleCreate(BaseModel):
+    name: str
+    permissions: RolePermissions
+
+class RoleUpdate(BaseModel):
+    name: Optional[str] = None
+    permissions: Optional[RolePermissions] = None
 
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     email: Optional[EmailStr] = None
     role: Optional[str] = None
-    permissions: Optional[UserPermissions] = None
 
 class PasswordChange(BaseModel):
     old_password: Optional[str] = None  # Required for self-change
     new_password: str
-
-class UserWithPermissions(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str
-    username: str
-    full_name: str
-    email: Optional[EmailStr] = None
-    role: str
-    permissions: Optional[UserPermissions] = None
-    created_at: datetime
 
 # ==================== WIKI MODELS ====================
 class WikiPage(BaseModel):
