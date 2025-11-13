@@ -401,7 +401,8 @@ class WikiPage(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str
-    content: str  # HTML content from editor
+    content: str = ""  # HTML content from editor
+    is_folder: bool = False  # True if this is a folder/section
     parent_id: Optional[str] = None  # For tree structure
     order: int = 0  # Order within siblings
     created_by: str  # User ID
