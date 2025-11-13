@@ -150,6 +150,36 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/wiki"
+            element={
+              <ProtectedRoute>
+                <Layout user={user} setUser={setUser}>
+                  <Wiki user={user} />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/registries"
+            element={
+              <ProtectedRoute>
+                <Layout user={user} setUser={setUser}>
+                  <Registries user={user} />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/registries/:registryId"
+            element={
+              <ProtectedRoute>
+                <Layout user={user} setUser={setUser}>
+                  <RegistryView user={user} />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </div>
