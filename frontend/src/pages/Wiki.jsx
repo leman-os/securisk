@@ -8,8 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { BookOpen, Plus, Edit, Trash2, ChevronRight, ChevronDown, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import { Textarea } from '@/components/ui/textarea';
 
 const Wiki = ({ user }) => {
   const [pages, setPages] = useState([]);
