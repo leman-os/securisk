@@ -698,6 +698,28 @@ async def login(credentials: UserLogin):
     if isinstance(user_doc.get('created_at'), str):
         user_doc['created_at'] = datetime.fromisoformat(user_doc['created_at'])
     
+    # Get role permissions
+    role_id = user_doc.get('role')
+    permissions = None
+    
+    # Check if role is an ID (custom role) or legacy role name
+    role_doc = await db.roles.find_one({"id": role_id})
+    if role_doc:
+        permissions = role_doc.get('permissions')
+        user_doc['role_name'] = role_doc.get('name')
+    elif role_id == "Администратор":
+        # Legacy admin role - full permissions
+        permissions = {
+            "dashboard": True, "incidents": True, "assets": True, "risks": True,
+            "threats": True, "vulnerabilities": True, "users": True, "wiki": True,
+            "registries": True, "settings": True
+        }
+        user_doc['role_name'] = "Администратор"
+    
+    # Add permissions to user doc
+    if permissions:
+        user_doc['permissions'] = permissions
+    
     user = User(**user_doc)
     return Token(access_token=access_token, token_type="bearer", user=user)
 
