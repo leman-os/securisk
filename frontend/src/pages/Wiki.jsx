@@ -163,17 +163,6 @@ const Wiki = ({ user }) => {
 
   const tree = buildTree(pages);
 
-  const modules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'indent': '-1'}, { 'indent': '+1' }],
-      ['link', 'image'],
-      ['clean']
-    ],
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
