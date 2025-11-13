@@ -407,6 +407,74 @@ const Wiki = ({ user }) => {
           )}
         </div>
       </div>
+
+      {/* Dialogs */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Новая страница</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Название</Label>
+              <Input
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Введите название страницы"
+              />
+            </div>
+            <div>
+              <Label>Содержание</Label>
+              <RichTextEditor
+                content={formData.content}
+                onChange={(content) => setFormData({ ...formData, content })}
+              />
+            </div>
+            <Button onClick={createPage} className="w-full">
+              Создать
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Новый раздел</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Название раздела</Label>
+              <Input
+                placeholder="Введите название раздела"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    const title = e.target.value;
+                    if (title.trim()) {
+                      createPage({ title, content: '', is_folder: true });
+                      e.target.value = '';
+                      setIsCreateFolderOpen(false);
+                    }
+                  }
+                }}
+              />
+            </div>
+            <Button
+              onClick={(e) => {
+                const input = e.target.closest('.space-y-4').querySelector('input');
+                const title = input.value;
+                if (title.trim()) {
+                  createPage({ title, content: '', is_folder: true });
+                  setIsCreateFolderOpen(false);
+                }
+              }}
+              className="w-full"
+            >
+              Создать раздел
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
