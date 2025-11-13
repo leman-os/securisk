@@ -270,6 +270,7 @@ const Registries = ({ user }) => {
                       <option value="date">Дата</option>
                       <option value="checkbox">Чекбокс</option>
                       <option value="select">Выбор из списка</option>
+                      <option value="multiselect">Выбор нескольких из списка</option>
                     </select>
                   </div>
                   
