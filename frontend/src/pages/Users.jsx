@@ -9,13 +9,16 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, UserCircle } from 'lucide-react';
+import { Plus, Trash2, UserCircle, Edit, Key } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Users = ({ user }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
 
   const [formData, setFormData] = useState({
     username: '',
@@ -23,6 +26,17 @@ const Users = ({ user }) => {
     full_name: '',
     email: '',
     role: 'Инженер ИБ',
+  });
+
+  const [editFormData, setEditFormData] = useState({
+    full_name: '',
+    email: '',
+    role: '',
+  });
+
+  const [passwordData, setPasswordData] = useState({
+    old_password: '',
+    new_password: '',
   });
 
   useEffect(() => {
