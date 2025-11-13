@@ -133,6 +133,73 @@ const RegistryView = ({ user }) => {
     }
   };
 
+  // Structure editing functions
+  const openEditStructure = () => {
+    setStructureData({ columns: [...registry.columns] });
+    setIsEditStructureOpen(true);
+  };
+
+  const addColumnToStructure = () => {
+    if (!newColumn.name.trim()) {
+      toast.error('Введите название столбца');
+      return;
+    }
+    
+    const column = {
+      id: Date.now().toString(),
+      name: newColumn.name,
+      column_type: newColumn.column_type,
+      options: (newColumn.column_type === 'select' || newColumn.column_type === 'multiselect') ? newColumn.options : undefined,
+      order: structureData.columns.length
+    };
+    
+    setStructureData({
+      ...structureData,
+      columns: [...structureData.columns, column]
+    });
+    
+    setNewColumn({ name: '', column_type: 'text', options: [] });
+  };
+
+  const removeColumnFromStructure = (columnId) => {
+    setStructureData({
+      ...structureData,
+      columns: structureData.columns.filter(col => col.id !== columnId)
+    });
+  };
+
+  const addSelectOption = () => {
+    if (!selectOption.trim()) return;
+    setNewColumn({
+      ...newColumn,
+      options: [...newColumn.options, selectOption]
+    });
+    setSelectOption('');
+  };
+
+  const removeSelectOption = (option) => {
+    setNewColumn({
+      ...newColumn,
+      options: newColumn.options.filter(opt => opt !== option)
+    });
+  };
+
+  const saveStructure = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/registries/${registryId}`,
+        { columns: structureData.columns },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Структура обновлена');
+      setIsEditStructureOpen(false);
+      fetchRegistry();
+      fetchRecords();
+    } catch (error) {
+      toast.error('Ошибка обновления структуры');
+    }
+  };
+
   const exportRegistry = async () => {
     try {
       const token = localStorage.getItem('token');
