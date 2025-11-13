@@ -246,7 +246,43 @@ const Wiki = ({ user }) => {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
-              {tree.length === 0 ? (
+              {/* Search */}
+              <div className="mb-4">
+                <div className="relative">
+                  <Search className="absolute left-2 top-2.5 w-4 h-4 text-slate-400" />
+                  <Input
+                    placeholder="Поиск страниц..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-8 text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Tree or search results */}
+              {searchQuery.trim() ? (
+                <div className="space-y-1">
+                  {filteredPages.length === 0 ? (
+                    <p className="text-sm text-slate-500 text-center py-4">Ничего не найдено</p>
+                  ) : (
+                    filteredPages.map(page => (
+                      <div
+                        key={page.id}
+                        className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-slate-100 ${
+                          selectedPage?.id === page.id ? 'bg-cyan-50 text-cyan-700' : ''
+                        }`}
+                        onClick={() => {
+                          setSelectedPage(page);
+                          setIsEditMode(false);
+                        }}
+                      >
+                        {page.is_folder ? <Folder className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                        <span className="flex-1 text-sm">{page.title}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              ) : tree.length === 0 ? (
                 <p className="text-sm text-slate-500 text-center py-4">Нет страниц</p>
               ) : (
                 <div className="space-y-1">
