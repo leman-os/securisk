@@ -18,10 +18,14 @@ const RegistryView = ({ user }) => {
   const [filteredRecords, setFilteredRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
+  const [isEditStructureOpen, setIsEditStructureOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   
   const [formData, setFormData] = useState({});
+  const [structureData, setStructureData] = useState({ columns: [] });
+  const [newColumn, setNewColumn] = useState({ name: '', column_type: 'text', options: [] });
+  const [selectOption, setSelectOption] = useState('');
 
   useEffect(() => {
     fetchRegistry();
