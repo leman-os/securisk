@@ -124,11 +124,18 @@ const Incidents = ({ user }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Prepare data - convert empty strings to null for optional datetime fields
+      const dataToSend = {
+        ...formData,
+        reaction_start_time: formData.reaction_start_time || null,
+        closed_at: formData.closed_at || null,
+      };
+      
       if (editingIncident) {
-        await axios.put(`${API}/incidents/${editingIncident.id}`, formData);
+        await axios.put(`${API}/incidents/${editingIncident.id}`, dataToSend);
         toast.success('Инцидент обновлен');
       } else {
-        await axios.post(`${API}/incidents`, formData);
+        await axios.post(`${API}/incidents`, dataToSend);
         toast.success('Инцидент создан');
       }
       setDialogOpen(false);
