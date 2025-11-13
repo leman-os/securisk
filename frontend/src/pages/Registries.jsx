@@ -318,20 +318,24 @@ const Registries = ({ user }) => {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {registries.length === 0 ? (
-          <Card className="col-span-full">
-            <CardContent className="py-12 text-center">
-              <Table className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500 mb-4">Нет созданных реестров</p>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                Создать первый реестр
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          registries.map((registry) => (
-            <Card key={registry.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+      {registries.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Table className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 mb-4">Нет созданных реестров</p>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              Создать первый реестр
+            </Button>
+          </CardContent>
+        </Card>
+      ) : viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {registries.map((registry) => (
+            <Card 
+              key={registry.id} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => navigate(`/registries/${registry.id}`)}
+            >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Table className="w-5 h-5 text-cyan-600" />
@@ -345,15 +349,7 @@ const Registries = ({ user }) => {
                 <div className="text-sm text-slate-600">
                   <span className="font-medium">{registry.columns?.length || 0}</span> столбцов
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => navigate(`/registries/${registry.id}`)}
-                    className="flex-1"
-                    size="sm"
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Открыть
-                  </Button>
+                <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                   <Button
                     onClick={() => exportRegistry(registry.id, registry.name)}
                     variant="outline"
@@ -372,9 +368,55 @@ const Registries = ({ user }) => {
                 </div>
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {registries.map((registry) => (
+                <div
+                  key={registry.id}
+                  className="p-4 hover:bg-slate-50 cursor-pointer flex items-center justify-between"
+                  onClick={() => navigate(`/registries/${registry.id}`)}
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="flex items-center justify-center w-10 h-10 bg-cyan-100 rounded-lg">
+                      <Table className="w-5 h-5 text-cyan-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-slate-900">{registry.name}</h3>
+                      {registry.description && (
+                        <p className="text-sm text-slate-600">{registry.description}</p>
+                      )}
+                      <p className="text-xs text-slate-500 mt-1">
+                        {registry.columns?.length || 0} столбцов
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      onClick={() => exportRegistry(registry.id, registry.name)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      onClick={() => deleteRegistry(registry.id)}
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
