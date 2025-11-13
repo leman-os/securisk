@@ -167,15 +167,18 @@ backend:
   
   - task: "Registry endpoints with export"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Добавлены модели Registry, RegistryColumn, RegistryRecord. CRUD endpoints для реестров и записей. Поддержка типов полей: text, number, id (автономер), date, checkbox, select. GET /api/registries/{id}/export для экспорта в CSV."
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Registry endpoints работают корректно. POST /api/registries создает реестры с кастомными колонками (text, number, id). GET /api/registries возвращает список реестров. POST /api/registries/{id}/records создает записи с автогенерацией ID полей (col3: 1). GET /api/registries/{id}/records получает записи. GET /api/registries/{id}/export экспортирует данные в CSV формате с правильными заголовками. Полный функционал реестров с экспортом работает правильно."
   
   - task: "Test asset creation with empty threats array"
     implemented: true
