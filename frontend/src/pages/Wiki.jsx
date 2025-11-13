@@ -207,14 +207,14 @@ const Wiki = ({ user }) => {
             <FolderPlus className="w-4 h-4 mr-2" />
             Раздел
           </Button>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600">
-                <Plus className="w-4 h-4 mr-2" />
-                Создать страницу
-              </Button>
-            </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-gradient-to-r from-cyan-500 to-cyan-600">
+            <Plus className="w-4 h-4 mr-2" />
+            Создать страницу
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-12 gap-6">
             <DialogHeader>
               <DialogTitle>Новая страница</DialogTitle>
             </DialogHeader>
