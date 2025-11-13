@@ -122,15 +122,18 @@ user_problem_statement: |
 backend:
   - task: "Add asset_categories to Settings model"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Добавлено поле asset_categories в модели Settings и SettingsUpdate. Список по умолчанию: Сервер, Рабочая станция, Сетевое оборудование, ИТ-инфраструктура, База данных, Приложение."
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Settings asset_categories работает корректно. GET /api/settings возвращает поле asset_categories с массивом категорий. PUT /api/settings успешно обновляет asset_categories. Протестированы операции чтения и записи категорий активов."
   
   - task: "User management endpoints"
     implemented: true
