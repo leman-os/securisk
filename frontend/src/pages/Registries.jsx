@@ -160,7 +160,8 @@ const Registries = ({ user }) => {
     id: 'ID (автономер)',
     date: 'Дата',
     checkbox: 'Чекбокс',
-    select: 'Выбор из списка'
+    select: 'Выбор из списка',
+    multiselect: 'Выбор нескольких из списка'
   };
 
   if (loading) {
