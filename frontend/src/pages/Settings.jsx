@@ -124,6 +124,18 @@ const Settings = ({ user }) => {
     updateSettings({ threat_sources: updated });
   };
 
+  const addAssetCategory = () => {
+    if (!newAssetCategory.trim()) return;
+    const updated = [...(settings?.asset_categories || []), newAssetCategory.trim()];
+    updateSettings({ asset_categories: updated });
+    setNewAssetCategory('');
+  };
+
+  const removeAssetCategory = (category) => {
+    const updated = settings.asset_categories.filter((c) => c !== category);
+    updateSettings({ asset_categories: updated });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
