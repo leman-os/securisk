@@ -669,11 +669,18 @@ async def register_user(user_data: UserCreate, current_user: User = Depends(get_
     if existing:
         raise HTTPException(status_code=400, detail="Username already exists")
     
+    # Get role name from role ID
+    role_name = user_data.role
+    role = await db.roles.find_one({"id": user_data.role})
+    if role:
+        role_name = role['name']
+    
     user = User(
         username=user_data.username,
         full_name=user_data.full_name,
         email=user_data.email,
-        role=user_data.role
+        role=user_data.role,
+        role_name=role_name
     )
     
     doc = user.model_dump()
