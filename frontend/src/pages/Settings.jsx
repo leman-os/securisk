@@ -310,6 +310,52 @@ const Settings = ({ user }) => {
         </CardContent>
       </Card>
 
+      {/* Asset Categories */}
+      <Card className="border-slate-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <SettingsIcon className="w-5 h-5 text-cyan-600" />
+            Категории активов
+          </CardTitle>
+          <CardDescription>
+            Список категорий для классификации информационных активов
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {settings?.asset_categories?.map((category) => (
+              <Badge
+                key={category}
+                className="bg-purple-100 text-purple-800 border-purple-300 px-3 py-1.5 text-sm"
+                variant="outline"
+              >
+                {category}
+                <button
+                  onClick={() => removeAssetCategory(category)}
+                  className="ml-2 hover:text-purple-900"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Добавить новую категорию актива"
+              value={newAssetCategory}
+              onChange={(e) => setNewAssetCategory(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addAssetCategory()}
+            />
+            <Button
+              onClick={addAssetCategory}
+              className="bg-gradient-to-r from-cyan-500 to-cyan-600"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Threat Categories */}
       <Card className="border-slate-200">
         <CardHeader>
