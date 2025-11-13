@@ -17,6 +17,7 @@ const Settings = ({ user }) => {
   const [newSystem, setNewSystem] = useState('');
   const [newThreat, setNewThreat] = useState('');
   const [newAssetStatus, setNewAssetStatus] = useState('');
+  const [newAssetCategory, setNewAssetCategory] = useState('');
   const [newThreatCategory, setNewThreatCategory] = useState('');
   const [newThreatSource, setNewThreatSource] = useState('');
 
