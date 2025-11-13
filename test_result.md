@@ -481,6 +481,30 @@ frontend:
         agent: "testing"
         comment: "✅ ПРЕДЫДУЩЕЕ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Отступы уменьшены корректно"
 
+  - task: "Test incident creation without closed_at field"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/Incidents.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Создание инцидента без поля closed_at работает корректно. Заполнены обязательные поля (время инцидента, время обнаружения, нарушитель, система, тип инцидента, критичность 'Средняя', статус 'Открыт'). Поле 'Время закрытия' намеренно НЕ заполнялось. Инцидент успешно создан без ошибок, получено сообщение 'Инцидент создан'."
+
+  - task: "Test role permissions update"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/Roles.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Обновление роли работает корректно. Найдена роль 'Инженер ИБ', открыт диалог редактирования, изменено право доступа 'Реестры' (с True на False), сохранены изменения. Получено сообщение 'Роль обновлена' без ошибки 'Ошибка при обновлении роли'. Функционал редактирования ролей работает правильно."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
