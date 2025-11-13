@@ -59,18 +59,21 @@ const Wiki = ({ user }) => {
     }
   };
 
-  const createPage = async () => {
+  const createPage = async (data) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API}/wiki`, formData, {
+      const pageData = data || formData;
+      await axios.post(`${API}/wiki`, pageData, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success('Страница создана');
-      setIsCreateDialogOpen(false);
-      setFormData({ title: '', content: '', parent_id: null });
+      toast.success(pageData.is_folder ? 'Раздел создан' : 'Страница создана');
+      if (!data) {
+        setIsCreateDialogOpen(false);
+        setFormData({ title: '', content: '', parent_id: null });
+      }
       fetchPages();
     } catch (error) {
-      toast.error('Ошибка создания страницы');
+      toast.error('Ошибка создания');
     }
   };
 
