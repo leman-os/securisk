@@ -120,6 +120,54 @@ user_problem_statement: |
   6) Протестировать создание актива через API
 
 backend:
+  - task: "Add asset_categories to Settings model"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Добавлено поле asset_categories в модели Settings и SettingsUpdate. Список по умолчанию: Сервер, Рабочая станция, Сетевое оборудование, ИТ-инфраструктура, База данных, Приложение."
+  
+  - task: "User management endpoints"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Добавлены endpoints: PUT /api/users/{user_id} для редактирования, POST /api/users/{user_id}/change-password для смены пароля. Поддержка прав доступа администратора."
+  
+  - task: "Wiki pages endpoints"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Добавлены модели WikiPage, WikiPageCreate, WikiPageUpdate. CRUD endpoints для wiki страниц с поддержкой древовидной структуры (parent_id, order). POST /api/wiki/{page_id}/move для перемещения."
+  
+  - task: "Registry endpoints with export"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Добавлены модели Registry, RegistryColumn, RegistryRecord. CRUD endpoints для реестров и записей. Поддержка типов полей: text, number, id (автономер), date, checkbox, select. GET /api/registries/{id}/export для экспорта в CSV."
+  
   - task: "Test asset creation with empty threats array"
     implemented: true
     working: true
