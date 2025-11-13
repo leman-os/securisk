@@ -412,6 +412,7 @@ class WikiPage(BaseModel):
 class WikiPageCreate(BaseModel):
     title: str
     content: str = ""
+    is_folder: bool = False
     parent_id: Optional[str] = None
     order: int = 0
 
