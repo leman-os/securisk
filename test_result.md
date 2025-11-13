@@ -152,15 +152,18 @@ backend:
   
   - task: "Wiki pages endpoints"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Добавлены модели WikiPage, WikiPageCreate, WikiPageUpdate. CRUD endpoints для wiki страниц с поддержкой древовидной структуры (parent_id, order). POST /api/wiki/{page_id}/move для перемещения."
+      - working: true
+        agent: "testing"
+        comment: "✅ ТЕСТИРОВАНИЕ ЗАВЕРШЕНО: Wiki pages endpoints работают корректно. POST /api/wiki создает новые страницы с HTML контентом. GET /api/wiki возвращает список всех страниц. GET /api/wiki/{page_id} получает конкретную страницу. PUT /api/wiki/{page_id} обновляет title и content. DELETE /api/wiki/{page_id} удаляет страницы. Полный CRUD функционал для Wiki работает правильно."
   
   - task: "Registry endpoints with export"
     implemented: true
