@@ -466,10 +466,16 @@ const Assets = ({ user }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Категория</Label>
-                  <Input
+                  <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  />
+                    className="w-full p-2 border border-slate-300 rounded-md"
+                  >
+                    <option value="">Выберите категорию</option>
+                    {settings?.asset_categories?.map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <Label>Владелец</Label>
