@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, UploadFile, File
+from fastapi.responses import Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -12,6 +13,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
 import jwt
+import base64
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -1733,7 +1735,12 @@ async def get_risk_analytics(current_user: User = Depends(get_current_user)):
 
 @api_router.post("/wiki", response_model=WikiPage)
 async def create_wiki_page(page_data: WikiPageCreate, current_user: User = Depends(get_current_user)):
-    page = WikiPage(**page_data.model_dump(), created_by=current_user.id)
+    # Ensure parent_id is None if it's an empty string
+    page_dict = page_data.model_dump()
+    if page_dict.get('parent_id') == '' or page_dict.get('parent_id') is None:
+        page_dict['parent_id'] = None
+    
+    page = WikiPage(**page_dict, created_by=current_user.id)
     doc = page.model_dump()
     doc['created_at'] = doc['created_at'].isoformat()
     doc['updated_at'] = doc['updated_at'].isoformat()
@@ -1793,6 +1800,59 @@ async def move_wiki_page(page_id: str, move_data: WikiPageMove, current_user: Us
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Wiki page not found")
     return {"message": "Page moved successfully"}
+
+@api_router.post("/wiki/upload-image")
+async def upload_wiki_image(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    # Validate file type
+    if not file.content_type or not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    # Validate file size (max 5MB)
+    file_content = await file.read()
+    if len(file_content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image size must be less than 5MB")
+    
+    # Convert to base64
+    image_base64 = base64.b64encode(file_content).decode('utf-8')
+    image_data_url = f"data:{file.content_type};base64,{image_base64}"
+    
+    # Save to database
+    image_id = str(uuid.uuid4())
+    image_doc = {
+        "id": image_id,
+        "filename": file.filename,
+        "content_type": file.content_type,
+        "data": image_data_url,
+        "size": len(file_content),
+        "uploaded_by": current_user.id,
+        "uploaded_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.wiki_images.insert_one(image_doc)
+    
+    # Return URL that can be used in the editor
+    return {"url": f"/api/wiki/image/{image_id}", "id": image_id}
+
+@api_router.get("/wiki/image/{image_id}")
+async def get_wiki_image(image_id: str, credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))):
+    # Allow access to images even without auth (for img tags)
+    image = await db.wiki_images.find_one({"id": image_id}, {"_id": 0})
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    # Return the image data URL
+    data_url = image.get('data', '')
+    if data_url.startswith('data:'):
+        # Extract base64 data
+        header, base64_data = data_url.split(',', 1)
+        image_bytes = base64.b64decode(base64_data)
+        content_type = image.get('content_type', 'image/png')
+        return Response(content=image_bytes, media_type=content_type)
+    else:
+        raise HTTPException(status_code=404, detail="Image data not found")
 
 @api_router.delete("/wiki/{page_id}")
 async def delete_wiki_page(page_id: str, current_user: User = Depends(get_current_user)):

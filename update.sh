@@ -10,9 +10,11 @@ echo "🔄 Применение изменений SecuRisk..."
 echo "🐍 Перезапуск Backend..."
 sudo supervisorctl restart securisk-backend
 
-# 2. Frontend: Пересборка обязательна для применения JS/JSX правок
-echo "⚛️ Пересборка Frontend..."
+# 2. Frontend: Установка зависимостей и пересборка обязательна для применения JS/JSX правок
+echo "⚛️ Установка зависимостей Frontend..."
 cd "$PROJECT_ROOT/frontend"
+yarn install --silent
+echo "⚛️ Пересборка Frontend..."
 yarn build --silent
 chmod -R 755 build/
 

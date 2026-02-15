@@ -62,11 +62,22 @@ const Wiki = ({ user }) => {
   const createPage = async (data) => {
     try {
       const token = localStorage.getItem('token');
-      const pageData = data || {
-        ...formData,
-        parent_id: formData.parent_id || null,
+      
+      // Use provided data or current formData
+      const currentData = data || formData;
+      const pageData = {
+        title: currentData.title?.trim() || '',
+        content: currentData.content || '<p></p>',
+        parent_id: currentData.parent_id && currentData.parent_id.toString().trim() !== '' ? currentData.parent_id : null,
+        is_folder: currentData.is_folder || false,
         order: 0
       };
+      
+      // Validate title
+      if (!pageData.title || pageData.title.trim() === '') {
+        toast.error('Название страницы обязательно');
+        return;
+      }
       
       await axios.post(`${API}/wiki`, pageData, {
         headers: { Authorization: `Bearer ${token}` }
@@ -201,6 +212,8 @@ const Wiki = ({ user }) => {
     );
   }
 
+ 
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
@@ -213,7 +226,10 @@ const Wiki = ({ user }) => {
             <FolderPlus className="w-4 h-4 mr-2" />
             Раздел
           </Button>
-          <Button onClick={() => setIsCreateDialogOpen(true)} className="bg-gradient-to-r from-cyan-500 to-cyan-600">
+          <Button onClick={() => {
+            setFormData({ title: '', content: '<p></p>', parent_id: null, is_folder: false });
+            setIsCreateDialogOpen(true);
+          }} className="bg-gradient-to-r from-cyan-500 to-cyan-600">
             <Plus className="w-4 h-4 mr-2" />
             Создать страницу
           </Button>
@@ -338,7 +354,7 @@ const Wiki = ({ user }) => {
                     </div>
                   </div>
                 ) : (
-                  <div className="prose max-w-none">
+                  <div className="wiki-content">
                     {selectedPage.content.includes('<') ? (
                       <div dangerouslySetInnerHTML={{ __html: selectedPage.content }} />
                     ) : (
@@ -365,20 +381,24 @@ const Wiki = ({ user }) => {
           <DialogHeader>
             <DialogTitle>Новая страница</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            createPage();
+          }} className="space-y-4">
             <div>
               <Label>Название</Label>
               <Input
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Введите название страницы"
+                required
               />
             </div>
             <div>
               <Label>Родительский раздел (необязательно)</Label>
               <select
                 value={formData.parent_id || ''}
-                onChange={(e) => setFormData({ ...formData, parent_id: e.target.value || null })}
+                onChange={(e) => setFormData(prev => ({ ...prev, parent_id: e.target.value || null }))}
                 className="w-full p-2 border border-slate-300 rounded-md"
               >
                 <option value="">Корневой уровень</option>
@@ -391,13 +411,13 @@ const Wiki = ({ user }) => {
               <Label>Содержание</Label>
               <RichTextEditor
                 content={formData.content}
-                onChange={(content) => setFormData({ ...formData, content })}
+                onChange={(content) => setFormData(prev => ({ ...prev, content }))}
               />
             </div>
-            <Button onClick={createPage} className="w-full">
+            <Button type="submit" className="w-full">
               Создать
             </Button>
-          </div>
+          </form>
         </DialogContent>
       </Dialog>
 
