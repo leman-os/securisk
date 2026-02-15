@@ -1,54 +1,23 @@
 #!/bin/bash
-
-# Остановить скрипт при любой ошибке
 set -e
 
-# Цвета для вывода
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-# Автоопределение путей
+# Определяем корень (т.к. скрипт в корне, PROJECT_ROOT это текущая папка)
 PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-BACKEND_DIR="$PROJECT_ROOT/backend"
-FRONTEND_DIR="$PROJECT_ROOT/frontend"
 
-echo -e "${GREEN}=== Перезапуск и обновление сервисов SecuRisk ===${NC}"
+echo "🔄 Применение изменений SecuRisk..."
 
-# 1. Обновление Backend
-echo -e "${GREEN}🐍 Обновление Backend...${NC}"
-cd "$BACKEND_DIR"
-
-if [ ! -d ".venv" ]; then
-    echo -e "${YELLOW}Виртуальное окружение не найдено. Создаю...${NC}"
-    python3.12 -m venv .venv
-fi
-
-source .venv/bin/activate
-pip install --upgrade pip --quiet
-pip install -r requirements.txt --quiet
-# Фикс для корректной работы passlib
-pip install "bcrypt==3.2.2" --quiet
-
-# 2. Обновление Frontend
-echo -e "${GREEN}⚛️ Пересборка Frontend (React)...${NC}"
-cd "$FRONTEND_DIR"
-
-# Если папки с зависимостями нет, устанавливаем их
-if [ ! -d "node_modules" ]; then
-    echo -e "${YELLOW}node_modules не найдены. Устанавливаю зависимости (это может занять время)...${NC}"
-    yarn install --silent
-fi
-
-# Сборка статики
-yarn build --silent
-
-# 3. Настройка прав (чтобы Nginx видел новые файлы)
-chmod -R 755 "$FRONTEND_DIR/build"
-
-# 4. Перезапуск процессов
-echo -e "${GREEN}🔄 Перезапуск Supervisor и Nginx...${NC}"
+# 1. Backend: Просто перезапуск (код подхватится сам)
+echo "🐍 Перезапуск Backend..."
 sudo supervisorctl restart securisk-backend
+
+# 2. Frontend: Пересборка обязательна для применения JS/JSX правок
+echo "⚛️ Пересборка Frontend..."
+cd "$PROJECT_ROOT/frontend"
+yarn build --silent
+chmod -R 755 build/
+
+# 3. Nginx: Перезагрузка для обновления статики
+echo "🌐 Обновление Nginx..."
 sudo systemctl reload nginx
 
-echo -e "${GREEN}✅ Изменения применены и сервисы перезапущены!${NC}"
+echo "✅ Все изменения применены!"
