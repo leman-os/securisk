@@ -1712,7 +1712,7 @@ async def get_risk_analytics(current_user: User = Depends(get_current_user)):
     # Top 10 most critical risks
     top_risks = await db.risks.find(
         {},
-        {"_id": 0, "risk_number": 1, "scenario": 1, "risk_level": 1, "criticality": 1, "owner": 1}
+        {"_id": 0, "id": 1, "risk_number": 1, "scenario": 1, "risk_level": 1, "criticality": 1, "owner": 1}
     ).sort("risk_level", -1).limit(10).to_list(10)
     
     # Risk distribution by owner
@@ -1757,6 +1757,59 @@ async def get_wiki_pages(current_user: User = Depends(get_current_user)):
             page['updated_at'] = datetime.fromisoformat(page['updated_at'])
     return pages
 
+@api_router.post("/wiki/upload-image")
+async def upload_wiki_image(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    # Validate file type
+    if not file.content_type or not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="File must be an image")
+
+    # Validate file size (max 5MB)
+    file_content = await file.read()
+    if len(file_content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image size must be less than 5MB")
+
+    # Convert to base64
+    image_base64 = base64.b64encode(file_content).decode('utf-8')
+    image_data_url = f"data:{file.content_type};base64,{image_base64}"
+
+    # Save to database
+    image_id = str(uuid.uuid4())
+    image_doc = {
+        "id": image_id,
+        "filename": file.filename,
+        "content_type": file.content_type,
+        "data": image_data_url,
+        "size": len(file_content),
+        "uploaded_by": current_user.id,
+        "uploaded_at": datetime.now(timezone.utc).isoformat()
+    }
+
+    await db.wiki_images.insert_one(image_doc)
+
+    # Return URL that can be used in the editor
+    return {"url": f"/api/wiki/image/{image_id}", "id": image_id}
+
+@api_router.get("/wiki/image/{image_id}")
+async def get_wiki_image(image_id: str, credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))):
+    # Allow access to images even without auth (for img tags)
+    image = await db.wiki_images.find_one({"id": image_id}, {"_id": 0})
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    # Return the image data URL
+    data_url = image.get('data', '')
+    if data_url.startswith('data:'):
+        # Extract base64 data
+        header, base64_data = data_url.split(',', 1)
+        image_bytes = base64.b64decode(base64_data)
+        content_type = image.get('content_type', 'image/png')
+        return Response(content=image_bytes, media_type=content_type)
+    else:
+        raise HTTPException(status_code=404, detail="Image data not found")
+
 @api_router.get("/wiki/{page_id}", response_model=WikiPage)
 async def get_wiki_page(page_id: str, current_user: User = Depends(get_current_user)):
     page = await db.wiki_pages.find_one({"id": page_id}, {"_id": 0})
@@ -1773,13 +1826,13 @@ async def update_wiki_page(page_id: str, page_data: WikiPageUpdate, current_user
     update_dict = {k: v for k, v in page_data.model_dump().items() if v is not None}
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
-    
+
     update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
-    
+
     result = await db.wiki_pages.update_one({"id": page_id}, {"$set": update_dict})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Wiki page not found")
-    
+
     page = await db.wiki_pages.find_one({"id": page_id}, {"_id": 0})
     if isinstance(page.get('created_at'), str):
         page['created_at'] = datetime.fromisoformat(page['created_at'])
@@ -1800,59 +1853,6 @@ async def move_wiki_page(page_id: str, move_data: WikiPageMove, current_user: Us
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Wiki page not found")
     return {"message": "Page moved successfully"}
-
-@api_router.post("/wiki/upload-image")
-async def upload_wiki_image(
-    file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user)
-):
-    # Validate file type
-    if not file.content_type or not file.content_type.startswith('image/'):
-        raise HTTPException(status_code=400, detail="File must be an image")
-    
-    # Validate file size (max 5MB)
-    file_content = await file.read()
-    if len(file_content) > 5 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="Image size must be less than 5MB")
-    
-    # Convert to base64
-    image_base64 = base64.b64encode(file_content).decode('utf-8')
-    image_data_url = f"data:{file.content_type};base64,{image_base64}"
-    
-    # Save to database
-    image_id = str(uuid.uuid4())
-    image_doc = {
-        "id": image_id,
-        "filename": file.filename,
-        "content_type": file.content_type,
-        "data": image_data_url,
-        "size": len(file_content),
-        "uploaded_by": current_user.id,
-        "uploaded_at": datetime.now(timezone.utc).isoformat()
-    }
-    
-    await db.wiki_images.insert_one(image_doc)
-    
-    # Return URL that can be used in the editor
-    return {"url": f"/api/wiki/image/{image_id}", "id": image_id}
-
-@api_router.get("/wiki/image/{image_id}")
-async def get_wiki_image(image_id: str, credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))):
-    # Allow access to images even without auth (for img tags)
-    image = await db.wiki_images.find_one({"id": image_id}, {"_id": 0})
-    if not image:
-        raise HTTPException(status_code=404, detail="Image not found")
-    
-    # Return the image data URL
-    data_url = image.get('data', '')
-    if data_url.startswith('data:'):
-        # Extract base64 data
-        header, base64_data = data_url.split(',', 1)
-        image_bytes = base64.b64decode(base64_data)
-        content_type = image.get('content_type', 'image/png')
-        return Response(content=image_bytes, media_type=content_type)
-    else:
-        raise HTTPException(status_code=404, detail="Image data not found")
 
 @api_router.delete("/wiki/{page_id}")
 async def delete_wiki_page(page_id: str, current_user: User = Depends(get_current_user)):

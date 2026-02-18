@@ -291,7 +291,8 @@ const Dashboard = ({ user }) => {
                   {riskAnalytics.top_risks.map((risk, index) => (
                     <div
                       key={risk.risk_number}
-                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/risks?risk_id=${risk.id}`)}
                     >
                       <div className="flex items-center gap-3 flex-1">
                         <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-200 font-semibold text-sm">

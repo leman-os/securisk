@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '../App';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +15,7 @@ import { Plus, Search, Filter, Edit, Trash2, Settings, Download, ChevronLeft, Ch
 import { toast } from 'sonner';
 
 const RiskRegister = ({ user }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [risks, setRisks] = useState([]);
   const [filteredRisks, setFilteredRisks] = useState([]);
   const [assets, setAssets] = useState([]);
@@ -76,6 +78,26 @@ const RiskRegister = ({ user }) => {
   useEffect(() => {
     applyFilters();
   }, [risks, searchTerm, filterStatus, filterCriticality]);
+
+  // Auto-open risk from dashboard link (?risk_id=...)
+  useEffect(() => {
+    const riskId = searchParams.get('risk_id');
+    if (!riskId) return;
+
+    const openRisk = async () => {
+      try {
+        const response = await axios.get(`${API}/risks/${riskId}`);
+        setViewingRisk(response.data);
+        setViewDialogOpen(true);
+        // Clear the param from URL without re-navigating
+        setSearchParams({}, { replace: true });
+      } catch (error) {
+        console.error('Risk not found:', error);
+      }
+    };
+
+    openRisk();
+  }, [searchParams]);
 
   const fetchAssets = async () => {
     try {
