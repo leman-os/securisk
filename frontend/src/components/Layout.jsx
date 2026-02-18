@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Shield, LayoutDashboard, AlertTriangle, AlertCircle, Server, Users, LogOut, Settings, Crosshair, Bug, BookOpen, Table, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Shield, LayoutDashboard, AlertTriangle, AlertCircle, Server, Users, LogOut, Settings, Crosshair, Bug, BookOpen, Table, ChevronLeft, ChevronRight, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Layout = ({ user, setUser, children }) => {
@@ -16,6 +16,7 @@ const Layout = ({ user, setUser, children }) => {
 
   const allMenuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Дашборд', permission: 'dashboard' },
+    { path: '/requirements', icon: ClipboardList, label: 'Требования', permission: 'requirements' },
     { path: '/risks', icon: AlertTriangle, label: 'Реестр рисков', permission: 'risks' },
     { path: '/threats', icon: Crosshair, label: 'Угрозы', permission: 'threats' },
     { path: '/vulnerabilities', icon: Bug, label: 'Уязвимости', permission: 'vulnerabilities' },

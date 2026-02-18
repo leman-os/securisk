@@ -22,6 +22,7 @@ const Roles = ({ user }) => {
     name: '',
     permissions: {
       dashboard: true,
+      requirements: true,
       incidents: true,
       assets: true,
       risks: true,
@@ -107,6 +108,7 @@ const Roles = ({ user }) => {
       name: '',
       permissions: {
         dashboard: true,
+        requirements: true,
         incidents: true,
         assets: true,
         risks: true,
@@ -132,6 +134,7 @@ const Roles = ({ user }) => {
 
   const permissionLabels = {
     dashboard: 'Дашборд',
+    requirements: 'Требования',
     incidents: 'Инциденты',
     assets: 'Активы',
     risks: 'Реестр рисков',

@@ -15,6 +15,7 @@ import Wiki from './pages/Wiki';
 import Registries from './pages/Registries';
 import RegistryView from './pages/RegistryView';
 import Roles from './pages/Roles';
+import Requirements from './pages/Requirements';
 import Layout from './components/Layout';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -187,6 +188,16 @@ function App() {
               <ProtectedRoute>
                 <Layout user={user} setUser={setUser}>
                   <Roles user={user} />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/requirements"
+            element={
+              <ProtectedRoute>
+                <Layout user={user} setUser={setUser}>
+                  <Requirements user={user} />
                 </Layout>
               </ProtectedRoute>
             }
