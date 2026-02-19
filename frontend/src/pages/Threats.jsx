@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Eye, Edit, Trash2, Filter, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, X, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLocation } from 'react-router-dom';
 
 const Threats = ({ user }) => {
   const [threats, setThreats] = useState([]);
@@ -19,6 +20,7 @@ const Threats = ({ user }) => {
   const [vulnerabilities, setVulnerabilities] = useState([]);
   const [mitreAttacks, setMitreAttacks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [viewVulnDialogOpen, setViewVulnDialogOpen] = useState(false);
@@ -56,6 +58,12 @@ const Threats = ({ user }) => {
   useEffect(() => {
     fetchThreats();
   }, [page, limit, sortBy, sortOrder]);
+
+  useEffect(() => {
+    if (!location.state?.openId || threats.length === 0) return;
+    const item = threats.find(t => t.id === location.state.openId);
+    if (item) handleView(item);
+  }, [threats]); // eslint-disable-line
 
   useEffect(() => {
     applyFilters();

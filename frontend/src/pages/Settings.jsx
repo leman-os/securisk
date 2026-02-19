@@ -6,12 +6,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Settings as SettingsIcon } from 'lucide-react';
+import { Plus, X, Settings as SettingsIcon, Sun, Moon } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Settings = ({ user }) => {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isDark, setIsDark] = useState(() =>
+    document.documentElement.classList.contains('dark')
+  );
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    if (next) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme', next ? 'dark' : 'light');
+    toast.success(next ? 'Тёмная тема включена' : 'Светлая тема включена');
+  };
   
   const [newSubjectType, setNewSubjectType] = useState('');
   const [newSystem, setNewSystem] = useState('');
@@ -165,9 +180,48 @@ const Settings = ({ user }) => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Настройки</h1>
-        <p className="text-slate-600">Управление справочниками системы</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Настройки</h1>
+        <p className="text-slate-600 dark:text-slate-400">Управление справочниками системы</p>
       </div>
+
+      {/* Theme toggle */}
+      <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
+            {isDark ? <Moon className="w-5 h-5 text-violet-500" /> : <Sun className="w-5 h-5 text-amber-500" />}
+            Тема интерфейса
+          </CardTitle>
+          <CardDescription className="dark:text-slate-400">
+            Выберите светлую или тёмную тему оформления
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => { if (isDark) toggleTheme(); }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${
+                !isDark
+                  ? 'border-cyan-500 bg-cyan-50 text-cyan-700'
+                  : 'border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-slate-300'
+              }`}
+            >
+              <Sun className="w-4 h-4" />
+              Светлая
+            </button>
+            <button
+              onClick={() => { if (!isDark) toggleTheme(); }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-all ${
+                isDark
+                  ? 'border-violet-500 bg-violet-900/30 text-violet-400'
+                  : 'border-slate-200 text-slate-500 hover:border-slate-300'
+              }`}
+            >
+              <Moon className="w-4 h-4" />
+              Тёмная
+            </button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Subject Types */}
       <Card className="border-slate-200">

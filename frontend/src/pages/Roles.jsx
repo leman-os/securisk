@@ -28,10 +28,10 @@ const Roles = ({ user }) => {
       risks: true,
       threats: true,
       vulnerabilities: true,
-      users: false,
       wiki: true,
       registries: true,
-      settings: false
+      graph: true,
+      admin: false,
     }
   });
 
@@ -114,10 +114,10 @@ const Roles = ({ user }) => {
         risks: true,
         threats: true,
         vulnerabilities: true,
-        users: false,
         wiki: true,
         registries: true,
-        settings: false
+        graph: true,
+        admin: false,
       }
     });
   };
@@ -140,10 +140,10 @@ const Roles = ({ user }) => {
     risks: 'Реестр рисков',
     threats: 'Угрозы',
     vulnerabilities: 'Уязвимости',
-    users: 'Пользователи',
     wiki: 'База знаний',
     registries: 'Реестры',
-    settings: 'Настройки'
+    graph: 'Граф связей',
+    admin: 'Админпанель',
   };
 
   if (loading) {

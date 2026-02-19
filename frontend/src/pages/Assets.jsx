@@ -13,6 +13,7 @@ import { Plus, Search, Edit, Trash2, RefreshCw, Filter, Settings, Download, Chev
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useLocation } from 'react-router-dom';
 
 const Assets = ({ user }) => {
   const [assets, setAssets] = useState([]);
@@ -21,6 +22,7 @@ const Assets = ({ user }) => {
   const [threats, setThreats] = useState([]);
   const [vulnerabilities, setVulnerabilities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState(null);
@@ -89,6 +91,12 @@ const Assets = ({ user }) => {
   useEffect(() => {
     fetchAssets();
   }, [page, limit, sortBy, sortOrder]);
+
+  useEffect(() => {
+    if (!location.state?.openId || assets.length === 0) return;
+    const item = assets.find(a => a.id === location.state.openId);
+    if (item) handleView(item);
+  }, [assets]); // eslint-disable-line
 
   useEffect(() => {
     // Save visible columns to localStorage

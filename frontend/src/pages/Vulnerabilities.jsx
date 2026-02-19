@@ -12,12 +12,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Eye, Edit, Trash2, Filter, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, X, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLocation } from 'react-router-dom';
 
 const Vulnerabilities = ({ user }) => {
   const [vulnerabilities, setVulnerabilities] = useState([]);
   const [filteredVulnerabilities, setFilteredVulnerabilities] = useState([]);
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [viewAssetDialogOpen, setViewAssetDialogOpen] = useState(false);
@@ -56,6 +58,12 @@ const Vulnerabilities = ({ user }) => {
   useEffect(() => {
     fetchVulnerabilities();
   }, [page, limit, sortBy, sortOrder]);
+
+  useEffect(() => {
+    if (!location.state?.openId || vulnerabilities.length === 0) return;
+    const item = vulnerabilities.find(v => v.id === location.state.openId);
+    if (item) handleView(item);
+  }, [vulnerabilities]); // eslint-disable-line
 
   useEffect(() => {
     applyFilters();
