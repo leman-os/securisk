@@ -234,10 +234,8 @@ const Assets = ({ user }) => {
   };
 
   const handleEditFromView = () => {
-    setEditingAsset(viewingAsset);
-    setFormData(viewingAsset);
     setViewDialogOpen(false);
-    setDialogOpen(true);
+    handleEdit(viewingAsset);
   };
 
   const handleDeleteFromView = async () => {
@@ -487,10 +485,23 @@ const Assets = ({ user }) => {
                 </div>
                 <div className="space-y-2">
                   <Label>Владелец</Label>
-                  <Input
-                    value={formData.owner}
-                    onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
-                  />
+                  {settings?.asset_owners?.length > 0 ? (
+                    <Select value={formData.owner || ''} onValueChange={(v) => setFormData({ ...formData, owner: v })}>
+                      <SelectTrigger><SelectValue placeholder="Выберите владельца..." /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">— Не выбрано —</SelectItem>
+                        {settings.asset_owners.map(o => (
+                          <SelectItem key={o} value={o}>{o}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      value={formData.owner}
+                      onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
+                      placeholder="Введите владельца..."
+                    />
+                  )}
                 </div>
               </div>
 

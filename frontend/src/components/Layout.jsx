@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Shield, LayoutDashboard, AlertTriangle, AlertCircle, Server,
   LogOut, Crosshair, Bug, BookOpen, Table, ChevronLeft, ChevronRight,
-  ClipboardList, SlidersHorizontal, GitBranch, HelpCircle,
+  ClipboardList, SlidersHorizontal, GitBranch, HelpCircle, User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -18,16 +18,18 @@ const Layout = ({ user, setUser, children }) => {
     navigate('/login');
   };
 
+  // Порядок разделов: Дашборд → Инциденты → Активы → Уязвимости → Угрозы →
+  //   Реестр рисков → Реестры → Требования → База знаний → Граф связей
   const allMenuItems = [
     { path: '/',                icon: LayoutDashboard, label: 'Дашборд',       permission: 'dashboard' },
-    { path: '/requirements',    icon: ClipboardList,   label: 'Требования',    permission: 'requirements' },
-    { path: '/risks',           icon: AlertTriangle,   label: 'Реестр рисков', permission: 'risks' },
-    { path: '/threats',         icon: Crosshair,       label: 'Угрозы',        permission: 'threats' },
-    { path: '/vulnerabilities', icon: Bug,             label: 'Уязвимости',    permission: 'vulnerabilities' },
     { path: '/incidents',       icon: AlertCircle,     label: 'Инциденты',     permission: 'incidents' },
     { path: '/assets',          icon: Server,          label: 'Активы',        permission: 'assets' },
-    { path: '/wiki',            icon: BookOpen,        label: 'База знаний',   permission: 'wiki' },
+    { path: '/vulnerabilities', icon: Bug,             label: 'Уязвимости',    permission: 'vulnerabilities' },
+    { path: '/threats',         icon: Crosshair,       label: 'Угрозы',        permission: 'threats' },
+    { path: '/risks',           icon: AlertTriangle,   label: 'Реестр рисков', permission: 'risks' },
     { path: '/registries',      icon: Table,           label: 'Реестры',       permission: 'registries' },
+    { path: '/requirements',    icon: ClipboardList,   label: 'Требования',    permission: 'requirements' },
+    { path: '/wiki',            icon: BookOpen,        label: 'База знаний',   permission: 'wiki' },
     { path: '/graph',           icon: GitBranch,       label: 'Граф связей',   permission: 'graph' },
   ];
 
@@ -39,56 +41,65 @@ const Layout = ({ user, setUser, children }) => {
   const hasAdminAccess = user?.role === 'Администратор' || user?.permissions?.admin === true;
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="flex h-screen bg-slate-100 dark:bg-slate-950">
       {/* Sidebar */}
-      <aside className={`${collapsed ? 'w-16' : 'w-64'} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col transition-all duration-300`}>
+      <aside className={`${collapsed ? 'w-16' : 'w-64'} bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-300 shadow-sm`}>
 
-        {/* Logo */}
-        <div className={`${collapsed ? 'p-3' : 'p-6'} border-b border-slate-200 dark:border-slate-700 transition-all duration-300`}>
+        {/* Logo + User */}
+        <div className={`${collapsed ? 'p-3' : 'p-5'} border-b border-slate-200 dark:border-slate-800 transition-all duration-300 bg-gradient-to-br from-cyan-600 to-cyan-700`}>
           <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg flex-shrink-0">
-              <Shield className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-center w-9 h-9 bg-white/20 rounded-lg flex-shrink-0 backdrop-blur-sm">
+              <Shield className="w-5 h-5 text-white" />
             </div>
             {!collapsed && (
-              <div>
-                <h1 className="text-lg font-bold text-slate-900 dark:text-white">SecuRisk</h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400">ISO 27000</p>
+              <div className="min-w-0">
+                <h1 className="text-base font-bold text-white leading-tight">SecuRisk</h1>
+                <p className="text-xs text-cyan-200/80">ISO 27000</p>
+                {user && (
+                  <div className="flex items-center gap-1 mt-1.5">
+                    <User className="w-3 h-3 text-cyan-100/70 flex-shrink-0" />
+                    <p className="text-xs font-medium text-cyan-100 truncate">
+                      {user.username || user.login || user.full_name}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
 
         {/* Collapse toggle */}
-        <div className={`p-2 ${collapsed ? 'flex justify-center' : 'flex justify-end'}`}>
+        <div className={`px-3 py-2 ${collapsed ? 'flex justify-center' : 'flex justify-end'}`}>
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
             title={collapsed ? 'Развернуть меню' : 'Свернуть меню'}
           >
             {collapsed
-              ? <ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-              : <ChevronLeft  className="w-4 h-4 text-slate-600 dark:text-slate-400" />}
+              ? <ChevronRight className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              : <ChevronLeft  className="w-4 h-4 text-slate-500 dark:text-slate-400" />}
           </button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-3 pb-2 space-y-0.5 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname === item.path ||
+              (item.path !== '/' && location.pathname.startsWith(item.path));
             return (
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 data-testid={`menu-${item.path.replace('/', '') || 'dashboard'}`}
-                className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-3 rounded-lg font-medium transition-colors ${
+                className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
                   isActive
-                    ? 'bg-cyan-50 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-700'
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                    ? 'bg-cyan-600 text-white shadow-sm shadow-cyan-600/30'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                 }`}
                 title={collapsed ? item.label : ''}
               >
-                <Icon className="w-5 h-5 flex-shrink-0" />
+                <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : ''}`} />
                 {!collapsed && <span>{item.label}</span>}
               </button>
             );
@@ -96,13 +107,14 @@ const Layout = ({ user, setUser, children }) => {
         </nav>
 
         {/* Info link */}
-        <div className="px-4 pb-2">
+        <div className="px-3 pb-2">
+          <div className="h-px bg-slate-200 dark:bg-slate-800 mb-2" />
           <button
             onClick={() => navigate('/info')}
-            className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-4'} py-2.5 rounded-lg text-sm font-medium transition-colors ${
+            className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-3 px-3'} py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
               location.pathname === '/info'
-                ? 'bg-cyan-50 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-700'
-                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
+                ? 'bg-cyan-600 text-white shadow-sm shadow-cyan-600/30'
+                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
             }`}
             title={collapsed ? 'Информация' : ''}
           >
@@ -112,21 +124,12 @@ const Layout = ({ user, setUser, children }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-700 space-y-2">
-          {/* User info */}
-          {!collapsed && (
-            <div className="mb-1 p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Текущий пользователь</p>
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">{user?.full_name}</p>
-              <p className="text-xs text-slate-600 dark:text-slate-400">{user?.role}</p>
-            </div>
-          )}
-
+        <div className="px-3 pb-4 border-t border-slate-200 dark:border-slate-800 pt-3 space-y-2">
           {/* Admin panel button */}
           {hasAdminAccess && (
             <button
               onClick={() => navigate('/admin')}
-              className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-2 px-3'} py-2.5 rounded-lg text-sm font-medium transition-colors bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/50 border border-violet-200 dark:border-violet-700`}
+              className={`w-full flex items-center ${collapsed ? 'justify-center px-2' : 'gap-2 px-3'} py-2.5 rounded-lg text-sm font-medium transition-all duration-150 bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-900/40 border border-violet-200 dark:border-violet-800`}
               title={collapsed ? 'Админпанель' : ''}
             >
               <SlidersHorizontal className="w-4 h-4 flex-shrink-0" />
@@ -138,11 +141,11 @@ const Layout = ({ user, setUser, children }) => {
           <Button
             onClick={handleLogout}
             data-testid="logout-button"
-            variant="outline"
-            className={`w-full ${collapsed ? 'justify-center px-2' : 'justify-start gap-2'} text-slate-700 dark:text-slate-300 dark:border-slate-600 hover:text-red-600 hover:border-red-600`}
+            variant="ghost"
+            className={`w-full ${collapsed ? 'justify-center px-2' : 'justify-start gap-2 px-3'} text-slate-500 dark:text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-all`}
             title={collapsed ? 'Выход' : ''}
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-4 h-4 flex-shrink-0" />
             {!collapsed && 'Выход'}
           </Button>
         </div>
@@ -150,7 +153,7 @@ const Layout = ({ user, setUser, children }) => {
 
       {/* Main content */}
       <main className="flex-1 overflow-auto">
-        <div className="h-full p-2">
+        <div className="min-h-full p-6">
           {children}
         </div>
       </main>

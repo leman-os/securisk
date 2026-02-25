@@ -38,20 +38,22 @@ const Login = ({ setUser }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-cyan-50 to-slate-100 p-4">
+    <div className="min-h-screen flex items-center justify-center p-4
+      bg-gradient-to-br from-slate-100 via-cyan-50 to-slate-100
+      dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <div className="w-full max-w-md">
         <div className="text-center mb-8 animate-fade-in">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl mb-4 shadow-lg">
             <Shield className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">SecuRisk</h1>
-          <p className="text-slate-600">Система управления рисками и инцидентами ИБ</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">SecuRisk</h1>
+          <p className="text-slate-600 dark:text-slate-400">Система управления рисками и инцидентами ИБ</p>
         </div>
 
-        <Card className="shadow-xl border-slate-200 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+        <Card className="shadow-xl border-slate-200 dark:border-slate-700 dark:bg-slate-800 animate-fade-in" style={{ animationDelay: '0.1s' }}>
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-semibold text-center">Вход в систему</CardTitle>
-            <CardDescription className="text-center">
+            <CardTitle className="text-2xl font-semibold text-center dark:text-white">Вход в систему</CardTitle>
+            <CardDescription className="text-center dark:text-slate-400">
               Введите ваши учетные данные для доступа
             </CardDescription>
           </CardHeader>
@@ -63,9 +65,9 @@ const Login = ({ setUser }) => {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              
+
               <div className="space-y-2">
-                <Label htmlFor="username">Имя пользователя</Label>
+                <Label htmlFor="username" className="dark:text-slate-300">Имя пользователя</Label>
                 <Input
                   id="username"
                   data-testid="login-username-input"
@@ -74,12 +76,12 @@ const Login = ({ setUser }) => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
-                  className="h-11"
+                  className="h-11 dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-400"
                 />
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="password">Пароль</Label>
+                <Label htmlFor="password" className="dark:text-slate-300">Пароль</Label>
                 <Input
                   id="password"
                   data-testid="login-password-input"
@@ -88,7 +90,7 @@ const Login = ({ setUser }) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="h-11"
+                  className="h-11 dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-400"
                 />
               </div>
 
@@ -111,7 +113,7 @@ const Login = ({ setUser }) => {
           </CardContent>
         </Card>
 
-        <p className="text-center text-sm text-slate-500 mt-6">
+        <p className="text-center text-sm text-slate-500 dark:text-slate-500 mt-6">
           ISO 27000 Compliant • Secured Platform
         </p>
       </div>

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Shield } from 'lucide-react';
+import { Plus, Edit, Trash2, Shield, Eye, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Roles = ({ user }) => {
@@ -18,19 +18,23 @@ const Roles = ({ user }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
 
+  const defaultSectionPerm = (view = true, edit = true) => ({ view, edit });
+
   const [formData, setFormData] = useState({
     name: '',
     permissions: {
-      dashboard: true,
-      requirements: true,
-      incidents: true,
-      assets: true,
-      risks: true,
-      threats: true,
-      vulnerabilities: true,
-      wiki: true,
-      registries: true,
-      graph: true,
+      dashboard:       defaultSectionPerm(),
+      requirements:    defaultSectionPerm(),
+      incidents:       defaultSectionPerm(),
+      assets:          defaultSectionPerm(),
+      risks:           defaultSectionPerm(),
+      threats:         defaultSectionPerm(),
+      vulnerabilities: defaultSectionPerm(),
+      wiki:            defaultSectionPerm(),
+      registries:      defaultSectionPerm(),
+      graph:           defaultSectionPerm(),
+      users:           defaultSectionPerm(false, false),
+      settings:        defaultSectionPerm(false, false),
       admin: false,
     }
   });
@@ -73,10 +77,13 @@ const Roles = ({ user }) => {
 
   const openEditDialog = (role) => {
     setEditingRole(role);
-    setFormData({
-      name: role.name,
-      permissions: { ...role.permissions }
+    // Нормализуем разрешения: поддержка старого формата (bool) и нового ({view,edit})
+    const perms = { ...role.permissions };
+    Object.keys(sectionLabels).forEach(k => {
+      if (perms[k] !== undefined) perms[k] = normalizePerm(perms[k]);
+      else perms[k] = defaultSectionPerm();
     });
+    setFormData({ name: role.name, permissions: perms });
     setIsEditDialogOpen(true);
   };
 
@@ -103,47 +110,57 @@ const Roles = ({ user }) => {
     }
   };
 
+  const normalizePerm = (v) => {
+    if (typeof v === 'boolean') return { view: v, edit: v };
+    if (v && typeof v === 'object') return { view: !!v.view, edit: !!v.edit };
+    return { view: true, edit: true };
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
       permissions: {
-        dashboard: true,
-        requirements: true,
-        incidents: true,
-        assets: true,
-        risks: true,
-        threats: true,
-        vulnerabilities: true,
-        wiki: true,
-        registries: true,
-        graph: true,
+        dashboard:       defaultSectionPerm(),
+        requirements:    defaultSectionPerm(),
+        incidents:       defaultSectionPerm(),
+        assets:          defaultSectionPerm(),
+        risks:           defaultSectionPerm(),
+        threats:         defaultSectionPerm(),
+        vulnerabilities: defaultSectionPerm(),
+        wiki:            defaultSectionPerm(),
+        registries:      defaultSectionPerm(),
+        graph:           defaultSectionPerm(),
+        users:           defaultSectionPerm(false, false),
+        settings:        defaultSectionPerm(false, false),
         admin: false,
       }
     });
   };
 
-  const togglePermission = (key) => {
+  const togglePermField = (key, field) => {
+    const cur = normalizePerm(formData.permissions[key]);
     setFormData({
       ...formData,
       permissions: {
         ...formData.permissions,
-        [key]: !formData.permissions[key]
+        [key]: { ...cur, [field]: !cur[field] }
       }
     });
   };
 
-  const permissionLabels = {
-    dashboard: 'Дашборд',
-    requirements: 'Требования',
-    incidents: 'Инциденты',
-    assets: 'Активы',
-    risks: 'Реестр рисков',
-    threats: 'Угрозы',
+  const sectionLabels = {
+    dashboard:       'Дашборд',
+    requirements:    'Требования',
+    incidents:       'Инциденты',
+    assets:          'Активы',
+    risks:           'Реестр рисков',
+    threats:         'Угрозы',
     vulnerabilities: 'Уязвимости',
-    wiki: 'База знаний',
-    registries: 'Реестры',
-    graph: 'Граф связей',
-    admin: 'Админпанель',
+    wiki:            'База знаний',
+    registries:      'Реестры',
+    graph:           'Граф связей',
+    users:           'Пользователи',
+    settings:        'Настройки',
   };
 
   if (loading) {
@@ -185,22 +202,53 @@ const Roles = ({ user }) => {
       </div>
 
       <div>
-        <Label className="text-base font-semibold mb-3 block">Права доступа к разделам</Label>
-        <div className="grid grid-cols-2 gap-3">
-          {Object.entries(permissionLabels).map(([key, label]) => (
-            <div key={key} className="flex items-center gap-2 p-3 border border-slate-200 rounded-lg hover:bg-slate-50">
+        <Label className="text-base font-semibold mb-2 block">Права доступа к разделам</Label>
+        <div className="grid grid-cols-3 gap-1 text-xs font-semibold text-slate-500 uppercase mb-1 px-2">
+          <span>Раздел</span>
+          <span className="text-center flex items-center justify-center gap-1"><Eye className="w-3 h-3" />Просмотр</span>
+          <span className="text-center flex items-center justify-center gap-1"><Pencil className="w-3 h-3" />Правка</span>
+        </div>
+        <div className="space-y-1">
+          {Object.entries(sectionLabels).map(([key, label]) => {
+            const perm = normalizePerm(formData.permissions[key]);
+            return (
+              <div key={key} className="grid grid-cols-3 gap-1 items-center p-2 border border-slate-200 rounded-lg hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                <Label className="cursor-pointer text-sm">{label}</Label>
+                <div className="flex justify-center">
+                  <input
+                    type="checkbox"
+                    checked={perm.view}
+                    onChange={() => togglePermField(key, 'view')}
+                    className="w-4 h-4 accent-cyan-600"
+                    id={`perm-${key}-view`}
+                  />
+                </div>
+                <div className="flex justify-center">
+                  <input
+                    type="checkbox"
+                    checked={perm.edit}
+                    onChange={() => togglePermField(key, 'edit')}
+                    className="w-4 h-4 accent-cyan-600"
+                    id={`perm-${key}-edit`}
+                    disabled={!perm.view}
+                  />
+                </div>
+              </div>
+            );
+          })}
+          {/* Admin toggle */}
+          <div className="grid grid-cols-3 gap-1 items-center p-2 border border-amber-200 bg-amber-50 rounded-lg dark:border-amber-900 dark:bg-amber-900/20">
+            <Label className="cursor-pointer text-sm font-semibold text-amber-700 dark:text-amber-400">Админпанель</Label>
+            <div className="flex justify-center col-span-2">
               <input
                 type="checkbox"
-                checked={formData.permissions[key]}
-                onChange={() => togglePermission(key)}
-                className="w-4 h-4"
-                id={`perm-${key}`}
+                checked={!!formData.permissions.admin}
+                onChange={() => setFormData({ ...formData, permissions: { ...formData.permissions, admin: !formData.permissions.admin } })}
+                className="w-4 h-4 accent-amber-600"
+                id="perm-admin"
               />
-              <Label htmlFor={`perm-${key}`} className="cursor-pointer flex-1">
-                {label}
-              </Label>
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </div>
@@ -269,8 +317,18 @@ const Roles = ({ user }) => {
                 ) : (
                   roles.map((role) => {
                     const activePermissions = Object.entries(role.permissions || {})
-                      .filter(([_, value]) => value)
-                      .map(([key]) => permissionLabels[key])
+                      .filter(([key, value]) => {
+                        if (key === 'admin') return !!value;
+                        const p = normalizePerm(value);
+                        return p.view || p.edit;
+                      })
+                      .map(([key, value]) => {
+                        const label = sectionLabels[key] || (key === 'admin' ? 'Админпанель' : key);
+                        if (key === 'admin') return label;
+                        const p = normalizePerm(value);
+                        const suffix = p.view && p.edit ? '' : p.view ? ' (П)' : ' (Р)';
+                        return label + suffix;
+                      })
                       .filter(Boolean);
                     
                     return (

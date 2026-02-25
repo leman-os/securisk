@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Eye, Edit, Trash2, Filter, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, X, ExternalLink } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, Filter, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, X, ExternalLink, Info } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import { useLocation } from 'react-router-dom';
 
@@ -353,7 +354,41 @@ const Vulnerabilities = ({ user }) => {
             </div>
 
             <div>
-              <Label>CVSS v3.1 Vector (необязательно)</Label>
+              <div className="flex items-center gap-2 mb-1">
+                <Label>CVSS v3.1 Vector (необязательно)</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button type="button" className="text-slate-400 hover:text-cyan-500 transition-colors">
+                      <Info className="w-4 h-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-96 text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" side="right">
+                    <p className="font-semibold mb-2 text-slate-900 dark:text-white">Формат CVSS v3.1 Vector</p>
+                    <p className="text-slate-600 dark:text-slate-300 mb-3">Строка вида <code className="bg-slate-100 dark:bg-slate-700 px-1 rounded text-xs font-mono">CVSS:3.1/AV:_/AC:_/PR:_/UI:_/S:_/C:_/I:_/A:_</code></p>
+                    <div className="space-y-1.5 text-xs">
+                      {[
+                        ['AV — Attack Vector', 'N=Network, A=Adjacent, L=Local, P=Physical'],
+                        ['AC — Attack Complexity', 'L=Low, H=High'],
+                        ['PR — Privileges Required', 'N=None, L=Low, H=High'],
+                        ['UI — User Interaction', 'N=None, R=Required'],
+                        ['S — Scope', 'U=Unchanged, C=Changed'],
+                        ['C — Confidentiality', 'N=None, L=Low, H=High'],
+                        ['I — Integrity', 'N=None, L=Low, H=High'],
+                        ['A — Availability', 'N=None, L=Low, H=High'],
+                      ].map(([k, v]) => (
+                        <div key={k} className="flex gap-2">
+                          <span className="font-semibold text-slate-700 dark:text-slate-300 w-44 flex-shrink-0">{k}</span>
+                          <span className="text-slate-500 dark:text-slate-400">{v}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-600">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Пример критической уязвимости:</p>
+                      <code className="text-xs font-mono text-cyan-600 dark:text-cyan-400">CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H</code>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
               <Input
                 value={formData.cvss_vector}
                 onChange={(e) => setFormData({...formData, cvss_vector: e.target.value})}

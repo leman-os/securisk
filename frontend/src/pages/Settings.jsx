@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Settings as SettingsIcon, Sun, Moon } from 'lucide-react';
+import { Plus, X, Settings as SettingsIcon, Sun, Moon, User } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Settings = ({ user }) => {
@@ -35,6 +35,7 @@ const Settings = ({ user }) => {
   const [newAssetCategory, setNewAssetCategory] = useState('');
   const [newThreatCategory, setNewThreatCategory] = useState('');
   const [newThreatSource, setNewThreatSource] = useState('');
+  const [newAssetOwner, setNewAssetOwner] = useState('');
 
   useEffect(() => {
     fetchSettings();
@@ -149,6 +150,18 @@ const Settings = ({ user }) => {
   const removeAssetCategory = (category) => {
     const updated = settings.asset_categories.filter((c) => c !== category);
     updateSettings({ asset_categories: updated });
+  };
+
+  const addAssetOwner = () => {
+    if (!newAssetOwner.trim()) return;
+    const updated = [...(settings?.asset_owners || []), newAssetOwner.trim()];
+    updateSettings({ asset_owners: updated });
+    setNewAssetOwner('');
+  };
+
+  const removeAssetOwner = (owner) => {
+    const updated = (settings.asset_owners || []).filter((o) => o !== owner);
+    updateSettings({ asset_owners: updated });
   };
 
   if (loading) {
@@ -502,9 +515,59 @@ const Settings = ({ user }) => {
         </CardContent>
       </Card>
 
-      <Card className="border-slate-200 bg-slate-50">
+      {/* Asset Owners */}
+      <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
+            <User className="w-5 h-5 text-teal-600" />
+            Владельцы активов
+          </CardTitle>
+          <CardDescription className="dark:text-slate-400">
+            Список владельцев информационных активов. Используется при создании и редактировании активов.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {(settings?.asset_owners || []).map((owner) => (
+              <Badge
+                key={owner}
+                className="bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-900/40 dark:text-teal-300 dark:border-teal-700 px-3 py-1.5 text-sm"
+                variant="outline"
+              >
+                {owner}
+                <button
+                  onClick={() => removeAssetOwner(owner)}
+                  className="ml-2 hover:text-teal-900 dark:hover:text-teal-100"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            ))}
+            {(!settings?.asset_owners || settings.asset_owners.length === 0) && (
+              <p className="text-sm text-slate-400 dark:text-slate-500">Нет владельцев активов. Добавьте ниже.</p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Добавить владельца актива (ФИО или название)"
+              value={newAssetOwner}
+              onChange={(e) => setNewAssetOwner(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addAssetOwner()}
+              className="dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+            />
+            <Button
+              onClick={addAssetOwner}
+              className="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50">
         <CardContent className="pt-6">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             <strong>Примечание:</strong> Изменения в справочниках сразу отражаются при создании и редактировании инцидентов, активов, угроз и уязвимостей.
           </p>
         </CardContent>

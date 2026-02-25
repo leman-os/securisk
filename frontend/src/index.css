@@ -166,3 +166,103 @@ code {
 .dark .ProseMirror code     { background: #334155; color: #e2e8f0; }
 .dark .wiki-content blockquote,
 .dark .ProseMirror blockquote { border-left-color: #475569; color: #94a3b8; }
+
+/* ── Тёмная тема: иконки календаря и цвет текста в полях ввода ── */
+
+/* Иконка выбора даты/времени — делаем белой в тёмной теме */
+.dark input[type="date"],
+.dark input[type="datetime-local"],
+.dark input[type="time"],
+.dark input[type="month"] {
+    color-scheme: dark;           /* системная иконка адаптируется под тёмный фон */
+    color: #f1f5f9;
+    background-color: #1e293b;
+    border-color: #475569;
+}
+
+/* Иконка календаря (webkit) — делаем белой через brightness(0)+invert(1) */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+.dark input[type="time"]::-webkit-calendar-picker-indicator,
+.dark input[type="month"]::-webkit-calendar-picker-indicator,
+html.dark input[type="date"]::-webkit-calendar-picker-indicator,
+html.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+html.dark input[type="time"]::-webkit-calendar-picker-indicator,
+html.dark input[type="month"]::-webkit-calendar-picker-indicator {
+    filter: brightness(0) invert(1) !important;
+    cursor: pointer !important;
+    opacity: 0.85 !important;
+}
+
+/* Все текстовые поля ввода в тёмной теме — белый текст */
+.dark input[type="text"],
+.dark input[type="password"],
+.dark input[type="email"],
+.dark input[type="number"],
+.dark input[type="search"],
+.dark input[type="tel"],
+.dark input[type="url"],
+.dark textarea,
+.dark select {
+    color: #f1f5f9;
+    background-color: #1e293b;
+}
+
+/* Placeholder текст в тёмной теме */
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: #64748b;
+}
+
+/* Фокус в тёмной теме */
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+    outline-color: #0891b2;
+    border-color: #0891b2;
+}
+
+/* ── Тёмная тема: Radix UI Select компоненты ── */
+
+/* Кнопка-триггер Select */
+.dark [role="combobox"],
+.dark button[data-radix-select-trigger] {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+    border-color: #475569 !important;
+}
+
+/* Выпадающее меню Select */
+.dark [data-radix-popper-content-wrapper] [role="listbox"],
+.dark [data-radix-select-content] {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+/* Элементы списка */
+.dark [role="option"] {
+    color: #f1f5f9 !important;
+}
+.dark [role="option"]:hover,
+.dark [role="option"]:focus,
+.dark [role="option"][data-highlighted] {
+    background-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+.dark [role="option"][data-state="checked"] {
+    background-color: #164e63 !important;
+    color: #67e8f9 !important;
+}
+
+/* SelectTrigger placeholder */
+.dark [data-placeholder] {
+    color: #64748b !important;
+}

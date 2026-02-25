@@ -7,8 +7,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict, EmailStr
-from typing import List, Optional
+from pydantic import BaseModel, Field, ConfigDict, EmailStr, model_validator
+from typing import List, Optional, Dict, Any, Union
 import uuid
 from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
@@ -134,7 +134,7 @@ class Incident(BaseModel):
     detection_source: Optional[str] = None  # Источник выявления
     criticality: str  # Низкая, Средняя, Высокая
     detected_by: Optional[str] = None  # Выявил (ФИО)
-    status: str  # Открыт, Закрыт
+    status: str  # Новая, В работе, Завершен, Проверен
     closed_at: Optional[datetime] = None  # Время закрытия
     mtta: Optional[float] = None  # Время от инцидента до обнаружения (минуты)
     mttr: Optional[float] = None  # Время от обнаружения до начала реакции (минуты)
@@ -143,8 +143,15 @@ class Incident(BaseModel):
     measures: Optional[str] = None  # Меры
     is_repeat: bool = False  # Повтор
     comment: Optional[str] = None  # Комментарий
+    assigned_to: List[str] = Field(default_factory=list)  # User IDs assigned to this incident
+    created_by: Optional[str] = None  # User ID who created the incident
+    attachments: List[dict] = Field(default_factory=list)  # Список вложений {id, data, filename}
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class IncidentAttachmentCreate(BaseModel):
+    data: str  # base64 data URL
+    filename: str = ""
 
 class IncidentCreate(BaseModel):
     incident_number: Optional[str] = None  # Auto-generated if not provided
@@ -159,12 +166,14 @@ class IncidentCreate(BaseModel):
     detection_source: Optional[str] = None
     criticality: str
     detected_by: Optional[str] = None
-    status: str
+    status: str = "Новая"
     closed_at: Optional[datetime] = None  # Время закрытия
     description: Optional[str] = None
     measures: Optional[str] = None
     is_repeat: bool = False
     comment: Optional[str] = None
+    assigned_to: List[str] = Field(default_factory=list)
+    attachments: List[dict] = Field(default_factory=list)
 
 class IncidentUpdate(BaseModel):
     incident_number: Optional[str] = None
@@ -185,6 +194,25 @@ class IncidentUpdate(BaseModel):
     measures: Optional[str] = None
     is_repeat: Optional[bool] = None
     comment: Optional[str] = None
+    assigned_to: Optional[List[str]] = None
+    attachments: Optional[List[dict]] = None
+
+# ==================== INCIDENT COMMENT MODEL ====================
+class IncidentComment(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    incident_id: str
+    text: str = ""
+    image: Optional[str] = None  # base64 data URL
+    type: str = "message"  # "message" or "note"
+    user_id: str
+    user_name: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class IncidentCommentCreate(BaseModel):
+    text: str = ""
+    image: Optional[str] = None  # base64 data URL
+    type: str = "message"
 
 class Asset(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -253,6 +281,7 @@ class Settings(BaseModel):
     asset_categories: List[str] = Field(default_factory=lambda: ["Сервер", "Рабочая станция", "Сетевое оборудование", "ИТ-инфраструктура", "База данных", "Приложение"])
     threat_categories: List[str] = Field(default_factory=lambda: ["Внешний злоумышленник", "Инсайдер", "Стихийное бедствие", "Сбой оборудования"])
     threat_sources: List[str] = Field(default_factory=lambda: ["Хакер-одиночка", "Криминальная группа", "Недовольный сотрудник", "Конкурент"])
+    asset_owners: List[str] = Field(default_factory=list)
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class SettingsUpdate(BaseModel):
@@ -263,6 +292,7 @@ class SettingsUpdate(BaseModel):
     asset_categories: Optional[List[str]] = None
     threat_categories: Optional[List[str]] = None
     threat_sources: Optional[List[str]] = None
+    asset_owners: Optional[List[str]] = None
 
 class DashboardStats(BaseModel):
     total_risks: int
@@ -361,17 +391,42 @@ class MitreAttack(BaseModel):
     description: str
 
 # ==================== USER MANAGEMENT MODELS ====================
+
+class SectionPermission(BaseModel):
+    view: bool = True
+    edit: bool = True
+
 class RolePermissions(BaseModel):
-    dashboard: bool = True
-    incidents: bool = True
-    assets: bool = True
-    risks: bool = True
-    threats: bool = True
-    vulnerabilities: bool = True
-    users: bool = False
-    wiki: bool = True
-    registries: bool = True
-    settings: bool = False
+    dashboard: SectionPermission = Field(default_factory=SectionPermission)
+    requirements: SectionPermission = Field(default_factory=SectionPermission)
+    incidents: SectionPermission = Field(default_factory=SectionPermission)
+    assets: SectionPermission = Field(default_factory=SectionPermission)
+    risks: SectionPermission = Field(default_factory=SectionPermission)
+    threats: SectionPermission = Field(default_factory=SectionPermission)
+    vulnerabilities: SectionPermission = Field(default_factory=SectionPermission)
+    users: SectionPermission = Field(default_factory=lambda: SectionPermission(view=False, edit=False))
+    wiki: SectionPermission = Field(default_factory=SectionPermission)
+    registries: SectionPermission = Field(default_factory=SectionPermission)
+    graph: SectionPermission = Field(default_factory=SectionPermission)
+    settings: SectionPermission = Field(default_factory=lambda: SectionPermission(view=False, edit=False))
+    admin: bool = False
+
+    @model_validator(mode='before')
+    @classmethod
+    def convert_legacy_bool_permissions(cls, data):
+        """Конвертируем старый формат (bool) в новый ({view, edit})"""
+        if not isinstance(data, dict):
+            return data
+        non_section = {'admin'}
+        result = {}
+        for k, v in data.items():
+            if k in non_section:
+                result[k] = v
+            elif isinstance(v, bool):
+                result[k] = {'view': v, 'edit': v}
+            else:
+                result[k] = v
+        return result
 
 class Role(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -1087,20 +1142,21 @@ async def create_incident(incident_data: IncidentCreate, current_user: User = De
     data_dict = incident_data.model_dump()
     if not data_dict.get('incident_number'):
         data_dict['incident_number'] = await generate_incident_number()
-    
+
+    # Set created_by to current user
+    data_dict['created_by'] = current_user.id
+
     incident = Incident(**data_dict)
     doc = incident.model_dump()
-    
+
     # Calculate metrics
     doc = calculate_incident_metrics(doc)
-    
-    # Removed auto-close logic - users must manually set closed_at
-    
+
     # Update incident object with calculated metrics
     incident.mtta = doc.get('mtta')
     incident.mttr = doc.get('mttr')
     incident.mttc = doc.get('mttc')
-    
+
     # Serialize datetimes
     doc['incident_time'] = doc['incident_time'].isoformat()
     doc['detection_time'] = doc['detection_time'].isoformat()
@@ -1110,7 +1166,7 @@ async def create_incident(incident_data: IncidentCreate, current_user: User = De
         doc['closed_at'] = doc['closed_at'].isoformat()
     doc['created_at'] = doc['created_at'].isoformat()
     doc['updated_at'] = doc['updated_at'].isoformat()
-    
+
     await db.incidents.insert_one(doc)
     return incident
 
@@ -1124,25 +1180,38 @@ async def get_incidents(
 ):
     # Calculate skip
     skip = (page - 1) * limit
-    
+
     # Determine sort direction
     sort_direction = -1 if sort_order == "desc" else 1
-    
+
+    # Build query filter based on role
+    is_admin = current_user.role == "Администратор"
+    if is_admin:
+        query = {}
+    else:
+        # Non-admin: see incidents created by them OR assigned to them
+        query = {
+            "$or": [
+                {"created_by": current_user.id},
+                {"assigned_to": current_user.id}
+            ]
+        }
+
     # Get total count
-    total = await db.incidents.count_documents({})
-    
+    total = await db.incidents.count_documents(query)
+
     # Get paginated and sorted incidents
-    incidents = await db.incidents.find({}, {"_id": 0}).sort(sort_by, sort_direction).skip(skip).limit(limit).to_list(limit)
-    
+    incidents = await db.incidents.find(query, {"_id": 0}).sort(sort_by, sort_direction).skip(skip).limit(limit).to_list(limit)
+
     for incident in incidents:
         # Parse datetime fields
         for field in ['incident_time', 'detection_time', 'reaction_start_time', 'closed_at', 'created_at', 'updated_at']:
             if incident.get(field) and isinstance(incident[field], str):
                 incident[field] = datetime.fromisoformat(incident[field])
-    
+
     # Calculate total pages
     total_pages = (total + limit - 1) // limit
-    
+
     return PaginatedIncidents(
         items=incidents,
         total=total,
@@ -1198,17 +1267,54 @@ async def update_incident(incident_id: str, incident_data: IncidentUpdate, curre
     current_incident = await db.incidents.find_one({"id": incident_id}, {"_id": 0})
     if not current_incident:
         raise HTTPException(status_code=404, detail="Incident not found")
-    
-    update_dict = {k: v for k, v in incident_data.model_dump().items() if v is not None}
+
+    # Permission check: admin can edit all; non-admin can only edit assigned incidents
+    is_admin = current_user.role == "Администратор"
+    if not is_admin:
+        assigned = current_incident.get('assigned_to', [])
+        created_by = current_incident.get('created_by')
+        if current_user.id not in assigned and current_user.id != created_by:
+            raise HTTPException(status_code=403, detail="You can only edit incidents assigned to you or created by you")
+
+    # Only admin can change assigned_to
+    update_data = incident_data.model_dump()
+    if not is_admin and update_data.get('assigned_to') is not None:
+        update_data['assigned_to'] = None  # Non-admin cannot reassign
+
+    update_dict = {k: v for k, v in update_data.items() if v is not None}
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
-    
-    # Removed auto-close logic - users must manually set closed_at
-    
+
+    # Only admin can change status FROM "Проверен"
+    old_status = current_incident.get('status')
+    new_status_req = update_dict.get('status')
+    if old_status == 'Проверен' and new_status_req and new_status_req != old_status and not is_admin:
+        raise HTTPException(status_code=403, detail="Только администратор может изменить статус «Проверен»")
+
+    # Когда статус меняется на "Проверен" — автоматически ставим дату закрытия
+    if update_dict.get('status') == 'Проверен' and not update_dict.get('closed_at'):
+        if not current_incident.get('closed_at'):
+            update_dict['closed_at'] = datetime.now(timezone.utc).isoformat()
+
+    # When status changes to "Завершен", auto-assign to all admin users
+    if update_dict.get('status') == 'Завершен':
+        admin_users = await db.users.find({"role": "Администратор"}, {"_id": 0, "id": 1}).to_list(100)
+        admin_ids = [u['id'] for u in admin_users]
+        # Also get admins via role collection
+        admin_roles = await db.roles.find({"name": "Администратор"}, {"_id": 0, "id": 1}).to_list(10)
+        for ar in admin_roles:
+            role_users = await db.users.find({"role": ar['id']}, {"_id": 0, "id": 1}).to_list(100)
+            admin_ids.extend([u['id'] for u in role_users])
+        admin_ids = list(set(admin_ids))
+        if admin_ids:
+            current_assigned = current_incident.get('assigned_to', [])
+            merged_assigned = list(set(current_assigned + admin_ids))
+            update_dict['assigned_to'] = merged_assigned
+
     # Merge with current data for metric calculation
     merged_data = {**current_incident, **update_dict}
     merged_data = calculate_incident_metrics(merged_data)
-    
+
     # Update metrics
     if 'mtta' in merged_data:
         update_dict['mtta'] = merged_data['mtta']
@@ -1216,18 +1322,72 @@ async def update_incident(incident_id: str, incident_data: IncidentUpdate, curre
         update_dict['mttr'] = merged_data['mttr']
     if 'mttc' in merged_data:
         update_dict['mttc'] = merged_data['mttc']
-    
+
     # Serialize datetimes
     for key in ['incident_time', 'detection_time', 'reaction_start_time', 'closed_at']:
         if key in update_dict and isinstance(update_dict[key], datetime):
             update_dict[key] = update_dict[key].isoformat()
-    
+
     update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
-    
+
     result = await db.incidents.update_one({"id": incident_id}, {"$set": update_dict})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Incident not found")
-    
+
+    # === Auto-notes for tracked changes ===
+    notes_to_add = []
+    note_time = datetime.now(timezone.utc).isoformat()
+
+    # 1. Status change note
+    old_status = current_incident.get('status')
+    new_status = update_dict.get('status')
+    if new_status and new_status != old_status:
+        notes_to_add.append(f"Статус изменён: {old_status} → {new_status}")
+
+    # 2. Reassignment note (only if assigned_to was explicitly in request)
+    if update_data.get('assigned_to') is not None:
+        old_assigned = set(current_incident.get('assigned_to') or [])
+        new_assigned = set(update_dict.get('assigned_to') or [])
+        # Exclude admin auto-add on status change to avoid noise
+        net_added = new_assigned - old_assigned
+        net_removed = old_assigned - new_assigned
+        if net_added or net_removed:
+            all_ids = list(new_assigned | old_assigned)
+            users_rows = await db.users.find({"id": {"$in": all_ids}}, {"_id": 0, "id": 1, "full_name": 1}).to_list(200)
+            uid_name = {u['id']: u['full_name'] for u in users_rows}
+            parts = []
+            if net_added:
+                parts.append("добавлены: " + ", ".join(uid_name.get(uid, uid) for uid in sorted(net_added)))
+            if net_removed:
+                parts.append("удалены: " + ", ".join(uid_name.get(uid, uid) for uid in sorted(net_removed)))
+            if parts:
+                notes_to_add.append("Переназначение — " + "; ".join(parts))
+
+    # 3. General edit note (when other meaningful fields changed, no status/assignment note yet)
+    if not notes_to_add:
+        tracked = ['description', 'measures', 'violator', 'system', 'incident_type', 'criticality',
+                   'incident_time', 'detection_time', 'reaction_start_time', 'login', 'detection_source']
+        for field in tracked:
+            if field in update_dict:
+                old_val = str(current_incident.get(field) or '')
+                new_val = str(update_dict.get(field) or '')
+                if old_val != new_val:
+                    notes_to_add.append("Инцидент обновлён")
+                    break
+
+    for note_text in notes_to_add:
+        note_doc = {
+            "id": str(uuid.uuid4()),
+            "incident_id": incident_id,
+            "text": note_text,
+            "image": None,
+            "type": "note",
+            "user_id": current_user.id,
+            "user_name": current_user.full_name,
+            "created_at": note_time,
+        }
+        await db.incident_comments.insert_one(note_doc)
+
     incident = await db.incidents.find_one({"id": incident_id}, {"_id": 0})
     for field in ['incident_time', 'detection_time', 'reaction_start_time', 'closed_at', 'created_at', 'updated_at']:
         if incident.get(field) and isinstance(incident[field], str):
@@ -1239,7 +1399,82 @@ async def delete_incident(incident_id: str, current_user: User = Depends(get_cur
     result = await db.incidents.delete_one({"id": incident_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Incident not found")
+    # Also delete comments
+    await db.incident_comments.delete_many({"incident_id": incident_id})
     return {"message": "Incident deleted"}
+
+# ==================== INCIDENT COMMENTS ====================
+
+@api_router.get("/incidents/{incident_id}/comments", response_model=List[IncidentComment])
+async def get_incident_comments(incident_id: str, current_user: User = Depends(get_current_user)):
+    comments = await db.incident_comments.find(
+        {"incident_id": incident_id}, {"_id": 0}
+    ).sort("created_at", 1).to_list(1000)
+    result = []
+    for c in comments:
+        if isinstance(c.get('created_at'), str):
+            c['created_at'] = datetime.fromisoformat(c['created_at'])
+        result.append(IncidentComment(**c))
+    return result
+
+@api_router.post("/incidents/{incident_id}/comments", response_model=IncidentComment)
+async def add_incident_comment(incident_id: str, comment_data: IncidentCommentCreate, current_user: User = Depends(get_current_user)):
+    incident = await db.incidents.find_one({"id": incident_id})
+    if not incident:
+        raise HTTPException(status_code=404, detail="Incident not found")
+    if not comment_data.text.strip() and not comment_data.image:
+        raise HTTPException(status_code=400, detail="Comment must have text or image")
+    comment = IncidentComment(
+        incident_id=incident_id,
+        text=comment_data.text,
+        image=comment_data.image,
+        user_id=current_user.id,
+        user_name=current_user.full_name
+    )
+    doc = comment.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    await db.incident_comments.insert_one(doc)
+    return comment
+
+@api_router.delete("/incidents/{incident_id}/comments/{comment_id}")
+async def delete_incident_comment(incident_id: str, comment_id: str, current_user: User = Depends(get_current_user)):
+    comment = await db.incident_comments.find_one({"id": comment_id, "incident_id": incident_id})
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    # Only admin or comment author can delete
+    is_admin = current_user.role == "Администратор"
+    if not is_admin and comment.get('user_id') != current_user.id:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    await db.incident_comments.delete_one({"id": comment_id})
+    return {"message": "Comment deleted"}
+
+# ==================== INCIDENT ATTACHMENTS ====================
+
+@api_router.post("/incidents/{incident_id}/attachments")
+async def add_incident_attachment(incident_id: str, attachment: IncidentAttachmentCreate, current_user: User = Depends(get_current_user)):
+    incident = await db.incidents.find_one({"id": incident_id}, {"_id": 0})
+    if not incident:
+        raise HTTPException(status_code=404, detail="Incident not found")
+    att = {
+        "id": str(uuid.uuid4()),
+        "data": attachment.data,
+        "filename": attachment.filename,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.incidents.update_one({"id": incident_id}, {"$push": {"attachments": att}})
+    return {"message": "Attachment added", "id": att["id"]}
+
+@api_router.delete("/incidents/{incident_id}/attachments/{attachment_id}")
+async def delete_incident_attachment(incident_id: str, attachment_id: str, current_user: User = Depends(get_current_user)):
+    incident = await db.incidents.find_one({"id": incident_id}, {"_id": 0})
+    if not incident:
+        raise HTTPException(status_code=404, detail="Incident not found")
+    attachments = incident.get('attachments', [])
+    new_attachments = [a for a in attachments if a.get('id') != attachment_id]
+    if len(new_attachments) == len(attachments):
+        raise HTTPException(status_code=404, detail="Attachment not found")
+    await db.incidents.update_one({"id": incident_id}, {"$set": {"attachments": new_attachments}})
+    return {"message": "Attachment deleted"}
 
 # ==================== ASSET ENDPOINTS ====================
 

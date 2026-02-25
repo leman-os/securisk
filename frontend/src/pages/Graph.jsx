@@ -7,13 +7,14 @@ import { GitBranch, RefreshCw, ZoomIn, ZoomOut, Maximize2, Info, X, ExternalLink
 import { Button } from '@/components/ui/button';
 
 /* ── node visual config ─────────────────────────────────────────── */
+// shape: 'rect' | 'ellipse' | 'diamond' | 'circle'
 const NODE_CFG = {
-  asset:         { label: 'Актив',            color: '#0891b2', glow: '#67e8f9', r: 22 },
-  risk:          { label: 'Риск',             color: '#ef4444', glow: '#fca5a5', r: 13 },
-  threat:        { label: 'Угроза',           color: '#7c3aed', glow: '#c4b5fd', r: 13 },
-  vulnerability: { label: 'Уязвимость',       color: '#d97706', glow: '#fcd34d', r: 13 },
-  risk_owner:    { label: 'Вл. риска',        color: '#16a34a', glow: '#86efac', r: 9  },
-  asset_owner:   { label: 'Вл. актива',       color: '#0d9488', glow: '#5eead4', r: 9  },
+  asset:         { label: 'Актив',            color: '#0891b2', glow: '#67e8f9', r: 32, shape: 'rect' },
+  risk:          { label: 'Риск',             color: '#ef4444', glow: '#fca5a5', r: 20, shape: 'ellipse' },
+  threat:        { label: 'Угроза',           color: '#7c3aed', glow: '#c4b5fd', r: 20, shape: 'diamond' },
+  vulnerability: { label: 'Уязвимость',       color: '#d97706', glow: '#fcd34d', r: 18, shape: 'circle' },
+  risk_owner:    { label: 'Вл. риска',        color: '#16a34a', glow: '#86efac', r: 12, shape: 'circle' },
+  asset_owner:   { label: 'Вл. актива',       color: '#0d9488', glow: '#5eead4', r: 12, shape: 'circle' },
 };
 
 /* link colors: more opaque for asset connections */
@@ -38,20 +39,21 @@ const NAV_PATH = {
 
 const nid = (type, id) => `${type}::${id}`;
 
-/* split label into ≤2 lines of ≤11 chars each */
-const wrapLines = (text, maxLen = 11) => {
+/* split label into ≤3 lines of ≤12 chars each (asset nodes are bigger now) */
+const wrapLines = (text, maxLen = 12, maxLines = 3) => {
   if (!text) return [''];
   if (text.length <= maxLen) return [text];
   const words = text.split(/[\s\-\/]+/);
   const lines = [];
   let cur = '';
   for (const w of words) {
-    const attempt = cur ? `${cur} ${w}` : w;
+    const word = w.length > maxLen ? w.slice(0, maxLen - 1) + '…' : w;
+    const attempt = cur ? `${cur} ${word}` : word;
     if (attempt.length <= maxLen) { cur = attempt; }
-    else { if (cur) lines.push(cur); cur = w.slice(0, maxLen); }
+    else { if (cur) lines.push(cur); cur = word; }
   }
   if (cur) lines.push(cur);
-  return lines.slice(0, 2);
+  return lines.slice(0, maxLines);
 };
 
 /* ── tooltip HTML ────────────────────────────────────────────────── */
@@ -312,79 +314,131 @@ const Graph = () => {
 
     svg.on('click', () => {
       setSelected(null);
-      nodeSel.select('circle').attr('opacity', 1).attr('stroke-width', d => d.type === 'asset' ? 2 : 1.5);
-      nodeSel.selectAll('text').attr('opacity', d => d.type === 'asset' ? 1 : 0.9);
+      nodeSel.select('circle, rect, ellipse, polygon').attr('opacity', 1).attr('stroke-width', d => d.shape === 'rect' ? 2 : 1.5);
+      nodeSel.selectAll('text').attr('opacity', 1);
       linkSel.attr('opacity', 1);
     });
 
-    /* ── circles ── */
-    nodeSel.append('circle')
+    /* ── shapes per node type ── */
+    // Актив → прямоугольник
+    nodeSel.filter(d => d.shape === 'rect').append('rect')
+      .attr('width',  d => d.r * 2)
+      .attr('height', d => d.r * 1.2)
+      .attr('x',      d => -d.r)
+      .attr('y',      d => -d.r * 0.6)
+      .attr('rx', 8).attr('ry', 8)
+      .attr('fill',   d => d.color)
+      .attr('stroke', '#ffffff66')
+      .attr('stroke-width', 2)
+      .attr('filter', d => `url(#glow-${d.type})`);
+
+    // Риск → эллипс (шире, чем высокий)
+    nodeSel.filter(d => d.shape === 'ellipse').append('ellipse')
+      .attr('rx',     d => d.r * 1.4)
+      .attr('ry',     d => d.r * 0.75)
+      .attr('fill',   d => d.color + 'cc')
+      .attr('stroke', '#ffffff33')
+      .attr('stroke-width', 1.5)
+      .attr('filter', d => `url(#glow-${d.type})`);
+
+    // Угроза → ромб (diamond)
+    nodeSel.filter(d => d.shape === 'diamond').append('polygon')
+      .attr('points', d => {
+        const s = d.r * 1.3;
+        return `0,${-s} ${s},0 0,${s} ${-s},0`;
+      })
+      .attr('fill',   d => d.color + 'cc')
+      .attr('stroke', '#ffffff33')
+      .attr('stroke-width', 1.5)
+      .attr('filter', d => `url(#glow-${d.type})`);
+
+    // Уязвимость и владельцы → круг
+    nodeSel.filter(d => d.shape === 'circle').append('circle')
       .attr('r',            d => d.r)
-      .attr('fill',         d => d.type === 'asset' ? d.color : d.color + 'bb')
-      .attr('stroke',       d => d.type === 'asset' ? '#ffffff66' : '#ffffff22')
-      .attr('stroke-width', d => d.type === 'asset' ? 2 : 1.5)
+      .attr('fill',         d => d.type.endsWith('owner') ? d.color : d.color + 'bb')
+      .attr('stroke',       d => d.type.endsWith('owner') ? '#ffffff44' : '#ffffff22')
+      .attr('stroke-width', d => d.type.endsWith('owner') ? 1.5 : 1.5)
       .attr('filter',       d => `url(#glow-${d.type})`);
 
     /* ── labels ──────────────────────────────────────────────────────
-       Assets (large): text INSIDE the circle, white, wrapped to 2 lines
-       Others: text BELOW circle, readable via paint-order stroke         */
+       Assets (large r=32): text INSIDE the circle, white, wrapped to 3 lines
+       Others: text BELOW circle, short truncation, readable via outline      */
 
-    /* asset labels — inside */
+    /* asset labels — inside circle */
     nodeSel.filter(d => d.type === 'asset').each(function(d) {
       const grp   = d3.select(this);
-      const lines = wrapLines(d.label, 11);
-      const lineH = 11;
-      const offset = -(lines.length - 1) * lineH / 2;
+      const lines = wrapLines(d.label, 12, 3);
+      const lineH = 10;
+      const totalH = (lines.length - 1) * lineH;
       lines.forEach((line, i) => {
         grp.append('text')
           .text(line)
           .attr('text-anchor',       'middle')
           .attr('dominant-baseline', 'middle')
-          .attr('dy',        offset + i * lineH)
-          .attr('fill',      '#ffffff')
-          .attr('font-size', '9px')
-          .attr('font-weight', '700')
+          .attr('y', -totalH / 2 + i * lineH)
+          .attr('fill',        '#ffffff')
+          .attr('font-size',   '7px')
           .attr('font-family', 'system-ui, sans-serif')
           .style('pointer-events', 'none')
           .style('user-select',   'none');
       });
     });
 
-    /* non-asset labels — below, with outline for readability */
-    nodeSel.filter(d => d.type !== 'asset').append('text')
-      .text(d => {
-        const s = d.label;
-        return s.length > 20 ? s.slice(0, 19) + '…' : s;
-      })
+    /* risk / threat / vuln labels — inside their circle too, smaller */
+    nodeSel.filter(d => d.type !== 'asset' && !d.type.endsWith('owner')).each(function(d) {
+      const grp   = d3.select(this);
+      const lines = wrapLines(d.label, 10, 2);
+      const lineH = 9;
+      const totalH = (lines.length - 1) * lineH;
+      lines.forEach((line, i) => {
+        grp.append('text')
+          .text(line)
+          .attr('text-anchor',       'middle')
+          .attr('dominant-baseline', 'middle')
+          .attr('y', -totalH / 2 + i * lineH)
+          .attr('fill',        '#ffffff')
+          .attr('font-size',   '6.5px')
+          .attr('font-family', 'system-ui, sans-serif')
+          .style('pointer-events', 'none')
+          .style('user-select',   'none');
+      });
+    });
+
+    /* owner labels — tiny, below */
+    nodeSel.filter(d => d.type.endsWith('owner')).append('text')
+      .text(d => d.label.length > 14 ? d.label.slice(0, 13) + '…' : d.label)
       .attr('text-anchor',  'middle')
-      .attr('dy',           d => d.r + 12)
-      .attr('fill',         '#f1f5f9')
-      .attr('font-size',    d => d.type.endsWith('owner') ? '8px' : '9.5px')
+      .attr('dominant-baseline', 'middle')
+      .attr('fill',         '#e2e8f0')
+      .attr('font-size',    '6px')
       .attr('font-family',  'system-ui, sans-serif')
-      .attr('paint-order',  'stroke')
-      .attr('stroke',       '#020617')
-      .attr('stroke-width', '3px')
-      .attr('stroke-linejoin', 'round')
-      .attr('opacity', 0.9)
+      .attr('dy',           d => d.r + 9)
+      .attr('opacity', 0.85)
       .style('pointer-events', 'none')
       .style('user-select',   'none');
 
-    /* ── simulation — assets repel more, pulling clusters around them ── */
+    /* ── simulation — tighter clustering, nodes closer together ── */
     const sim = d3.forceSimulation(nodes)
       .force('link', d3.forceLink(links).id(d => d.id)
         .distance(d => {
-          if (['threat_asset','vuln_asset','risk_asset'].includes(d.kind)) return 110;
-          if (d.kind.endsWith('_owner')) return 70;
-          return 90;
+          if (['threat_asset','vuln_asset','risk_asset'].includes(d.kind)) return 80;
+          if (d.kind.endsWith('_owner')) return 50;
+          return 65;
         })
         .strength(d => {
-          if (['threat_asset','vuln_asset','risk_asset'].includes(d.kind)) return 0.7;
-          return 0.4;
+          if (['threat_asset','vuln_asset','risk_asset'].includes(d.kind)) return 0.9;
+          if (d.kind.endsWith('_owner')) return 0.6;
+          return 0.6;
         })
       )
-      .force('charge',  d3.forceManyBody().strength(d => d.type === 'asset' ? -600 : -220))
-      .force('center',  d3.forceCenter(width / 2, height / 2))
-      .force('collide', d3.forceCollide().radius(d => d.r + 20));
+      .force('charge',  d3.forceManyBody().strength(d => {
+        if (d.type === 'asset') return -400;
+        if (d.type.endsWith('owner')) return -80;
+        return -150;
+      }))
+      .force('center',  d3.forceCenter(width / 2, height / 2).strength(0.08))
+      .force('collide', d3.forceCollide().radius(d => d.r + 12).strength(0.7))
+      .alphaDecay(0.025);
 
     simRef.current = sim;
 
@@ -410,15 +464,16 @@ const Graph = () => {
 
   /* ── highlight on click ─────────────────────────────────────────── */
   const highlight = (id, connIds, ns, ls) => {
-    ns.select('circle')
-      .attr('opacity', d => (d.id === id || connIds.has(d.id)) ? 1 : 0.1)
-      .attr('stroke-width', d => d.id === id ? 4 : (d.type === 'asset' ? 2 : 1.5));
+    // Handle all shape types
+    ns.select('circle, rect, ellipse, polygon')
+      .attr('opacity', d => (d.id === id || connIds.has(d.id)) ? 1 : 0.12)
+      .attr('stroke-width', d => d.id === id ? 3.5 : (d.shape === 'rect' ? 2 : 1.5));
     ns.selectAll('text')
       .attr('opacity', d => (d.id === id || connIds.has(d.id)) ? 1 : 0.05);
     ls.attr('opacity', l => {
       const s = typeof l.source === 'object' ? l.source.id : l.source;
       const t = typeof l.target === 'object' ? l.target.id : l.target;
-      return (s === id || t === id) ? 1 : 0.03;
+      return (s === id || t === id) ? 1 : 0.04;
     });
   };
 
@@ -580,9 +635,37 @@ const Graph = () => {
 
         {/* Hint */}
         {!loading && !selected && (
-          <div className="absolute left-3 top-3 flex items-center gap-1.5 text-xs text-slate-500 bg-slate-900/80 px-2.5 py-1.5 rounded-lg pointer-events-none z-10">
+          <div className="absolute left-3 top-3 flex items-center gap-1.5 text-xs text-slate-400 bg-slate-900/80 px-2.5 py-1.5 rounded-lg pointer-events-none z-10">
             <Info className="w-3.5 h-3.5 flex-shrink-0" />
-            Наведите для деталей · Кликните для связей · «Открыть» — перейти в раздел
+            Наведите для деталей · Кликните для связей · Тащите узлы · Скролл — масштаб
+          </div>
+        )}
+
+        {/* Legend */}
+        {!loading && (
+          <div className="absolute bottom-3 right-3 bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2.5 z-10 pointer-events-none">
+            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Легенда</div>
+            <div className="space-y-1.5">
+              {Object.entries(NODE_CFG).map(([type, cfg]) => (
+                <div key={type} className="flex items-center gap-2">
+                  <svg width="18" height="16" style={{ flexShrink: 0 }}>
+                    {cfg.shape === 'rect' && (
+                      <rect x="1" y="3" width="16" height="10" rx="2" fill={cfg.color} fillOpacity="0.9" />
+                    )}
+                    {cfg.shape === 'ellipse' && (
+                      <ellipse cx="9" cy="8" rx="8" ry="5" fill={cfg.color} fillOpacity="0.9" />
+                    )}
+                    {cfg.shape === 'diamond' && (
+                      <polygon points="9,1 17,8 9,15 1,8" fill={cfg.color} fillOpacity="0.9" />
+                    )}
+                    {cfg.shape === 'circle' && (
+                      <circle cx="9" cy="8" r={Math.min(cfg.r * 0.4 + 2, 7)} fill={cfg.color} fillOpacity="0.9" />
+                    )}
+                  </svg>
+                  <span className="text-xs text-slate-300">{cfg.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
