@@ -1,0 +1,35 @@
+version: '3.9'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-changeme}
+      MONGO_INITDB_DATABASE: securisk_db
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - securisk_net
+
+  app:
+    image: securisk:latest   # собирается через build.sh вендором
+    restart: always
+    depends_on:
+      - mongodb
+    environment:
+      MONGO_URL: mongodb://securisk_user:${MONGO_PASSWORD:-changeme}@mongodb:27017/securisk_db?authSource=securisk_db
+      DB_NAME: securisk_db
+      SECRET_KEY: ${SECRET_KEY:-change-this-secret}
+      LICENSE_SALT: ${LICENSE_SALT}   # задаётся вендором при сборке
+    ports:
+      - "80:80"
+    networks:
+      - securisk_net
+
+volumes:
+  mongo_data:
+
+networks:
+  securisk_net:

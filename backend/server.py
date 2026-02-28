@@ -6,6 +6,9 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import hashlib
+import hmac as hmac_lib
+import subprocess
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr, model_validator
 from typing import List, Optional, Dict, Any, Union
@@ -28,6 +31,41 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production')
 ALGORITHM = "HS256"
+
+# ==================== LICENSE CONFIG ====================
+LICENSE_SALT = os.environ.get('LICENSE_SALT', 'sr-commercial-salt-2025')
+TRIAL_DAYS = 40
+
+def get_machine_id() -> str:
+    """Возвращает MachineID: SHA256 от /etc/machine-id + MAC-адрес"""
+    try:
+        with open('/etc/machine-id', 'r') as f:
+            system_id = f.read().strip()
+    except Exception:
+        try:
+            with open('/proc/sys/kernel/random/boot_id', 'r') as f:
+                system_id = f.read().strip().replace('-', '')
+        except Exception:
+            system_id = 'unknown'
+    try:
+        result = subprocess.run(
+            ['ip', 'link', 'show'],
+            capture_output=True, text=True, timeout=5
+        )
+        mac = 'unknown'
+        for line in result.stdout.split('\n'):
+            if 'link/ether' in line and 'lo' not in line:
+                mac = line.strip().split()[1]
+                break
+    except Exception:
+        mac = 'unknown'
+    raw = f"{system_id}:{mac}"
+    return hashlib.sha256(raw.encode()).hexdigest()[:32]
+
+def compute_install_hash(install_date: str, machine_id: str) -> str:
+    """HMAC-SHA256 от даты установки. Защита от ручной правки даты в БД."""
+    key = f"{machine_id}:{LICENSE_SALT}".encode()
+    return hmac_lib.new(key, install_date.encode(), hashlib.sha256).hexdigest()
 
 # Create the main app
 app = FastAPI()
@@ -293,6 +331,17 @@ class SettingsUpdate(BaseModel):
     threat_categories: Optional[List[str]] = None
     threat_sources: Optional[List[str]] = None
     asset_owners: Optional[List[str]] = None
+
+# ==================== LICENSE MODELS ====================
+class LicenseActivate(BaseModel):
+    license_key: str
+
+class LicenseStatus(BaseModel):
+    machine_id: str
+    status: str          # "trial" | "active" | "expired"
+    days_left: Optional[int] = None
+    expires: Optional[str] = None
+    message: str
 
 class DashboardStats(BaseModel):
     total_risks: int
@@ -717,6 +766,69 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+# ==================== LICENSE HELPERS ====================
+
+def _validate_license_key(license_key: str, machine_id: str) -> Optional[datetime]:
+    """Проверяет ключ. Возвращает дату истечения или None при ошибке."""
+    parts = license_key.split('.')
+    if len(parts) != 2:
+        return None
+    expire_date_str, key_hash = parts
+    raw_str = f"{machine_id}|{expire_date_str}|{LICENSE_SALT}"
+    expected = hashlib.sha256(raw_str.encode()).hexdigest()
+    if key_hash != expected:
+        return None
+    try:
+        expire_dt = datetime.fromisoformat(expire_date_str)
+        if expire_dt.tzinfo is None:
+            expire_dt = expire_dt.replace(tzinfo=timezone.utc)
+        return expire_dt
+    except ValueError:
+        return None
+
+async def verify_license():
+    """FastAPI-зависимость: проверяет лицензию перед мутирующими запросами."""
+    info = await db.settings.find_one({"type": "license_info"})
+    if not info:
+        # Лицензионная запись ещё не создана — первый запуск, пропускаем
+        return
+    machine_id = info.get('machine_id', get_machine_id())
+    install_date_raw = info.get('install_date', datetime.now(timezone.utc).isoformat())
+
+    # Проверяем HMAC — защита от ручной правки install_date в MongoDB
+    stored_hash = info.get('install_date_hash')
+    if stored_hash:
+        expected_hash = compute_install_hash(
+            install_date_raw if isinstance(install_date_raw, str) else install_date_raw.isoformat(),
+            machine_id
+        )
+        if not hmac_lib.compare_digest(stored_hash, expected_hash):
+            raise HTTPException(
+                status_code=402,
+                detail="Обнаружено нарушение целостности лицензионной записи."
+            )
+
+    license_key = info.get('license_key')
+    if not license_key:
+        if isinstance(install_date_raw, str):
+            install_date = datetime.fromisoformat(install_date_raw)
+        else:
+            install_date = install_date_raw
+        if install_date.tzinfo is None:
+            install_date = install_date.replace(tzinfo=timezone.utc)
+        days_passed = (datetime.now(timezone.utc) - install_date).days
+        if days_passed > TRIAL_DAYS:
+            raise HTTPException(
+                status_code=402,
+                detail=f"Пробный период истёк ({days_passed} дней). Активируйте лицензию в разделе Настройки."
+            )
+    else:
+        expire_dt = _validate_license_key(license_key, machine_id)
+        if expire_dt is None:
+            raise HTTPException(status_code=402, detail="Лицензионный ключ недействителен.")
+        if datetime.now(timezone.utc) > expire_dt:
+            raise HTTPException(status_code=402, detail="Срок действия лицензии истёк. Обратитесь к поставщику.")
+
 # ==================== AUTH ENDPOINTS ====================
 
 @api_router.post("/auth/register", response_model=User)
@@ -983,6 +1095,109 @@ async def delete_role(role_id: str, current_user: User = Depends(get_current_use
 
 # ==================== SETTINGS ENDPOINTS ====================
 
+@api_router.get("/settings/license", response_model=LicenseStatus)
+async def get_license_status(current_user: User = Depends(get_current_user)):
+    machine_id = get_machine_id()
+    info = await db.settings.find_one({"type": "license_info"})
+    if not info:
+        return LicenseStatus(
+            machine_id=machine_id,
+            status="trial",
+            days_left=TRIAL_DAYS,
+            message="Лицензионная запись не найдена. Переустановите систему."
+        )
+    stored_machine_id = info.get('machine_id', machine_id)
+    install_date_raw = info.get('install_date', datetime.now(timezone.utc).isoformat())
+    # Проверяем целостность даты установки
+    stored_hash = info.get('install_date_hash')
+    if stored_hash:
+        expected_hash = compute_install_hash(
+            install_date_raw if isinstance(install_date_raw, str) else install_date_raw.isoformat(),
+            stored_machine_id
+        )
+        if not hmac_lib.compare_digest(stored_hash, expected_hash):
+            return LicenseStatus(
+                machine_id=stored_machine_id,
+                status="expired",
+                message="Обнаружено нарушение целостности лицензионной записи."
+            )
+    license_key = info.get('license_key')
+    if not license_key:
+        if isinstance(install_date_raw, str):
+            install_date = datetime.fromisoformat(install_date_raw)
+        else:
+            install_date = install_date_raw
+        if install_date.tzinfo is None:
+            install_date = install_date.replace(tzinfo=timezone.utc)
+        days_passed = (datetime.now(timezone.utc) - install_date).days
+        days_left = max(0, TRIAL_DAYS - days_passed)
+        if days_left > 0:
+            return LicenseStatus(
+                machine_id=stored_machine_id,
+                status="trial",
+                days_left=days_left,
+                message=f"Пробный период. Осталось {days_left} дней."
+            )
+        else:
+            return LicenseStatus(
+                machine_id=stored_machine_id,
+                status="expired",
+                days_left=0,
+                message="Пробный период истёк. Требуется активация."
+            )
+    else:
+        expire_dt = _validate_license_key(license_key, stored_machine_id)
+        if expire_dt is None:
+            return LicenseStatus(
+                machine_id=stored_machine_id,
+                status="expired",
+                message="Лицензионный ключ недействителен."
+            )
+        if datetime.now(timezone.utc) > expire_dt:
+            return LicenseStatus(
+                machine_id=stored_machine_id,
+                status="expired",
+                expires=expire_dt.strftime("%d.%m.%Y"),
+                message="Срок действия лицензии истёк."
+            )
+        days_left = (expire_dt - datetime.now(timezone.utc)).days
+        return LicenseStatus(
+            machine_id=stored_machine_id,
+            status="active",
+            days_left=days_left,
+            expires=expire_dt.strftime("%d.%m.%Y"),
+            message=f"Лицензия активна до {expire_dt.strftime('%d.%m.%Y')}."
+        )
+
+@api_router.post("/settings/activate", response_model=LicenseStatus)
+async def activate_license(data: LicenseActivate, current_user: User = Depends(get_current_user)):
+    if current_user.role != "Администратор":
+        raise HTTPException(status_code=403, detail="Только администратор может активировать лицензию.")
+    info = await db.settings.find_one({"type": "license_info"})
+    if not info:
+        raise HTTPException(status_code=404, detail="Лицензионная запись не найдена.")
+    machine_id = info.get('machine_id', get_machine_id())
+    expire_dt = _validate_license_key(data.license_key, machine_id)
+    if expire_dt is None:
+        raise HTTPException(status_code=400, detail="Неверный лицензионный ключ. Проверьте правильность ввода.")
+    if datetime.now(timezone.utc) > expire_dt:
+        raise HTTPException(status_code=400, detail="Этот ключ уже истёк.")
+    await db.settings.update_one(
+        {"type": "license_info"},
+        {"$set": {
+            "license_key": data.license_key,
+            "license_expires": expire_dt.isoformat()
+        }}
+    )
+    days_left = (expire_dt - datetime.now(timezone.utc)).days
+    return LicenseStatus(
+        machine_id=machine_id,
+        status="active",
+        days_left=days_left,
+        expires=expire_dt.strftime("%d.%m.%Y"),
+        message=f"Лицензия успешно активирована до {expire_dt.strftime('%d.%m.%Y')}."
+    )
+
 @api_router.get("/settings", response_model=Settings)
 async def get_settings(current_user: User = Depends(get_current_user)):
     settings = await db.settings.find_one({"id": "settings"}, {"_id": 0})
@@ -1023,7 +1238,7 @@ async def update_settings(settings_data: SettingsUpdate, current_user: User = De
 # ==================== RISK ENDPOINTS ====================
 
 @api_router.post("/risks", response_model=Risk)
-async def create_risk(risk_data: RiskCreate, current_user: User = Depends(get_current_user)):
+async def create_risk(risk_data: RiskCreate, current_user: User = Depends(get_current_user), _lic: None = Depends(verify_license)):
     # Auto-generate risk number if not provided
     data_dict = risk_data.model_dump()
     if not data_dict.get('risk_number'):
@@ -1085,7 +1300,7 @@ async def get_risk(risk_id: str, current_user: User = Depends(get_current_user))
     return Risk(**risk)
 
 @api_router.put("/risks/{risk_id}", response_model=Risk)
-async def update_risk(risk_id: str, risk_data: RiskUpdate, current_user: User = Depends(get_current_user)):
+async def update_risk(risk_id: str, risk_data: RiskUpdate, current_user: User = Depends(get_current_user), _lic: None = Depends(verify_license)):
     update_dict = {k: v for k, v in risk_data.model_dump().items() if v is not None}
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
@@ -1128,7 +1343,7 @@ async def update_risk(risk_id: str, risk_data: RiskUpdate, current_user: User = 
     return Risk(**risk)
 
 @api_router.delete("/risks/{risk_id}")
-async def delete_risk(risk_id: str, current_user: User = Depends(get_current_user)):
+async def delete_risk(risk_id: str, current_user: User = Depends(get_current_user), _lic: None = Depends(verify_license)):
     result = await db.risks.delete_one({"id": risk_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Risk not found")
@@ -1137,7 +1352,7 @@ async def delete_risk(risk_id: str, current_user: User = Depends(get_current_use
 # ==================== INCIDENT ENDPOINTS ====================
 
 @api_router.post("/incidents", response_model=Incident)
-async def create_incident(incident_data: IncidentCreate, current_user: User = Depends(get_current_user)):
+async def create_incident(incident_data: IncidentCreate, current_user: User = Depends(get_current_user), _lic: None = Depends(verify_license)):
     # Auto-generate incident number if not provided
     data_dict = incident_data.model_dump()
     if not data_dict.get('incident_number'):
@@ -1263,7 +1478,7 @@ async def get_incident(incident_id: str, current_user: User = Depends(get_curren
     return Incident(**incident)
 
 @api_router.put("/incidents/{incident_id}", response_model=Incident)
-async def update_incident(incident_id: str, incident_data: IncidentUpdate, current_user: User = Depends(get_current_user)):
+async def update_incident(incident_id: str, incident_data: IncidentUpdate, current_user: User = Depends(get_current_user), _lic: None = Depends(verify_license)):
     current_incident = await db.incidents.find_one({"id": incident_id}, {"_id": 0})
     if not current_incident:
         raise HTTPException(status_code=404, detail="Incident not found")
@@ -1395,7 +1610,7 @@ async def update_incident(incident_id: str, incident_data: IncidentUpdate, curre
     return Incident(**incident)
 
 @api_router.delete("/incidents/{incident_id}")
-async def delete_incident(incident_id: str, current_user: User = Depends(get_current_user)):
+async def delete_incident(incident_id: str, current_user: User = Depends(get_current_user), _lic: None = Depends(verify_license)):
     result = await db.incidents.delete_one({"id": incident_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Incident not found")
@@ -1479,7 +1694,7 @@ async def delete_incident_attachment(incident_id: str, attachment_id: str, curre
 # ==================== ASSET ENDPOINTS ====================
 
 @api_router.post("/assets", response_model=Asset)
-async def create_asset(asset_data: AssetCreate, current_user: User = Depends(get_current_user)):
+async def create_asset(asset_data: AssetCreate, current_user: User = Depends(get_current_user), _lic: None = Depends(verify_license)):
     # Auto-generate asset number if not provided
     data_dict = asset_data.model_dump()
     if not data_dict.get('asset_number'):
@@ -1547,7 +1762,7 @@ async def get_asset(asset_id: str, current_user: User = Depends(get_current_user
     return Asset(**asset)
 
 @api_router.put("/assets/{asset_id}", response_model=Asset)
-async def update_asset(asset_id: str, asset_data: AssetUpdate, current_user: User = Depends(get_current_user)):
+async def update_asset(asset_id: str, asset_data: AssetUpdate, current_user: User = Depends(get_current_user), _lic: None = Depends(verify_license)):
     update_dict = {k: v for k, v in asset_data.model_dump().items() if v is not None}
     if not update_dict:
         raise HTTPException(status_code=400, detail="No fields to update")
@@ -1572,7 +1787,7 @@ async def update_asset(asset_id: str, asset_data: AssetUpdate, current_user: Use
     return Asset(**asset)
 
 @api_router.delete("/assets/{asset_id}")
-async def delete_asset(asset_id: str, current_user: User = Depends(get_current_user)):
+async def delete_asset(asset_id: str, current_user: User = Depends(get_current_user), _lic: None = Depends(verify_license)):
     result = await db.assets.delete_one({"id": asset_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Asset not found")
@@ -1614,7 +1829,7 @@ async def generate_threat_number():
     return f"THR-{year}-{next_num:03d}"
 
 @api_router.post("/threats", response_model=Threat)
-async def create_threat(threat: ThreatCreate, current_user: User = Depends(get_current_user)):
+async def create_threat(threat: ThreatCreate, current_user: User = Depends(get_current_user), _lic: None = Depends(verify_license)):
     threat_dict = threat.model_dump()
     
     if not threat_dict.get('threat_number'):
@@ -1669,7 +1884,7 @@ async def get_threat(threat_id: str, current_user: User = Depends(get_current_us
     return threat
 
 @api_router.put("/threats/{threat_id}", response_model=Threat)
-async def update_threat(threat_id: str, threat: ThreatUpdate, current_user: User = Depends(get_current_user)):
+async def update_threat(threat_id: str, threat: ThreatUpdate, current_user: User = Depends(get_current_user), _lic: None = Depends(verify_license)):
     update_dict = {k: v for k, v in threat.model_dump().items() if v is not None}
     update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
     
@@ -1685,7 +1900,7 @@ async def update_threat(threat_id: str, threat: ThreatUpdate, current_user: User
     return updated
 
 @api_router.delete("/threats/{threat_id}")
-async def delete_threat(threat_id: str, current_user: User = Depends(get_current_user)):
+async def delete_threat(threat_id: str, current_user: User = Depends(get_current_user), _lic: None = Depends(verify_license)):
     result = await db.threats.delete_one({"id": threat_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Threat not found")
@@ -1784,7 +1999,7 @@ def calculate_cvss_score(vector: str) -> tuple:
     return score, severity
 
 @api_router.post("/vulnerabilities", response_model=Vulnerability)
-async def create_vulnerability(vulnerability: VulnerabilityCreate, current_user: User = Depends(get_current_user)):
+async def create_vulnerability(vulnerability: VulnerabilityCreate, current_user: User = Depends(get_current_user), _lic: None = Depends(verify_license)):
     vuln_dict = vulnerability.model_dump()
     
     if not vuln_dict.get('vulnerability_number'):
@@ -1851,7 +2066,7 @@ async def get_vulnerability(vulnerability_id: str, current_user: User = Depends(
     return vuln
 
 @api_router.put("/vulnerabilities/{vulnerability_id}", response_model=Vulnerability)
-async def update_vulnerability(vulnerability_id: str, vulnerability: VulnerabilityUpdate, current_user: User = Depends(get_current_user)):
+async def update_vulnerability(vulnerability_id: str, vulnerability: VulnerabilityUpdate, current_user: User = Depends(get_current_user), _lic: None = Depends(verify_license)):
     update_dict = {k: v for k, v in vulnerability.model_dump().items() if v is not None}
     update_dict['updated_at'] = datetime.now(timezone.utc).isoformat()
     
@@ -1878,7 +2093,7 @@ async def update_vulnerability(vulnerability_id: str, vulnerability: Vulnerabili
     return updated
 
 @api_router.delete("/vulnerabilities/{vulnerability_id}")
-async def delete_vulnerability(vulnerability_id: str, current_user: User = Depends(get_current_user)):
+async def delete_vulnerability(vulnerability_id: str, current_user: User = Depends(get_current_user), _lic: None = Depends(verify_license)):
     result = await db.vulnerabilities.delete_one({"id": vulnerability_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Vulnerability not found")
@@ -2406,6 +2621,22 @@ async def create_admin():
         ]
         await db.mitre_attack.insert_many(mitre_techniques)
         logger.info(f"Initialized {len(mitre_techniques)} MITRE ATT&CK techniques")
+
+    # Инициализация лицензионной записи (для Docker-деплоя без install.sh)
+    license_info = await db.settings.find_one({"type": "license_info"})
+    if not license_info:
+        mid = get_machine_id()
+        install_date = datetime.now(timezone.utc).isoformat()
+        install_hash = compute_install_hash(install_date, mid)
+        await db.settings.insert_one({
+            "type": "license_info",
+            "machine_id": mid,
+            "install_date": install_date,
+            "install_date_hash": install_hash,
+            "license_key": None,
+            "license_expires": None
+        })
+        logger.info(f"[LICENSE] Инициализирована. Server ID: {mid}")
 
 # Include router
 app.include_router(api_router)

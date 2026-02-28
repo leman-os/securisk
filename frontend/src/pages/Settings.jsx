@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Settings as SettingsIcon, Sun, Moon, User } from 'lucide-react';
+import { Plus, X, Settings as SettingsIcon, Sun, Moon, User, Key, ShieldCheck, ShieldAlert, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Settings = ({ user }) => {
@@ -15,6 +15,11 @@ const Settings = ({ user }) => {
   const [isDark, setIsDark] = useState(() =>
     document.documentElement.classList.contains('dark')
   );
+
+  // Лицензия
+  const [license, setLicense] = useState(null);
+  const [licenseKey, setLicenseKey] = useState('');
+  const [licenseLoading, setLicenseLoading] = useState(false);
 
   const toggleTheme = () => {
     const next = !isDark;
@@ -39,7 +44,36 @@ const Settings = ({ user }) => {
 
   useEffect(() => {
     fetchSettings();
+    fetchLicense();
   }, []);
+
+  const fetchLicense = async () => {
+    try {
+      const response = await axios.get(`${API}/settings/license`);
+      setLicense(response.data);
+    } catch {
+      // не критично — просто не показываем блок
+    }
+  };
+
+  const activateLicense = async () => {
+    if (!licenseKey.trim()) {
+      toast.error('Введите лицензионный ключ');
+      return;
+    }
+    setLicenseLoading(true);
+    try {
+      const response = await axios.post(`${API}/settings/activate`, { license_key: licenseKey.trim() });
+      setLicense(response.data);
+      setLicenseKey('');
+      toast.success(response.data.message);
+    } catch (error) {
+      const msg = error.response?.data?.detail || 'Ошибка активации';
+      toast.error(msg);
+    } finally {
+      setLicenseLoading(false);
+    }
+  };
 
   const fetchSettings = async () => {
     try {
@@ -196,6 +230,97 @@ const Settings = ({ user }) => {
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Настройки</h1>
         <p className="text-slate-600 dark:text-slate-400">Управление справочниками системы</p>
       </div>
+
+      {/* Лицензирование */}
+      {license && (
+        <Card className={`border-2 dark:bg-slate-800 ${
+          license.status === 'active'
+            ? 'border-emerald-400 dark:border-emerald-600'
+            : license.status === 'trial'
+            ? 'border-amber-400 dark:border-amber-600'
+            : 'border-red-400 dark:border-red-600'
+        }`}>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
+              {license.status === 'active' ? (
+                <ShieldCheck className="w-5 h-5 text-emerald-500" />
+              ) : license.status === 'trial' ? (
+                <Clock className="w-5 h-5 text-amber-500" />
+              ) : (
+                <ShieldAlert className="w-5 h-5 text-red-500" />
+              )}
+              Лицензирование
+              <Badge className={`ml-2 ${
+                license.status === 'active'
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300'
+                  : license.status === 'trial'
+                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
+                  : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'
+              }`}>
+                {license.status === 'active' ? 'Активна' : license.status === 'trial' ? 'Пробный период' : 'Истекла'}
+              </Badge>
+            </CardTitle>
+            <CardDescription className="dark:text-slate-400">{license.message}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wide">Server ID</Label>
+                <div className="mt-1 flex items-center gap-2">
+                  <code className="flex-1 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs px-3 py-2 rounded-md font-mono break-all select-all">
+                    {license.machine_id}
+                  </code>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      navigator.clipboard.writeText(license.machine_id);
+                      toast.success('Server ID скопирован');
+                    }}
+                    className="shrink-0 dark:border-slate-600"
+                  >
+                    Копировать
+                  </Button>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Передайте этот ID поставщику для получения ключа
+                </p>
+              </div>
+              {license.expires && (
+                <div>
+                  <Label className="text-slate-600 dark:text-slate-400 text-xs uppercase tracking-wide">Действует до</Label>
+                  <p className="mt-1 text-lg font-semibold text-slate-800 dark:text-white">{license.expires}</p>
+                  {license.days_left !== undefined && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Осталось {license.days_left} дней</p>
+                  )}
+                </div>
+              )}
+            </div>
+            {license.status !== 'active' && (
+              <div className="border-t dark:border-slate-700 pt-4">
+                <Label className="text-slate-700 dark:text-slate-300 font-medium">Активация лицензии</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    placeholder="Вставьте лицензионный ключ"
+                    value={licenseKey}
+                    onChange={(e) => setLicenseKey(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && activateLicense()}
+                    className="font-mono text-xs dark:bg-slate-700 dark:border-slate-600"
+                  />
+                  <Button
+                    onClick={activateLicense}
+                    disabled={licenseLoading}
+                    className="shrink-0 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
+                  >
+                    <Key className="w-4 h-4 mr-1" />
+                    {licenseLoading ? 'Проверка...' : 'Активировать'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Theme toggle */}
       <Card className="border-slate-200 dark:border-slate-700 dark:bg-slate-800">

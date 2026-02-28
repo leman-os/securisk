@@ -14,7 +14,7 @@ PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 BACKEND_DIR="$PROJECT_ROOT/backend"
 FRONTEND_DIR="$PROJECT_ROOT/frontend"
 
-echo -e "${GREEN}=== Установка SecuRisk (v2.4 Final) ===${NC}"
+echo -e "${GREEN}=== Установка SecuRisk (v2.5 Commercial) ===${NC}"
 echo -e "Папка проекта: ${PROJECT_ROOT}"
 
 # Проверка прав root
@@ -131,6 +131,61 @@ EOF
 
 python create_init_admin.py && rm create_init_admin.py
 
+# Генерация MachineID и инициализация лицензии
+echo -e "${YELLOW}Инициализация лицензионной записи...${NC}"
+SYSTEM_UUID=$(cat /etc/machine-id 2>/dev/null || cat /proc/sys/kernel/random/boot_id 2>/dev/null | tr -d '-' || echo "unknown")
+MAC_ADDR=$(ip link show 2>/dev/null | grep -v "lo" | grep "link/ether" | head -1 | awk '{print $2}' || echo "00:00:00:00:00:00")
+MACHINE_ID=$(echo "${SYSTEM_UUID}:${MAC_ADDR}" | sha256sum | cut -d' ' -f1 | cut -c1-32)
+
+cat > init_license.py <<PYEOF
+import asyncio, os, hashlib, hmac as hmac_lib
+from datetime import datetime, timezone
+from motor.motor_asyncio import AsyncIOMotorClient
+from dotenv import load_dotenv
+
+MACHINE_ID = "${MACHINE_ID}"
+LICENSE_SALT = os.environ.get("LICENSE_SALT", "sr-commercial-salt-2025")
+
+def compute_install_hash(install_date: str, machine_id: str) -> str:
+    key = f"{machine_id}:{LICENSE_SALT}".encode()
+    return hmac_lib.new(key, install_date.encode(), hashlib.sha256).hexdigest()
+
+async def init_license():
+    load_dotenv()
+    client = AsyncIOMotorClient(os.getenv("MONGO_URL"), serverSelectionTimeoutMS=5000)
+    db = client[os.getenv("DB_NAME")]
+    existing = await db.settings.find_one({"type": "license_info"})
+    if not existing:
+        install_date = datetime.now(timezone.utc).isoformat()
+        install_hash = compute_install_hash(install_date, MACHINE_ID)
+        await db.settings.insert_one({
+            "type": "license_info",
+            "machine_id": MACHINE_ID,
+            "install_date": install_date,
+            "install_date_hash": install_hash,
+            "license_key": None,
+            "license_expires": None
+        })
+        print(f"[LICENSE] Инициализирована. Server ID: {MACHINE_ID}")
+    else:
+        print(f"[LICENSE] Уже существует. Server ID: {existing['machine_id']}")
+    client.close()
+
+if __name__ == "__main__":
+    asyncio.run(init_license())
+PYEOF
+
+python init_license.py && rm init_license.py
+
+# Файл-метка на диске (вторая линия защиты для bare metal)
+MARK_DIR="/var/lib/securisk"
+mkdir -p "$MARK_DIR" && chmod 700 "$MARK_DIR"
+INSTALL_DATE_MARK=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+MARK_CONTENT=$(echo "${MACHINE_ID}:${INSTALL_DATE_MARK}" | sha256sum | cut -d' ' -f1)
+echo "$MARK_CONTENT" > "${MARK_DIR}/.install_mark"
+chmod 600 "${MARK_DIR}/.install_mark"
+echo -e "${YELLOW}Файл-метка сохранена в ${MARK_DIR}/.install_mark${NC}"
+
 # 5. Настройка Frontend
 echo -e "${GREEN}[4/7] Сборка Frontend...${NC}"
 cd "$FRONTEND_DIR"
@@ -197,3 +252,7 @@ IP=$(hostname -I | awk '{print $1}')
 echo -e "${GREEN}==========================================${NC}"
 echo -e "${GREEN}✅ ГОТОВО! Адрес: http://$IP${NC}"
 echo -e "Логин: admin / Пароль: $ADMIN_PASSWORD"
+echo -e "${YELLOW}------------------------------------------${NC}"
+echo -e "${YELLOW}Server ID для активации лицензии: $MACHINE_ID${NC}"
+echo -e "${YELLOW}Пробный период: 40 дней. Для активации обратитесь к поставщику.${NC}"
+echo -e "${GREEN}==========================================${NC}"
