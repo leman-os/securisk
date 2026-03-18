@@ -350,10 +350,10 @@ const MindMap = ({ user }) => {
   );
 
   return (
-    <div className="flex h-full gap-4">
+    <div className="flex gap-4" style={{ height: 'calc(100vh - 3rem)' }}>
 
       {/* ── Left: risk selector ── */}
-      <aside className="w-72 flex-shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex flex-col overflow-hidden">
+      <aside className="w-72 flex-shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex flex-col min-h-0 overflow-hidden">
         <div className="p-4 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2 mb-3">
             <Network className="w-5 h-5 text-cyan-600" />
@@ -420,7 +420,7 @@ const MindMap = ({ user }) => {
       </aside>
 
       {/* ── Right: mind map canvas ── */}
-      <div className="flex-1 min-w-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex flex-col overflow-hidden relative">
+      <div className="flex-1 min-w-0 min-h-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex flex-col overflow-hidden relative">
 
         {/* toolbar */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 dark:border-slate-800">
