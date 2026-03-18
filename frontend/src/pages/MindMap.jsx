@@ -66,7 +66,9 @@ const MindMap = ({ user }) => {
 
   /* fetch risk list */
   useEffect(() => {
-    axios.get(`${API}/risks`).then(r => setRisks(r.data)).catch(() => {});
+    axios.get(`${API}/risks`, { params: { limit: 1000 } })
+      .then(r => setRisks(r.data.items || []))
+      .catch(() => {});
   }, []);
 
   /* fetch related entities for selected risk */
@@ -74,14 +76,15 @@ const MindMap = ({ user }) => {
     setLoading(true);
     setTooltip(null);
     try {
+      const params = { limit: 1000 };
       const [ar, tr, vr] = await Promise.all([
-        axios.get(`${API}/assets`),
-        axios.get(`${API}/threats`),
-        axios.get(`${API}/vulnerabilities`),
+        axios.get(`${API}/assets`,          { params }),
+        axios.get(`${API}/threats`,         { params }),
+        axios.get(`${API}/vulnerabilities`, { params }),
       ]);
-      const assetMap  = Object.fromEntries(ar.data.map(a => [a.id, a]));
-      const threatMap = Object.fromEntries(tr.data.map(t => [t.id, t]));
-      const vulnMap   = Object.fromEntries(vr.data.map(v => [v.id, v]));
+      const assetMap  = Object.fromEntries((ar.data.items || ar.data).map(a => [a.id, a]));
+      const threatMap = Object.fromEntries((tr.data.items || tr.data).map(t => [t.id, t]));
+      const vulnMap   = Object.fromEntries((vr.data.items || vr.data).map(v => [v.id, v]));
 
       setMapData({
         risk,
