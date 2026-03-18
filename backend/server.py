@@ -2110,27 +2110,40 @@ async def get_mitre_attack_techniques(current_user: User = Depends(get_current_u
 # ==================== DASHBOARD ====================
 
 @api_router.get("/dashboard/stats", response_model=DashboardStats)
-async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
-    total_risks = await db.risks.count_documents({})
-    total_incidents = await db.incidents.count_documents({})
-    total_assets = await db.assets.count_documents({})
-    
-    critical_risks = await db.risks.count_documents({"criticality": "Критический"})
-    open_incidents = await db.incidents.count_documents({"status": "Открыт"})
-    critical_assets = await db.assets.count_documents({"criticality": "Высокая"})
-    
+async def get_dashboard_stats(
+    current_user: User = Depends(get_current_user),
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+):
+    date_filter: dict = {}
+    if date_from or date_to:
+        dt_range: dict = {}
+        if date_from:
+            dt_range["$gte"] = date_from
+        if date_to:
+            dt_range["$lte"] = date_to
+        date_filter["created_at"] = dt_range
+
+    total_risks = await db.risks.count_documents(date_filter)
+    total_incidents = await db.incidents.count_documents(date_filter)
+    total_assets = await db.assets.count_documents(date_filter)
+
+    critical_risks = await db.risks.count_documents({"criticality": "Критический", **date_filter})
+    open_incidents = await db.incidents.count_documents({"status": "Открыт", **date_filter})
+    critical_assets = await db.assets.count_documents({"criticality": "Высокая", **date_filter})
+
     # Calculate average metrics
-    incidents = await db.incidents.find({}, {"_id": 0, "mtta": 1, "mttr": 1, "mttc": 1}).to_list(1000)
-    
+    incidents = await db.incidents.find(date_filter, {"_id": 0, "mtta": 1, "mttr": 1, "mttc": 1}).to_list(1000)
+
     mtta_values = [inc['mtta'] for inc in incidents if inc.get('mtta')]
     mttr_values = [inc['mttr'] for inc in incidents if inc.get('mttr')]
     mttc_values = [inc['mttc'] for inc in incidents if inc.get('mttc')]
-    
+
     # Convert from minutes to hours
     avg_mtta = round(sum(mtta_values) / len(mtta_values) / 60, 2) if mtta_values else None
     avg_mttr = round(sum(mttr_values) / len(mttr_values) / 60, 2) if mttr_values else None
     avg_mttc = round(sum(mttc_values) / len(mttc_values) / 60, 2) if mttc_values else None
-    
+
     return DashboardStats(
         total_risks=total_risks,
         total_incidents=total_incidents,
@@ -2144,36 +2157,49 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
     )
 
 @api_router.get("/dashboard/risk-analytics")
-async def get_risk_analytics(current_user: User = Depends(get_current_user)):
+async def get_risk_analytics(
+    current_user: User = Depends(get_current_user),
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+):
     """Get detailed risk analytics for dashboard charts"""
-    
+    date_filter: dict = {}
+    if date_from or date_to:
+        dt_range: dict = {}
+        if date_from:
+            dt_range["$gte"] = date_from
+        if date_to:
+            dt_range["$lte"] = date_to
+        date_filter["created_at"] = dt_range
+
     # Risk distribution by criticality
     risks_by_criticality = {}
     for criticality in ["Низкий", "Средний", "Высокий", "Критический"]:
-        count = await db.risks.count_documents({"criticality": criticality})
+        count = await db.risks.count_documents({"criticality": criticality, **date_filter})
         risks_by_criticality[criticality] = count
-    
+
     # Risk distribution by status
     risks_by_status = {}
     for status in ["Открыт", "В обработке", "Принят", "Закрыт"]:
-        count = await db.risks.count_documents({"status": status})
+        count = await db.risks.count_documents({"status": status, **date_filter})
         risks_by_status[status] = count
-    
+
     # Top 10 most critical risks
     top_risks = await db.risks.find(
-        {},
+        date_filter,
         {"_id": 0, "id": 1, "risk_number": 1, "scenario": 1, "risk_level": 1, "criticality": 1, "owner": 1}
     ).sort("risk_level", -1).limit(10).to_list(10)
-    
+
     # Risk distribution by owner
     pipeline = [
+        *([ {"$match": date_filter} ] if date_filter else []),
         {"$group": {"_id": "$owner", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}},
-        {"$limit": 10}
+        {"$limit": 10},
     ]
     risks_by_owner = await db.risks.aggregate(pipeline).to_list(10)
     owner_distribution = {item["_id"]: item["count"] for item in risks_by_owner if item["_id"]}
-    
+
     return {
         "risks_by_criticality": risks_by_criticality,
         "risks_by_status": risks_by_status,

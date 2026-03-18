@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '../App';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import {
   AlertTriangle, AlertCircle, Server, TrendingUp, Activity, Shield,
   Clock, Timer, CheckCircle2, Settings2, ChevronRight, Download,
-  Users, BarChart3,
+  Users, BarChart3, CalendarDays, ChevronDown, X,
 } from 'lucide-react';
 
 const WIDGET_LABELS = {
@@ -26,11 +26,196 @@ const DEFAULT_VISIBLE = {
   top_risks:        true,
 };
 
+/* ─── Period presets ────────────────────────────────────────────────────────── */
+const PERIOD_PRESETS = [
+  { value: 'all',     label: 'Всё время' },
+  { value: 'today',   label: 'Сегодня' },
+  { value: 'yesterday', label: 'Вчера' },
+  { value: 'week',    label: 'Эта неделя' },
+  { value: 'last_week', label: 'Прошлая неделя' },
+  { value: 'month',   label: 'Этот месяц' },
+  { value: 'last_month', label: 'Прошлый месяц' },
+  { value: '2months', label: 'Последние 2 месяца' },
+  { value: '3months', label: 'Последние 3 месяца' },
+  { value: '6months', label: 'Последние 6 месяцев' },
+  { value: 'year',    label: 'Последний год' },
+  { value: 'last_year', label: 'Прошлый год' },
+  { value: 'custom',  label: 'Произвольный период' },
+];
+
+/** Returns { date_from, date_to } ISO strings or nulls for a preset key */
+function presetToDates(preset, customFrom, customTo) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const iso = (d) => d.toISOString();
+  const startOf = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const endOf   = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+
+  switch (preset) {
+    case 'all':
+      return { date_from: null, date_to: null };
+    case 'today':
+      return { date_from: iso(startOf(today)), date_to: iso(endOf(today)) };
+    case 'yesterday': {
+      const y = new Date(today); y.setDate(y.getDate() - 1);
+      return { date_from: iso(startOf(y)), date_to: iso(endOf(y)) };
+    }
+    case 'week': {
+      const day = today.getDay() || 7; // Mon=1 … Sun=7
+      const mon = new Date(today); mon.setDate(today.getDate() - day + 1);
+      return { date_from: iso(startOf(mon)), date_to: iso(endOf(today)) };
+    }
+    case 'last_week': {
+      const day = today.getDay() || 7;
+      const mon = new Date(today); mon.setDate(today.getDate() - day + 1 - 7);
+      const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+      return { date_from: iso(startOf(mon)), date_to: iso(endOf(sun)) };
+    }
+    case 'month': {
+      const first = new Date(today.getFullYear(), today.getMonth(), 1);
+      return { date_from: iso(startOf(first)), date_to: iso(endOf(today)) };
+    }
+    case 'last_month': {
+      const first = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const last  = new Date(today.getFullYear(), today.getMonth(), 0);
+      return { date_from: iso(startOf(first)), date_to: iso(endOf(last)) };
+    }
+    case '2months': {
+      const from = new Date(today); from.setMonth(from.getMonth() - 2);
+      return { date_from: iso(startOf(from)), date_to: iso(endOf(today)) };
+    }
+    case '3months': {
+      const from = new Date(today); from.setMonth(from.getMonth() - 3);
+      return { date_from: iso(startOf(from)), date_to: iso(endOf(today)) };
+    }
+    case '6months': {
+      const from = new Date(today); from.setMonth(from.getMonth() - 6);
+      return { date_from: iso(startOf(from)), date_to: iso(endOf(today)) };
+    }
+    case 'year': {
+      const from = new Date(today); from.setFullYear(from.getFullYear() - 1);
+      return { date_from: iso(startOf(from)), date_to: iso(endOf(today)) };
+    }
+    case 'last_year': {
+      const from = new Date(today.getFullYear() - 1, 0, 1);
+      const to   = new Date(today.getFullYear() - 1, 11, 31);
+      return { date_from: iso(startOf(from)), date_to: iso(endOf(to)) };
+    }
+    case 'custom':
+      return {
+        date_from: customFrom ? new Date(customFrom).toISOString() : null,
+        date_to:   customTo   ? new Date(customTo + 'T23:59:59').toISOString() : null,
+      };
+    default:
+      return { date_from: null, date_to: null };
+  }
+}
+
+/* ─── Period Selector component ─────────────────────────────────────────────── */
+const PeriodSelector = ({ period, setPeriod, customFrom, setCustomFrom, customTo, setCustomTo }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const currentLabel = PERIOD_PRESETS.find(p => p.value === period)?.label ?? 'Всё время';
+  const isCustom = period === 'custom';
+
+  const formatDateLabel = () => {
+    if (!isCustom) return null;
+    if (!customFrom && !customTo) return 'выберите даты';
+    const fmt = (s) => s ? new Date(s).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '…';
+    return `${fmt(customFrom)} — ${fmt(customTo)}`;
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+      >
+        <CalendarDays className="w-4 h-4 text-cyan-500" />
+        <span>{currentLabel}{isCustom && formatDateLabel() ? `: ${formatDateLabel()}` : ''}</span>
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full mt-2 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl w-64 p-2">
+          <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 px-2 py-1.5 uppercase tracking-wider">
+            Период
+          </p>
+          {PERIOD_PRESETS.filter(p => p.value !== 'custom').map(p => (
+            <button
+              key={p.value}
+              onClick={() => { setPeriod(p.value); setOpen(false); }}
+              className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors
+                ${period === p.value
+                  ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 font-semibold'
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+            >
+              {p.label}
+            </button>
+          ))}
+
+          {/* Custom range */}
+          <div className="border-t border-slate-100 dark:border-slate-700 mt-1 pt-2 px-2">
+            <button
+              onClick={() => setPeriod('custom')}
+              className={`w-full text-left px-1 py-1 rounded-lg text-sm mb-2 transition-colors
+                ${period === 'custom'
+                  ? 'text-cyan-700 dark:text-cyan-300 font-semibold'
+                  : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`}
+            >
+              Произвольный период
+            </button>
+            {period === 'custom' && (
+              <div className="space-y-1.5">
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs text-slate-400">С</label>
+                  <input
+                    type="date"
+                    value={customFrom}
+                    max={customTo || undefined}
+                    onChange={e => setCustomFrom(e.target.value)}
+                    className="w-full px-2 py-1 text-sm rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                  />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs text-slate-400">По</label>
+                  <input
+                    type="date"
+                    value={customTo}
+                    min={customFrom || undefined}
+                    onChange={e => setCustomTo(e.target.value)}
+                    className="w-full px-2 py-1 text-sm rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  className="w-full mt-1 bg-cyan-600 hover:bg-cyan-700 text-white text-xs"
+                  onClick={() => setOpen(false)}
+                >
+                  Применить
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 /* ─────────────────────────────────────────────────────────────────────────
    Builds a clean, self-contained HTML string for PDF capture.
    Uses only inline styles so html2canvas picks everything up correctly.
 ───────────────────────────────────────────────────────────────────────── */
-const buildPrintHTML = (stats, riskAnalytics) => {
+const buildPrintHTML = (stats, riskAnalytics, periodLabel) => {
   const date = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
 
   const critColor  = (c) => ({ Критический:'#dc2626', Высокий:'#ea580c', Средний:'#ca8a04', Низкий:'#16a34a' }[c] ?? '#94a3b8');
@@ -144,7 +329,8 @@ const buildPrintHTML = (stats, riskAnalytics) => {
       </div>
       <div style="text-align:right;">
         <div style="font-size:13px;font-weight:600;">Дашборд ИБ</div>
-        <div style="font-size:10px;color:#94a3b8;margin-top:2px;">Сформирован: ${date}</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:2px;">Период: ${periodLabel}</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:1px;">Сформирован: ${date}</div>
       </div>
     </div>
 
@@ -219,10 +405,10 @@ const Dashboard = ({ user }) => {
   });
   const gearRef = useRef(null);
 
-  useEffect(() => {
-    fetchStats();
-    fetchRiskAnalytics();
-  }, []);
+  // Period state
+  const [period, setPeriod] = useState('all');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
 
   useEffect(() => {
     const handler = (e) => {
@@ -238,25 +424,41 @@ const Dashboard = ({ user }) => {
     localStorage.setItem('dashboard_widgets', JSON.stringify(next));
   };
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async (dateFrom, dateTo) => {
     try {
-      const response = await axios.get(`${API}/dashboard/stats`);
+      const params = {};
+      if (dateFrom) params.date_from = dateFrom;
+      if (dateTo)   params.date_to   = dateTo;
+      const response = await axios.get(`${API}/dashboard/stats`, { params });
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchRiskAnalytics = async () => {
+  const fetchRiskAnalytics = useCallback(async (dateFrom, dateTo) => {
     try {
-      const response = await axios.get(`${API}/dashboard/risk-analytics`);
+      const params = {};
+      if (dateFrom) params.date_from = dateFrom;
+      if (dateTo)   params.date_to   = dateTo;
+      const response = await axios.get(`${API}/dashboard/risk-analytics`, { params });
       setRiskAnalytics(response.data);
     } catch (error) {
       console.error('Error fetching risk analytics:', error);
     }
-  };
+  }, []);
+
+  // Re-fetch when period or custom dates change
+  useEffect(() => {
+    // For custom period, wait until at least one date is set
+    if (period === 'custom' && !customFrom && !customTo) return;
+    const { date_from, date_to } = presetToDates(period, customFrom, customTo);
+    setLoading(true);
+    fetchStats(date_from, date_to);
+    fetchRiskAnalytics(date_from, date_to);
+  }, [period, customFrom, customTo, fetchStats, fetchRiskAnalytics]);
 
   /* ── PDF export: renders a clean off-screen HTML layout, then captures it ── */
   const exportPdf = async () => {
@@ -265,12 +467,12 @@ const Dashboard = ({ user }) => {
       const html2canvas = (await import('html2canvas')).default;
       const { jsPDF } = await import('jspdf');
 
-      // Build an off-screen div with clean inline-styled HTML
+      const periodLabel = PERIOD_PRESETS.find(p => p.value === period)?.label ?? 'Всё время';
       const container = document.createElement('div');
       container.style.cssText =
         'position:fixed;top:-9999px;left:-9999px;width:794px;background:#fff;' +
         'padding:32px;font-family:Arial,Helvetica,sans-serif;color:#0f172a;font-size:13px;line-height:1.5;';
-      container.innerHTML = buildPrintHTML(stats, riskAnalytics);
+      container.innerHTML = buildPrintHTML(stats, riskAnalytics, periodLabel);
       document.body.appendChild(container);
 
       const canvas = await html2canvas(container, {
@@ -404,12 +606,22 @@ const Dashboard = ({ user }) => {
       <div className="space-y-5 animate-fade-in">
 
         {/* ── Header ── */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Дашборд</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">Обзор состояния информационной безопасности</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Period selector */}
+            <PeriodSelector
+              period={period}
+              setPeriod={setPeriod}
+              customFrom={customFrom}
+              setCustomFrom={setCustomFrom}
+              customTo={customTo}
+              setCustomTo={setCustomTo}
+            />
+
             {/* PDF Export */}
             <Button
               variant="outline"
