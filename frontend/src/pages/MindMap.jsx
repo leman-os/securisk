@@ -103,8 +103,7 @@ const MindMap = ({ user }) => {
   useEffect(() => {
     if (!mapData || !svgRef.current) return;
     renderMap(mapData);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapData]);
+  }, [mapData]); // eslint-disable-line
 
   const renderMap = ({ risk, assets, threats, vulnerabilities }) => {
     const svgEl  = svgRef.current;
