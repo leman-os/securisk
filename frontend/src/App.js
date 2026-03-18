@@ -17,6 +17,7 @@ import RegistryView from './pages/RegistryView';
 import Roles from './pages/Roles';
 import Requirements from './pages/Requirements';
 import Graph from './pages/Graph';
+import MindMap from './pages/MindMap';
 import Info from './pages/Info';
 import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
@@ -150,6 +151,11 @@ function App() {
           <Route path="/graph" element={
             <ProtectedRoute>
               <Layout user={user} setUser={setUser}><Graph user={user} /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/mindmap" element={
+            <ProtectedRoute>
+              <Layout user={user} setUser={setUser}><MindMap user={user} /></Layout>
             </ProtectedRoute>
           } />
           <Route path="/info" element={

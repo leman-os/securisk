@@ -33,6 +33,7 @@ const Roles = ({ user }) => {
       wiki:            defaultSectionPerm(),
       registries:      defaultSectionPerm(),
       graph:           defaultSectionPerm(),
+      mindmap:         defaultSectionPerm(),
       users:           defaultSectionPerm(false, false),
       settings:        defaultSectionPerm(false, false),
       admin: false,
@@ -130,6 +131,7 @@ const Roles = ({ user }) => {
         wiki:            defaultSectionPerm(),
         registries:      defaultSectionPerm(),
         graph:           defaultSectionPerm(),
+        mindmap:         defaultSectionPerm(),
         users:           defaultSectionPerm(false, false),
         settings:        defaultSectionPerm(false, false),
         admin: false,
@@ -159,6 +161,7 @@ const Roles = ({ user }) => {
     wiki:            'База знаний',
     registries:      'Реестры',
     graph:           'Граф связей',
+    mindmap:         'Ментальная карта',
     users:           'Пользователи',
     settings:        'Настройки',
   };

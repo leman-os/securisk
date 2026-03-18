@@ -72,7 +72,7 @@ _ADMIN_PERMISSIONS = {
     "dashboard": True, "incidents": True, "assets": True, "risks": True,
     "threats": True, "vulnerabilities": True, "users": True, "wiki": True,
     "registries": True, "requirements": True, "graph": True,
-    "settings": True, "admin": True,
+    "mindmap": True, "settings": True, "admin": True,
 }
 
 # Create the main app
@@ -465,6 +465,7 @@ class RolePermissions(BaseModel):
     wiki: SectionPermission = Field(default_factory=SectionPermission)
     registries: SectionPermission = Field(default_factory=SectionPermission)
     graph: SectionPermission = Field(default_factory=SectionPermission)
+    mindmap: SectionPermission = Field(default_factory=SectionPermission)
     settings: SectionPermission = Field(default_factory=lambda: SectionPermission(view=False, edit=False))
     admin: bool = False
 
@@ -2551,7 +2552,7 @@ async def create_admin():
             permissions=RolePermissions(
                 dashboard=True, incidents=True, assets=True, risks=True,
                 threats=True, vulnerabilities=True, users=True, wiki=True,
-                registries=True, settings=True
+                registries=True, graph=True, mindmap=True, settings=True
             )
         )
         doc = admin_role_obj.model_dump()
@@ -2573,7 +2574,7 @@ async def create_admin():
             permissions=RolePermissions(
                 dashboard=True, incidents=True, assets=True, risks=True,
                 threats=True, vulnerabilities=True, users=False, wiki=True,
-                registries=True, settings=False
+                registries=True, graph=True, mindmap=True, settings=False
             )
         )
         doc = engineer_role_obj.model_dump()
@@ -2592,7 +2593,7 @@ async def create_admin():
             permissions=RolePermissions(
                 dashboard=True, incidents=True, assets=True, risks=True,
                 threats=True, vulnerabilities=True, users=False, wiki=True,
-                registries=False, settings=False
+                registries=False, graph=True, mindmap=True, settings=False
             )
         )
         doc = specialist_role_obj.model_dump()

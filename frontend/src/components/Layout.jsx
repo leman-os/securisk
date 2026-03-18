@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Shield, LayoutDashboard, AlertTriangle, AlertCircle, Server,
   LogOut, Crosshair, Bug, BookOpen, Table, ChevronLeft, ChevronRight,
-  ClipboardList, SlidersHorizontal, GitBranch, HelpCircle, User,
+  ClipboardList, SlidersHorizontal, GitBranch, HelpCircle, User, Network,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -31,6 +31,7 @@ const Layout = ({ user, setUser, children }) => {
     { path: '/requirements',    icon: ClipboardList,   label: 'Требования',    permission: 'requirements' },
     { path: '/wiki',            icon: BookOpen,        label: 'База знаний',   permission: 'wiki' },
     { path: '/graph',           icon: GitBranch,       label: 'Граф связей',   permission: 'graph' },
+    { path: '/mindmap',         icon: Network,         label: 'Ментал. карта', permission: 'mindmap' },
   ];
 
   const menuItems = allMenuItems.filter(item => {
