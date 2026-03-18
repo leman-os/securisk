@@ -67,6 +67,14 @@ def compute_install_hash(install_date: str, machine_id: str) -> str:
     key = f"{machine_id}:{LICENSE_SALT}".encode()
     return hmac_lib.new(key, install_date.encode(), hashlib.sha256).hexdigest()
 
+# Full permission set for legacy "Администратор" role
+_ADMIN_PERMISSIONS = {
+    "dashboard": True, "incidents": True, "assets": True, "risks": True,
+    "threats": True, "vulnerabilities": True, "users": True, "wiki": True,
+    "registries": True, "requirements": True, "graph": True,
+    "settings": True, "admin": True,
+}
+
 # Create the main app
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
@@ -752,14 +760,24 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         username = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-        
+
         user_doc = await db.users.find_one({"username": username}, {"_id": 0, "password": 0})
         if not user_doc:
             raise HTTPException(status_code=401, detail="User not found")
-        
+
         if isinstance(user_doc.get('created_at'), str):
             user_doc['created_at'] = datetime.fromisoformat(user_doc['created_at'])
-        
+
+        # Attach role permissions (same logic as /auth/login)
+        role_id = user_doc.get('role')
+        role_doc = await db.roles.find_one({"id": role_id})
+        if role_doc:
+            user_doc['permissions'] = role_doc.get('permissions')
+            user_doc['role_name'] = role_doc.get('name')
+        elif role_id == "Администратор":
+            user_doc['permissions'] = _ADMIN_PERMISSIONS
+            user_doc['role_name'] = "Администратор"
+
         return User(**user_doc)
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
@@ -888,11 +906,7 @@ async def login(credentials: UserLogin):
         user_doc['role_name'] = role_doc.get('name')
     elif role_id == "Администратор":
         # Legacy admin role - full permissions
-        permissions = {
-            "dashboard": True, "incidents": True, "assets": True, "risks": True,
-            "threats": True, "vulnerabilities": True, "users": True, "wiki": True,
-            "registries": True, "settings": True
-        }
+        permissions = _ADMIN_PERMISSIONS
         user_doc['role_name'] = "Администратор"
     
     # Add permissions to user doc

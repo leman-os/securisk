@@ -34,7 +34,9 @@ const Layout = ({ user, setUser, children }) => {
   ];
 
   const menuItems = allMenuItems.filter(item => {
-    if (!user?.permissions) return true;
+    // No user yet or no permissions object → show all (loading/legacy fallback)
+    if (!user) return false;
+    if (!user.permissions) return true;
     return user.permissions[item.permission] === true;
   });
 
