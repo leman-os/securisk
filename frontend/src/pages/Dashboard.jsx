@@ -213,177 +213,252 @@ const PeriodSelector = ({ period, setPeriod, customFrom, setCustomFrom, customTo
 
 /* ─────────────────────────────────────────────────────────────────────────
    Builds a clean, self-contained HTML string for PDF capture.
-   Uses only inline styles so html2canvas picks everything up correctly.
+   Rules for html2canvas compatibility:
+     • NO flexbox (flex:1 breaks layout) — use <table> instead
+     • NO CSS grid — use <table> instead
+     • ALL widths are explicit pixels (container=794px, padding=32px, content=730px)
+     • text-overflow:ellipsis works only with table-layout:fixed + overflow:hidden
 ───────────────────────────────────────────────────────────────────────── */
 const buildPrintHTML = (stats, riskAnalytics, periodLabel) => {
+  // Usable content width inside the 794px container with 32px padding on each side
+  const W = 730;
+
   const date = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' });
 
-  const critColor  = (c) => ({ Критический:'#dc2626', Высокий:'#ea580c', Средний:'#ca8a04', Низкий:'#16a34a' }[c] ?? '#94a3b8');
-  const statColor  = (s) => ({ Открыт:'#2563eb', 'В обработке':'#d97706', Принят:'#9333ea', Закрыт:'#94a3b8' }[s] ?? '#94a3b8');
+  const critColor = (c) => ({ Критический:'#dc2626', Высокий:'#ea580c', Средний:'#ca8a04', Низкий:'#16a34a' }[c] ?? '#94a3b8');
+  const statColor = (s) => ({ Открыт:'#2563eb', 'В обработке':'#d97706', Принят:'#9333ea', Закрыт:'#94a3b8' }[s] ?? '#94a3b8');
 
-  /* ── KPI cards ── */
+  /* ── Section header ── */
+  const section = (title) =>
+    `<div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.07em;
+      padding-bottom:5px;border-bottom:1px solid #e2e8f0;margin-bottom:10px;">${title}</div>`;
+
+  /* ── Small bar helper (table-based, no flexbox) ──
+     colW = total width of the cell containing label+bar+count
+     labelW = width of the label column
+     countW = width of the count column                              */
+  const barTable = (data, colorFn, colW) => {
+    const labelW = 108;
+    const countW = 72;
+    const barW   = colW - labelW - countW - 8; // 8px gap via cell padding
+    const tot    = Object.values(data || {}).reduce((a, b) => a + b, 0);
+    const rows   = Object.entries(data || {}).map(([k, v]) => {
+      const pct  = tot > 0 ? Math.round((v / tot) * 100) : 0;
+      const fill = Math.round(barW * pct / 100);
+      return `
+        <tr>
+          <td style="width:${labelW}px;padding:3px 6px 3px 0;font-size:10.5px;font-weight:500;
+            color:#334155;vertical-align:middle;overflow:hidden;">${k}</td>
+          <td style="width:${barW}px;padding:3px 4px;vertical-align:middle;">
+            <table style="width:${barW}px;border-collapse:collapse;"><tr>
+              <td style="width:${fill}px;height:8px;background:${colorFn(k)};border-radius:3px 0 0 3px;"></td>
+              <td style="width:${barW - fill}px;height:8px;background:#e2e8f0;border-radius:${fill===0?'3px':'0 3px 3px 0'};"></td>
+            </tr></table>
+          </td>
+          <td style="width:${countW}px;padding:3px 0 3px 4px;text-align:right;font-size:10px;
+            color:#64748b;vertical-align:middle;white-space:nowrap;">
+            <b style="color:#1e293b;">${v}</b>&nbsp;(${pct}%)
+          </td>
+        </tr>`;
+    }).join('');
+    return `<table style="width:${colW}px;border-collapse:collapse;table-layout:fixed;">${rows}</table>`;
+  };
+
+  /* ── KPI cards — 3 per row via table (each card ~237px, gap 8px) ── */
   const kpi = [
-    { label:'Всего рисков',        value: stats?.total_risks||0,      sub:`${stats?.critical_risks||0} критических`,     color:'#d97706' },
-    { label:'Критические риски',   value: stats?.critical_risks||0,   sub:`из ${stats?.total_risks||0} всего`,           color:'#dc2626' },
-    { label:'Инциденты',           value: stats?.total_incidents||0,  sub:`${stats?.open_incidents||0} открытых`,         color:'#2563eb' },
-    { label:'Открытые инциденты',  value: stats?.open_incidents||0,   sub:`из ${stats?.total_incidents||0} всего`,        color:'#7c3aed' },
-    { label:'Активы',              value: stats?.total_assets||0,     sub:`${stats?.critical_assets||0} критических`,    color:'#0891b2' },
-    { label:'Критические активы',  value: stats?.critical_assets||0,  sub:`из ${stats?.total_assets||0} всего`,          color:'#0d9488' },
+    { label:'Всего рисков',       value:stats?.total_risks||0,     sub:`${stats?.critical_risks||0} критических`,    color:'#d97706' },
+    { label:'Критические риски',  value:stats?.critical_risks||0,  sub:`из ${stats?.total_risks||0} всего`,          color:'#dc2626' },
+    { label:'Всего инцидентов',   value:stats?.total_incidents||0, sub:`${stats?.open_incidents||0} открытых`,       color:'#2563eb' },
+    { label:'Открытые инциденты', value:stats?.open_incidents||0,  sub:`из ${stats?.total_incidents||0} всего`,      color:'#7c3aed' },
+    { label:'Всего активов',      value:stats?.total_assets||0,    sub:`${stats?.critical_assets||0} критических`,  color:'#0891b2' },
+    { label:'Критические активы', value:stats?.critical_assets||0, sub:`из ${stats?.total_assets||0} всего`,        color:'#0d9488' },
   ];
-  const kpiHtml = kpi.map(k => `
-    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid ${k.color};border-radius:8px;padding:14px 16px;">
-      <div style="font-size:30px;font-weight:900;color:${k.color};line-height:1;">${k.value}</div>
-      <div style="font-size:12px;font-weight:600;color:#334155;margin-top:5px;">${k.label}</div>
-      <div style="font-size:11px;color:#94a3b8;margin-top:2px;">${k.sub}</div>
-    </div>`).join('');
-
-  /* ── Bar rows helper ── */
-  const bars = (data, colorFn) => Object.entries(data||{}).map(([k,v]) => {
-    const tot = Object.values(data).reduce((a,b)=>a+b,0);
-    const pct = tot > 0 ? Math.round((v/tot)*100) : 0;
-    return `
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <div style="width:110px;font-size:11px;font-weight:500;color:#334155;flex-shrink:0;">${k}</div>
-        <div style="flex:1;background:#e2e8f0;border-radius:4px;height:8px;overflow:hidden;">
-          <div style="background:${colorFn(k)};height:100%;width:${pct}%;"></div>
+  const cardW = Math.floor((W - 16) / 3); // 16px = 2 gaps × 8px
+  const kpiRows = [kpi.slice(0,3), kpi.slice(3,6)].map(row =>
+    `<tr>${row.map(k => `
+      <td style="width:${cardW}px;padding:4px;">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid ${k.color};
+          border-radius:8px;padding:12px 14px;">
+          <div style="font-size:28px;font-weight:900;color:${k.color};line-height:1;">${k.value}</div>
+          <div style="font-size:11px;font-weight:700;color:#334155;margin-top:5px;">${k.label}</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:2px;">${k.sub}</div>
         </div>
-        <div style="width:60px;text-align:right;font-size:11px;color:#64748b;flex-shrink:0;">
-          <b style="color:#1e293b;">${v}</b>&nbsp;(${pct}%)
-        </div>
-      </div>`;
-  }).join('');
-
-  /* ── Owner rows ── */
-  const ownerEntries = Object.entries(riskAnalytics?.risks_by_owner||{}).sort((a,b)=>b[1]-a[1]);
-  const ownerTot = ownerEntries.reduce((s,[,v])=>s+v,0);
-  const ownerHtml = ownerEntries.map(([o,v],i) => {
-    const pct = ownerTot > 0 ? Math.round((v/ownerTot)*100) : 0;
-    return `
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-        <div style="width:18px;height:18px;background:#e2e8f0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#475569;flex-shrink:0;">${i+1}</div>
-        <div style="width:160px;font-size:11px;color:#334155;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${o}</div>
-        <div style="flex:1;background:#e2e8f0;border-radius:4px;height:8px;overflow:hidden;">
-          <div style="background:#06b6d4;height:100%;width:${pct}%;"></div>
-        </div>
-        <div style="width:60px;text-align:right;font-size:11px;color:#64748b;flex-shrink:0;"><b style="color:#1e293b;">${v}</b>&nbsp;(${pct}%)</div>
-      </div>`;
-  }).join('');
+      </td>`).join('')}</tr>`
+  ).join('');
+  const kpiHtml = `
+    <div style="margin-bottom:22px;">
+      ${section('Ключевые показатели')}
+      <table style="width:${W}px;border-collapse:collapse;table-layout:fixed;margin:-4px;">
+        ${kpiRows}
+      </table>
+    </div>`;
 
   /* ── Incident metrics ── */
   const metricCards = [
-    stats?.avg_mtta && { label:'Время обнаружения', abbr:'MTTA', val:stats.avg_mtta, bg:'#eff6ff', color:'#2563eb' },
-    stats?.avg_mttr && { label:'Время реагирования', abbr:'MTTR', val:stats.avg_mttr, bg:'#fff7ed', color:'#ea580c' },
-    stats?.avg_mttc && { label:'Время закрытия',     abbr:'MTTC', val:stats.avg_mttc, bg:'#f0fdf4', color:'#16a34a' },
+    stats?.avg_mtta && { label:'Среднее время обнаружения', abbr:'MTTA', val:stats.avg_mtta, bg:'#eff6ff', color:'#2563eb' },
+    stats?.avg_mttr && { label:'Среднее время реагирования', abbr:'MTTR', val:stats.avg_mttr, bg:'#fff7ed', color:'#ea580c' },
+    stats?.avg_mttc && { label:'Среднее время закрытия',     abbr:'MTTC', val:stats.avg_mttc, bg:'#f0fdf4', color:'#16a34a' },
   ].filter(Boolean);
   const metricsHtml = metricCards.length ? `
-    <div style="margin-bottom:24px;">
-      ${section('Метрики инцидентов')}
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-        ${metricCards.map(m => `
-          <div style="background:${m.bg};border-left:4px solid ${m.color};border-radius:8px;padding:14px 16px;">
-            <div style="font-size:28px;font-weight:900;color:${m.color};line-height:1;">${m.val}<span style="font-size:14px;"> ч</span></div>
-            <div style="font-size:11px;font-weight:700;color:${m.color};margin-top:4px;">${m.abbr}</div>
-            <div style="font-size:11px;color:#64748b;margin-top:2px;">${m.label}</div>
-          </div>`).join('')}
-      </div>
+    <div style="margin-bottom:22px;">
+      ${section('Метрики инцидентов (часы)')}
+      <table style="width:${W}px;border-collapse:collapse;table-layout:fixed;margin:-4px;">
+        <tr>${metricCards.map(m => `
+          <td style="width:${cardW}px;padding:4px;">
+            <div style="background:${m.bg};border-left:4px solid ${m.color};border-radius:8px;padding:12px 14px;">
+              <div style="font-size:24px;font-weight:900;color:${m.color};line-height:1.1;">${m.val}<span style="font-size:12px;font-weight:400;"> ч</span></div>
+              <div style="font-size:11px;font-weight:700;color:${m.color};margin-top:4px;">${m.abbr}</div>
+              <div style="font-size:10px;color:#64748b;margin-top:1px;">${m.label}</div>
+            </div>
+          </td>`).join('')}
+        </tr>
+      </table>
     </div>` : '';
 
-  /* ── Top-10 table rows ── */
-  const topRows = (riskAnalytics?.top_risks||[]).map((r,i) => {
-    const c = critColor(r.criticality);
-    const pct = Math.min(Math.round((r.risk_level/25)*100),100);
-    const bg  = i%2===1 ? '#f8fafc' : '#ffffff';
+  /* ── Risk distribution — 2 columns ── */
+  const halfW = Math.floor((W - 16) / 2); // 16px gap between cols
+  const distHtml = riskAnalytics ? `
+    <div style="margin-bottom:22px;">
+      <table style="width:${W}px;border-collapse:collapse;table-layout:fixed;">
+        <tr>
+          <td style="width:${halfW}px;padding-right:8px;vertical-align:top;">
+            ${section('Риски по критичности')}
+            ${barTable(riskAnalytics.risks_by_criticality, critColor, halfW)}
+          </td>
+          <td style="width:${halfW}px;padding-left:8px;vertical-align:top;">
+            ${section('Риски по статусам')}
+            ${barTable(riskAnalytics.risks_by_status, statColor, halfW)}
+          </td>
+        </tr>
+      </table>
+    </div>` : '';
+
+  /* ── Risks by owner ── */
+  const ownerEntries = Object.entries(riskAnalytics?.risks_by_owner || {}).sort((a,b) => b[1]-a[1]);
+  const ownerTot = ownerEntries.reduce((s,[,v]) => s+v, 0);
+  const rankW = 26; const nameW = 215; const ownerCountW = 76;
+  const ownerBarW = W - rankW - nameW - ownerCountW - 16; // 16px padding sum
+  const ownerRows = ownerEntries.map(([o,v],i) => {
+    const pct  = ownerTot > 0 ? Math.round((v/ownerTot)*100) : 0;
+    const fill = Math.round(ownerBarW * pct / 100);
+    const bg   = i % 2 === 1 ? '#f8fafc' : '#ffffff';
     return `
       <tr style="background:${bg};">
-        <td style="padding:7px 8px;text-align:center;font-size:11px;font-weight:700;color:#64748b;">${i+1}</td>
-        <td style="padding:7px 8px;">
-          <div style="font-size:11px;font-weight:700;color:#1e293b;">${r.risk_number}</div>
-          <div style="font-size:10px;color:#64748b;margin-top:2px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.scenario||''}</div>
+        <td style="width:${rankW}px;padding:5px 4px;text-align:center;vertical-align:middle;">
+          <div style="display:inline-block;width:20px;height:20px;background:#e2e8f0;border-radius:50%;
+            text-align:center;line-height:20px;font-size:9px;font-weight:700;color:#475569;">${i+1}</div>
         </td>
-        <td style="padding:7px 8px;width:100px;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <div style="flex:1;background:#e2e8f0;border-radius:3px;height:6px;overflow:hidden;">
-              <div style="background:${c};height:100%;width:${pct}%;"></div>
-            </div>
-            <span style="font-size:12px;font-weight:900;color:#1e293b;width:16px;text-align:right;">${r.risk_level}</span>
-          </div>
+        <td style="width:${nameW}px;padding:5px 6px;font-size:10.5px;color:#334155;vertical-align:middle;
+          overflow:hidden;white-space:nowrap;">${o}</td>
+        <td style="width:${ownerBarW}px;padding:5px 4px;vertical-align:middle;">
+          <table style="width:${ownerBarW}px;border-collapse:collapse;"><tr>
+            <td style="width:${fill}px;height:7px;background:#06b6d4;border-radius:3px 0 0 3px;"></td>
+            <td style="width:${ownerBarW - fill}px;height:7px;background:#e2e8f0;border-radius:${fill===0?'3px':'0 3px 3px 0'};"></td>
+          </tr></table>
         </td>
-        <td style="padding:7px 8px;white-space:nowrap;">
-          <span style="background:${c}22;color:${c};border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;">${r.criticality}</span>
+        <td style="width:${ownerCountW}px;padding:5px 4px;text-align:right;font-size:10px;
+          color:#64748b;vertical-align:middle;white-space:nowrap;">
+          <b style="color:#1e293b;">${v}</b>&nbsp;(${pct}%)
         </td>
-        <td style="padding:7px 8px;font-size:10px;color:#64748b;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.owner||''}</td>
+      </tr>`;
+  }).join('');
+  const ownerHtml = ownerEntries.length ? `
+    <div style="margin-bottom:22px;">
+      ${section('Риски по владельцам')}
+      <table style="width:${W}px;border-collapse:collapse;table-layout:fixed;">${ownerRows}</table>
+    </div>` : '';
+
+  /* ── Top-10 risks table ──
+     #(28) | Риск/Сценарий(dynamic) | Уровень(115) | Критичность(100) | Владелец(130)
+     Padding per cell: 6px left + 6px right = 12px × 5 cols = 60px overhead
+     Dynamic col = W - 28 - 115 - 100 - 130 - 60 = 297px                            */
+  const col = { rank:28, level:115, crit:100, owner:130 };
+  const col_risk = W - col.rank - col.level - col.crit - col.owner - 60;
+  const topRows = (riskAnalytics?.top_risks || []).map((r,i) => {
+    const c   = critColor(r.criticality);
+    const pct = Math.min(Math.round((r.risk_level/25)*100), 100);
+    const barFill = Math.round(75 * pct / 100); // bar inside 75px
+    const barEmpty = 75 - barFill;
+    const bg  = i % 2 === 1 ? '#f8fafc' : '#ffffff';
+    const scenario = (r.scenario||'').length > 70 ? (r.scenario||'').slice(0,68)+'…' : (r.scenario||'');
+    return `
+      <tr style="background:${bg};">
+        <td style="width:${col.rank}px;padding:6px;text-align:center;font-size:11px;
+          font-weight:700;color:#64748b;vertical-align:middle;">${i+1}</td>
+        <td style="width:${col_risk}px;padding:6px;vertical-align:middle;overflow:hidden;">
+          <div style="font-size:10.5px;font-weight:700;color:#1e293b;white-space:nowrap;
+            overflow:hidden;">${r.risk_number}</div>
+          <div style="font-size:9.5px;color:#64748b;margin-top:2px;white-space:nowrap;
+            overflow:hidden;">${scenario}</div>
+        </td>
+        <td style="width:${col.level}px;padding:6px;vertical-align:middle;">
+          <table style="width:100%;border-collapse:collapse;"><tr>
+            <td style="width:75px;vertical-align:middle;">
+              <table style="width:75px;border-collapse:collapse;"><tr>
+                <td style="width:${barFill}px;height:6px;background:${c};border-radius:3px 0 0 3px;"></td>
+                <td style="width:${barEmpty}px;height:6px;background:#e2e8f0;border-radius:${barFill===0?'3px':'0 3px 3px 0'};"></td>
+              </tr></table>
+            </td>
+            <td style="padding-left:6px;font-size:13px;font-weight:900;color:#1e293b;
+              white-space:nowrap;">${r.risk_level}</td>
+          </tr></table>
+        </td>
+        <td style="width:${col.crit}px;padding:6px;vertical-align:middle;">
+          <span style="background:${c}22;color:${c};border-radius:4px;padding:2px 8px;
+            font-size:9.5px;font-weight:700;white-space:nowrap;">${r.criticality}</span>
+        </td>
+        <td style="width:${col.owner}px;padding:6px;font-size:10px;color:#64748b;
+          vertical-align:middle;overflow:hidden;white-space:nowrap;">${r.owner||'—'}</td>
       </tr>`;
   }).join('');
 
-  /* ── Section header helper ── */
-  function section(title) {
-    return `<div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;padding-bottom:6px;border-bottom:1px solid #e2e8f0;margin-bottom:12px;">${title}</div>`;
-  }
+  const topHtml = topRows ? `
+    <div style="margin-bottom:22px;">
+      ${section('Топ-10 самых опасных рисков')}
+      <table style="width:${W}px;border-collapse:collapse;table-layout:fixed;font-family:Arial,Helvetica,sans-serif;">
+        <thead>
+          <tr style="background:#f1f5f9;">
+            <th style="width:${col.rank}px;padding:6px;font-size:9.5px;font-weight:600;color:#64748b;text-align:center;">#</th>
+            <th style="width:${col_risk}px;padding:6px;font-size:9.5px;font-weight:600;color:#64748b;text-align:left;">Риск / Сценарий</th>
+            <th style="width:${col.level}px;padding:6px;font-size:9.5px;font-weight:600;color:#64748b;text-align:left;">Уровень</th>
+            <th style="width:${col.crit}px;padding:6px;font-size:9.5px;font-weight:600;color:#64748b;text-align:left;">Критичность</th>
+            <th style="width:${col.owner}px;padding:6px;font-size:9.5px;font-weight:600;color:#64748b;text-align:left;">Владелец</th>
+          </tr>
+        </thead>
+        <tbody>${topRows}</tbody>
+      </table>
+    </div>` : '';
 
   return `
-    <!-- Header bar -->
-    <div style="background:#0f172a;color:#fff;padding:14px 32px;margin:-32px -32px 28px -32px;display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <div style="font-size:16px;font-weight:800;color:#22d3ee;">SecuRisk</div>
-        <div style="font-size:10px;color:#94a3b8;margin-top:1px;">ISO 27000 — Система управления ИБ</div>
-      </div>
-      <div style="text-align:right;">
-        <div style="font-size:13px;font-weight:600;">Дашборд ИБ</div>
-        <div style="font-size:10px;color:#94a3b8;margin-top:2px;">Период: ${periodLabel}</div>
-        <div style="font-size:10px;color:#94a3b8;margin-top:1px;">Сформирован: ${date}</div>
-      </div>
-    </div>
+    <!-- Header: table-based, no flexbox -->
+    <table style="width:${W + 64}px;border-collapse:collapse;background:#0f172a;
+      margin:-32px -32px 28px -32px;">
+      <tr>
+        <td style="padding:14px 32px;vertical-align:middle;">
+          <div style="font-size:16px;font-weight:800;color:#22d3ee;">SecuRisk</div>
+          <div style="font-size:9.5px;color:#94a3b8;margin-top:2px;">ISO 27000 — Система управления ИБ</div>
+        </td>
+        <td style="padding:14px 32px;text-align:right;vertical-align:middle;">
+          <div style="font-size:13px;font-weight:700;color:#ffffff;">Дашборд ИБ</div>
+          <div style="font-size:9.5px;color:#94a3b8;margin-top:3px;">Период: ${periodLabel}</div>
+          <div style="font-size:9.5px;color:#94a3b8;margin-top:1px;">Сформирован: ${date}</div>
+        </td>
+      </tr>
+    </table>
 
-    <!-- KPI -->
-    <div style="margin-bottom:24px;">
-      ${section('Ключевые показатели')}
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">${kpiHtml}</div>
-    </div>
-
+    ${kpiHtml}
     ${metricsHtml}
-
-    ${riskAnalytics ? `
-      <!-- Risk distribution: 2 cols -->
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:24px;">
-        <div>
-          ${section('Риски по критичности')}
-          ${bars(riskAnalytics.risks_by_criticality, critColor)}
-        </div>
-        <div>
-          ${section('Риски по статусам')}
-          ${bars(riskAnalytics.risks_by_status, statColor)}
-        </div>
-      </div>
-
-      ${ownerEntries.length ? `
-        <div style="margin-bottom:24px;">
-          ${section('Риски по владельцам')}
-          ${ownerHtml}
-        </div>` : ''}
-
-      ${topRows ? `
-        <div style="margin-bottom:24px;">
-          ${section('Топ-10 самых опасных рисков')}
-          <table style="width:100%;border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;">
-            <thead>
-              <tr style="background:#f1f5f9;">
-                <th style="padding:7px 8px;font-size:10px;font-weight:600;color:#64748b;text-align:center;width:24px;">#</th>
-                <th style="padding:7px 8px;font-size:10px;font-weight:600;color:#64748b;text-align:left;">Риск / Сценарий</th>
-                <th style="padding:7px 8px;font-size:10px;font-weight:600;color:#64748b;text-align:left;width:100px;">Уровень</th>
-                <th style="padding:7px 8px;font-size:10px;font-weight:600;color:#64748b;text-align:left;width:90px;">Критичность</th>
-                <th style="padding:7px 8px;font-size:10px;font-weight:600;color:#64748b;text-align:left;width:90px;">Владелец</th>
-              </tr>
-            </thead>
-            <tbody>${topRows}</tbody>
-          </table>
-        </div>` : ''}
-    ` : ''}
+    ${distHtml}
+    ${ownerHtml}
+    ${topHtml}
 
     <!-- Footer -->
-    <div style="margin-top:28px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;">
-      <div style="font-size:9px;color:#94a3b8;">SecuRisk — Система управления рисками ИБ</div>
-      <div style="font-size:9px;color:#94a3b8;">Конфиденциально</div>
-    </div>`;
+    <table style="width:${W}px;border-collapse:collapse;border-top:1px solid #e2e8f0;margin-top:20px;">
+      <tr>
+        <td style="padding-top:10px;font-size:8.5px;color:#94a3b8;">SecuRisk — Система управления рисками ИБ</td>
+        <td style="padding-top:10px;font-size:8.5px;color:#94a3b8;text-align:right;">Конфиденциально</td>
+      </tr>
+    </table>`;
 };
 
 /* ─────────────────────────────────────────────────────────────────────────── */
