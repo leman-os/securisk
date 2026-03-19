@@ -129,7 +129,11 @@ const buildPrintHTML = (stats, riskAnalytics, recentIncidents, vulnStats, assetS
   const W    = 1040;          // content width
   const date = new Date().toLocaleDateString('ru-RU', { day:'2-digit', month:'long', year:'numeric' });
 
-  const critColor = c => ({ Критический:'#dc2626', Высокий:'#ea580c', Средний:'#ca8a04', Низкий:'#16a34a', 'Критическая':'#dc2626', 'Высокая':'#ea580c', 'Средняя':'#ca8a04', 'Низкая':'#16a34a' }[c] ?? '#94a3b8');
+  const critColor = c => ({
+    Критический:'#dc2626', Высокий:'#ea580c', Средний:'#ca8a04', Низкий:'#16a34a',
+    Критическая:'#dc2626', Высокая:'#ea580c', Средняя:'#ca8a04', Низкая:'#16a34a',
+    Critical:'#dc2626', High:'#ea580c', Medium:'#ca8a04', Low:'#16a34a',
+  }[c] ?? '#94a3b8');
   const statColor = s => ({ Открыт:'#2563eb', 'В обработке':'#d97706', Принят:'#9333ea', Закрыт:'#94a3b8', Открыт:'#2563eb' }[s] ?? '#94a3b8');
   const incStatColor = s => statColor(s);
 
@@ -237,7 +241,7 @@ const buildPrintHTML = (stats, riskAnalytics, recentIncidents, vulnStats, assetS
       <td style="width:${oCount}px;padding:5px 4px;text-align:right;font-size:10px;color:#64748b;vertical-align:middle;white-space:nowrap;"><b style="color:#1e293b;">${v}</b>&nbsp;(${pct}%)</td>
     </tr>`;
   }).join('');
-  const ownerHtml = ownerEntries.length ? `<div style="margin-bottom:24px;">
+  const ownerHtml = ownerEntries.length ? `<div data-pdf-section="1" style="margin-bottom:24px;">
     ${section('Риски по владельцам')}
     <table style="width:${W}px;border-collapse:collapse;table-layout:fixed;">${ownerRows}</table></div>` : '';
 
@@ -272,7 +276,7 @@ const buildPrintHTML = (stats, riskAnalytics, recentIncidents, vulnStats, assetS
       <td style="width:${tOwner}px;padding:6px;font-size:10px;color:#64748b;vertical-align:middle;overflow:hidden;white-space:nowrap;">${r.owner||'—'}</td>
     </tr>`;
   }).join('');
-  const topHtml = topRows ? `<div style="margin-bottom:24px;">
+  const topHtml = topRows ? `<div data-pdf-section="1" style="margin-bottom:24px;">
     ${section('Топ-10 самых опасных рисков')}
     <table style="width:${W}px;border-collapse:collapse;table-layout:fixed;">
       <thead><tr style="background:#f1f5f9;">
@@ -288,29 +292,30 @@ const buildPrintHTML = (stats, riskAnalytics, recentIncidents, vulnStats, assetS
   /* ── Recent incidents ── */
   const iNum=32, iStat=110, iPri=90, iDate=90, iMtta=70, iMttr=70, iPad=6*12;
   const iName = W - iNum - iStat - iPri - iDate - iMtta - iMttr - iPad;
+  const minsToH = m => m != null ? `${(m/60).toFixed(1)}ч` : '—';
   const incRows = (recentIncidents||[]).map((inc,i) => {
     const sc = incStatColor(inc.status);
-    const title = (inc.title||inc.name||inc.description||'Инцидент').slice(0,60);
+    const label = [inc.incident_number, inc.incident_type || (inc.description||'').slice(0,40)].filter(Boolean).join(' / ') || '—';
     return `<tr style="background:${i%2===1?'#f8fafc':'#fff'};">
       <td style="width:${iNum}px;padding:6px;text-align:center;font-size:11px;font-weight:700;color:#64748b;vertical-align:middle;">${i+1}</td>
-      <td style="width:${iName}px;padding:6px;font-size:11px;font-weight:600;color:#1e293b;vertical-align:middle;overflow:hidden;white-space:nowrap;">${title}</td>
+      <td style="width:${iName}px;padding:6px;font-size:11px;font-weight:600;color:#1e293b;vertical-align:middle;overflow:hidden;white-space:nowrap;">${label}</td>
       <td style="width:${iStat}px;padding:6px;vertical-align:middle;">
         <span style="background:${sc}22;color:${sc};border-radius:5px;padding:2px 8px;font-size:9.5px;font-weight:700;white-space:nowrap;">${inc.status||'—'}</span>
       </td>
-      <td style="width:${iPri}px;padding:6px;font-size:10px;color:#64748b;vertical-align:middle;white-space:nowrap;">${inc.priority||inc.criticality||'—'}</td>
+      <td style="width:${iPri}px;padding:6px;font-size:10px;color:#64748b;vertical-align:middle;white-space:nowrap;">${inc.criticality||'—'}</td>
       <td style="width:${iDate}px;padding:6px;font-size:10px;color:#64748b;vertical-align:middle;white-space:nowrap;">${inc.created_at ? new Date(inc.created_at).toLocaleDateString('ru-RU') : '—'}</td>
-      <td style="width:${iMtta}px;padding:6px;font-size:10px;color:#64748b;text-align:center;vertical-align:middle;">${inc.mtta ? `${inc.mtta}ч` : '—'}</td>
-      <td style="width:${iMttr}px;padding:6px;font-size:10px;color:#64748b;text-align:center;vertical-align:middle;">${inc.mttr ? `${inc.mttr}ч` : '—'}</td>
+      <td style="width:${iMtta}px;padding:6px;font-size:10px;color:#64748b;text-align:center;vertical-align:middle;">${minsToH(inc.mtta)}</td>
+      <td style="width:${iMttr}px;padding:6px;font-size:10px;color:#64748b;text-align:center;vertical-align:middle;">${minsToH(inc.mttr)}</td>
     </tr>`;
   }).join('');
-  const incHtml = incRows ? `<div style="margin-bottom:24px;">
+  const incHtml = incRows ? `<div data-pdf-section="1" style="margin-bottom:24px;">
     ${section('Последние инциденты')}
     <table style="width:${W}px;border-collapse:collapse;table-layout:fixed;">
       <thead><tr style="background:#f1f5f9;">
         <th style="width:${iNum}px;padding:6px;font-size:10px;font-weight:600;color:#64748b;text-align:center;">#</th>
         <th style="width:${iName}px;padding:6px;font-size:10px;font-weight:600;color:#64748b;text-align:left;">Инцидент</th>
         <th style="width:${iStat}px;padding:6px;font-size:10px;font-weight:600;color:#64748b;text-align:left;">Статус</th>
-        <th style="width:${iPri}px;padding:6px;font-size:10px;font-weight:600;color:#64748b;text-align:left;">Приоритет</th>
+        <th style="width:${iPri}px;padding:6px;font-size:10px;font-weight:600;color:#64748b;text-align:left;">Критичность</th>
         <th style="width:${iDate}px;padding:6px;font-size:10px;font-weight:600;color:#64748b;text-align:left;">Дата</th>
         <th style="width:${iMtta}px;padding:6px;font-size:10px;font-weight:600;color:#64748b;text-align:center;">MTTA</th>
         <th style="width:${iMttr}px;padding:6px;font-size:10px;font-weight:600;color:#64748b;text-align:center;">MTTR</th>
@@ -319,7 +324,7 @@ const buildPrintHTML = (stats, riskAnalytics, recentIncidents, vulnStats, assetS
     </table></div>` : '';
 
   /* ── Vuln + Asset stats side by side ── */
-  const extraHtml = (vulnStats || assetStats) ? `<div style="margin-bottom:24px;">
+  const extraHtml = (vulnStats || assetStats) ? `<div data-pdf-section="1" style="margin-bottom:24px;">
     <table style="width:${W}px;border-collapse:collapse;table-layout:fixed;">
       <tr>
         <td style="width:${halfW}px;padding-right:12px;vertical-align:top;">
@@ -458,8 +463,9 @@ const Dashboard = ({ user }) => {
     axios.get(`${API}/vulnerabilities`, { params: { limit: 1000 } })
       .then(r => {
         const items = r.data.items || r.data || [];
+        const SEV_RU = { Critical: 'Критический', High: 'Высокий', Medium: 'Средний', Low: 'Низкий' };
         const map = {};
-        items.forEach(v => { const k = v.severity || v.criticality || 'Не указано'; map[k] = (map[k]||0) + 1; });
+        items.forEach(v => { const k = SEV_RU[v.severity] || v.severity || v.criticality || 'Не указано'; map[k] = (map[k]||0) + 1; });
         if (Object.keys(map).length > 0) setVulnStats(map);
       }).catch(() => {});
 
@@ -487,22 +493,41 @@ const Dashboard = ({ user }) => {
       container.innerHTML = buildPrintHTML(stats, riskAnalytics, recentIncidents, vulnStats, assetStats, periodLabel);
       document.body.appendChild(container);
 
+      // Measure section boundaries before rasterising
+      await new Promise(r => setTimeout(r, 80));
+      const sectionEls = [...container.querySelectorAll('[data-pdf-section]')];
+      const cRect = container.getBoundingClientRect();
+      const sectionTops_css = sectionEls.map(el => el.getBoundingClientRect().top - cRect.top);
+
       const canvas = await html2canvas(container, {
         scale: 2, useCORS: true, backgroundColor: '#ffffff',
         width: 1120, windowWidth: 1120,
       });
       document.body.removeChild(container);
 
-      const imgData = canvas.toDataURL('image/png');
+      const pdfW = 297; // landscape A4 mm
+      const pdfH = 210;
       const pdf  = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-      const pdfW = 297; // landscape A4 width
-      const pdfH = 210; // landscape A4 height
-      const imgH = (canvas.height / canvas.width) * pdfW;
-      let pos = 0, left = imgH;
-      while (left > 0) {
-        if (pos > 0) pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, -pos, pdfW, imgH);
-        pos += pdfH; left -= pdfH;
+      const SCALE = canvas.width / 1120;          // canvas px per CSS px (≈2)
+      const pdfH_cpx = pdfH * canvas.width / pdfW; // page height in canvas px
+
+      // Build smart page breaks: start new page before a section that would overflow
+      const sectionTops_cpx = sectionTops_css.map(t => t * SCALE);
+      const pageBreaks_cpx = [0];
+      let lastBreak = 0;
+      for (const top of sectionTops_cpx) {
+        if (top > lastBreak + pdfH_cpx - 80 * SCALE) {
+          pageBreaks_cpx.push(top);
+          lastBreak = top;
+        }
+      }
+
+      const imgData    = canvas.toDataURL('image/png');
+      const totalH_mm  = canvas.height * pdfW / canvas.width;
+      for (let p = 0; p < pageBreaks_cpx.length; p++) {
+        if (p > 0) pdf.addPage();
+        const offsetY_mm = pageBreaks_cpx[p] * pdfW / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, -offsetY_mm, pdfW, totalH_mm);
       }
       pdf.save(`securisk-dashboard-${new Date().toISOString().slice(0, 10)}.pdf`);
     } catch (e) { console.error('PDF export failed', e); }
@@ -748,14 +773,14 @@ const Dashboard = ({ user }) => {
                     className="grid grid-cols-[1fr_7rem_6rem_6rem_4rem_4rem] gap-3 items-center px-2 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/60 cursor-pointer transition-colors">
                     <div className="min-w-0">
                       <div className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">
-                        {inc.title || inc.name || inc.description?.slice(0,50) || `Инцидент ${idx+1}`}
+                        {[inc.incident_number, inc.incident_type || inc.description?.slice(0,40)].filter(Boolean).join(' / ') || `Инцидент ${idx+1}`}
                       </div>
                     </div>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statBadge(inc.status)} truncate`}>{inc.status||'—'}</span>
                     <span className="text-xs text-slate-500 dark:text-slate-400 truncate">{inc.priority||inc.criticality||'—'}</span>
                     <span className="text-xs text-slate-500 dark:text-slate-400">{inc.created_at ? new Date(inc.created_at).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—'}</span>
-                    <span className="text-xs text-center text-slate-500 dark:text-slate-400">{inc.mtta ? `${inc.mtta}ч` : '—'}</span>
-                    <span className="text-xs text-center text-slate-500 dark:text-slate-400">{inc.mttr ? `${inc.mttr}ч` : '—'}</span>
+                    <span className="text-xs text-center text-slate-500 dark:text-slate-400">{inc.mtta != null ? `${(inc.mtta/60).toFixed(1)}ч` : '—'}</span>
+                    <span className="text-xs text-center text-slate-500 dark:text-slate-400">{inc.mttr != null ? `${(inc.mttr/60).toFixed(1)}ч` : '—'}</span>
                   </div>
                 ))}
               </div>
