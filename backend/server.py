@@ -73,6 +73,7 @@ _ADMIN_PERMISSIONS = {
     "threats": True, "vulnerabilities": True, "users": True, "wiki": True,
     "registries": True, "requirements": True, "graph": True,
     "mindmap": True, "settings": True, "admin": True,
+    "incidents_own_only": False,
 }
 
 # Create the main app
@@ -180,7 +181,7 @@ class Incident(BaseModel):
     detection_source: Optional[str] = None  # Источник выявления
     criticality: str  # Низкая, Средняя, Высокая
     detected_by: Optional[str] = None  # Выявил (ФИО)
-    status: str  # Новая, В работе, Завершен, Проверен
+    status: str  # Новый, В работе, Завершен, Проверен
     closed_at: Optional[datetime] = None  # Время закрытия
     mtta: Optional[float] = None  # Время от инцидента до обнаружения (минуты)
     mttr: Optional[float] = None  # Время от обнаружения до начала реакции (минуты)
@@ -212,7 +213,7 @@ class IncidentCreate(BaseModel):
     detection_source: Optional[str] = None
     criticality: str
     detected_by: Optional[str] = None
-    status: str = "Новая"
+    status: str = "Новый"
     closed_at: Optional[datetime] = None  # Время закрытия
     description: Optional[str] = None
     measures: Optional[str] = None
@@ -468,6 +469,7 @@ class RolePermissions(BaseModel):
     mindmap: SectionPermission = Field(default_factory=SectionPermission)
     settings: SectionPermission = Field(default_factory=lambda: SectionPermission(view=False, edit=False))
     admin: bool = False
+    incidents_own_only: bool = True  # True = только свои инциденты, False = все инциденты
 
     @model_validator(mode='before')
     @classmethod
@@ -475,7 +477,7 @@ class RolePermissions(BaseModel):
         """Конвертируем старый формат (bool) в новый ({view, edit})"""
         if not isinstance(data, dict):
             return data
-        non_section = {'admin'}
+        non_section = {'admin', 'incidents_own_only'}
         result = {}
         for k, v in data.items():
             if k in non_section:
@@ -1376,6 +1378,16 @@ async def create_incident(incident_data: IncidentCreate, current_user: User = De
     # Set created_by to current user
     data_dict['created_by'] = current_user.id
 
+    # Auto-assign creator so they always see and can edit the incident
+    assigned = data_dict.get('assigned_to') or []
+    if current_user.id not in assigned:
+        assigned = [current_user.id] + assigned
+    data_dict['assigned_to'] = assigned
+
+    # Ensure default status is "Новый" if not explicitly set
+    if not data_dict.get('status'):
+        data_dict['status'] = 'Новый'
+
     incident = Incident(**data_dict)
     doc = incident.model_dump()
 
@@ -1414,12 +1426,14 @@ async def get_incidents(
     # Determine sort direction
     sort_direction = -1 if sort_order == "desc" else 1
 
-    # Build query filter based on role
-    is_admin = current_user.role == "Администратор"
-    if is_admin:
+    # Build query filter based on permissions
+    perms = current_user.permissions or {}
+    is_admin = current_user.role == "Администратор" or perms.get('admin', False)
+    own_only = perms.get('incidents_own_only', True)  # default: restrict to own
+    if is_admin or not own_only:
         query = {}
     else:
-        # Non-admin: see incidents created by them OR assigned to them
+        # Show only incidents created by or assigned to the current user
         query = {
             "$or": [
                 {"created_by": current_user.id},

@@ -38,7 +38,9 @@ const Layout = ({ user, setUser, children }) => {
     // No user yet or no permissions object → show all (loading/legacy fallback)
     if (!user) return false;
     if (!user.permissions) return true;
-    return user.permissions[item.permission] === true;
+    const perm = user.permissions[item.permission];
+    // Support both legacy flat boolean (true) and SectionPermission ({view, edit})
+    return perm === true || (perm && typeof perm === 'object' && perm.view === true);
   });
 
   const hasAdminAccess = user?.role === 'Администратор' || user?.permissions?.admin === true;

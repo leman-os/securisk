@@ -23,19 +23,20 @@ const Roles = ({ user }) => {
   const [formData, setFormData] = useState({
     name: '',
     permissions: {
-      dashboard:       defaultSectionPerm(),
-      requirements:    defaultSectionPerm(),
-      incidents:       defaultSectionPerm(),
-      assets:          defaultSectionPerm(),
-      risks:           defaultSectionPerm(),
-      threats:         defaultSectionPerm(),
-      vulnerabilities: defaultSectionPerm(),
-      wiki:            defaultSectionPerm(),
-      registries:      defaultSectionPerm(),
-      graph:           defaultSectionPerm(),
-      mindmap:         defaultSectionPerm(),
-      users:           defaultSectionPerm(false, false),
-      settings:        defaultSectionPerm(false, false),
+      dashboard:          defaultSectionPerm(),
+      requirements:       defaultSectionPerm(),
+      incidents:          defaultSectionPerm(),
+      incidents_own_only: true,
+      assets:             defaultSectionPerm(),
+      risks:              defaultSectionPerm(),
+      threats:            defaultSectionPerm(),
+      vulnerabilities:    defaultSectionPerm(),
+      wiki:               defaultSectionPerm(),
+      registries:         defaultSectionPerm(),
+      graph:              defaultSectionPerm(),
+      mindmap:            defaultSectionPerm(),
+      users:              defaultSectionPerm(false, false),
+      settings:           defaultSectionPerm(false, false),
       admin: false,
     }
   });
@@ -84,6 +85,8 @@ const Roles = ({ user }) => {
       if (perms[k] !== undefined) perms[k] = normalizePerm(perms[k]);
       else perms[k] = defaultSectionPerm();
     });
+    // incidents_own_only — plain bool, не SectionPermission
+    if (perms.incidents_own_only === undefined) perms.incidents_own_only = true;
     setFormData({ name: role.name, permissions: perms });
     setIsEditDialogOpen(true);
   };
@@ -121,19 +124,20 @@ const Roles = ({ user }) => {
     setFormData({
       name: '',
       permissions: {
-        dashboard:       defaultSectionPerm(),
-        requirements:    defaultSectionPerm(),
-        incidents:       defaultSectionPerm(),
-        assets:          defaultSectionPerm(),
-        risks:           defaultSectionPerm(),
-        threats:         defaultSectionPerm(),
-        vulnerabilities: defaultSectionPerm(),
-        wiki:            defaultSectionPerm(),
-        registries:      defaultSectionPerm(),
-        graph:           defaultSectionPerm(),
-        mindmap:         defaultSectionPerm(),
-        users:           defaultSectionPerm(false, false),
-        settings:        defaultSectionPerm(false, false),
+        dashboard:          defaultSectionPerm(),
+        requirements:       defaultSectionPerm(),
+        incidents:          defaultSectionPerm(),
+        incidents_own_only: true,
+        assets:             defaultSectionPerm(),
+        risks:              defaultSectionPerm(),
+        threats:            defaultSectionPerm(),
+        vulnerabilities:    defaultSectionPerm(),
+        wiki:               defaultSectionPerm(),
+        registries:         defaultSectionPerm(),
+        graph:              defaultSectionPerm(),
+        mindmap:            defaultSectionPerm(),
+        users:              defaultSectionPerm(false, false),
+        settings:           defaultSectionPerm(false, false),
         admin: false,
       }
     });
@@ -215,27 +219,46 @@ const Roles = ({ user }) => {
           {Object.entries(sectionLabels).map(([key, label]) => {
             const perm = normalizePerm(formData.permissions[key]);
             return (
-              <div key={key} className="grid grid-cols-3 gap-1 items-center p-2 border border-slate-200 rounded-lg hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
-                <Label className="cursor-pointer text-sm">{label}</Label>
-                <div className="flex justify-center">
-                  <input
-                    type="checkbox"
-                    checked={perm.view}
-                    onChange={() => togglePermField(key, 'view')}
-                    className="w-4 h-4 accent-cyan-600"
-                    id={`perm-${key}-view`}
-                  />
+              <div key={key}>
+                <div className="grid grid-cols-3 gap-1 items-center p-2 border border-slate-200 rounded-lg hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                  <Label className="cursor-pointer text-sm">{label}</Label>
+                  <div className="flex justify-center">
+                    <input
+                      type="checkbox"
+                      checked={perm.view}
+                      onChange={() => togglePermField(key, 'view')}
+                      className="w-4 h-4 accent-cyan-600"
+                      id={`perm-${key}-view`}
+                    />
+                  </div>
+                  <div className="flex justify-center">
+                    <input
+                      type="checkbox"
+                      checked={perm.edit}
+                      onChange={() => togglePermField(key, 'edit')}
+                      className="w-4 h-4 accent-cyan-600"
+                      id={`perm-${key}-edit`}
+                      disabled={!perm.view}
+                    />
+                  </div>
                 </div>
-                <div className="flex justify-center">
-                  <input
-                    type="checkbox"
-                    checked={perm.edit}
-                    onChange={() => togglePermField(key, 'edit')}
-                    className="w-4 h-4 accent-cyan-600"
-                    id={`perm-${key}-edit`}
-                    disabled={!perm.view}
-                  />
-                </div>
+                {key === 'incidents' && perm.view && (
+                  <div className="ml-4 mt-0.5 flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 border-t-0 rounded-b-lg dark:bg-slate-800/50 dark:border-slate-700">
+                    <input
+                      type="checkbox"
+                      id="perm-incidents-own-only"
+                      checked={!!formData.permissions.incidents_own_only}
+                      onChange={() => setFormData({
+                        ...formData,
+                        permissions: { ...formData.permissions, incidents_own_only: !formData.permissions.incidents_own_only }
+                      })}
+                      className="w-3.5 h-3.5 accent-cyan-600"
+                    />
+                    <label htmlFor="perm-incidents-own-only" className="text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none">
+                      Только свои инциденты (созданные или назначенные)
+                    </label>
+                  </div>
+                )}
               </div>
             );
           })}

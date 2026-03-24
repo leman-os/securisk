@@ -13,11 +13,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2, Download, Settings, Clock, Timer, CheckCircle2, Filter, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, Eye, Edit, X, UserCheck, MessageSquare, Send, Users, Image, Paperclip, Calendar, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
-const INCIDENT_STATUSES = ['Новая', 'В работе', 'Завершен', 'Проверен'];
+const INCIDENT_STATUSES = ['Новый', 'В работе', 'Завершен', 'Проверен'];
 
 const getStatusColor = (status) => {
   switch (status) {
-    case 'Новая':    return 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300';
+    case 'Новый':    return 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300';
     case 'В работе': return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
     case 'Завершен': return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300';
     case 'Проверен': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300';
@@ -371,7 +371,7 @@ const Incidents = ({ user }) => {
     detection_source: '',
     criticality: 'Средняя',
     detected_by: user?.full_name || '',
-    status: 'Новая',
+    status: 'Новый',
     description: '',
     measures: '',
     is_repeat: false,
